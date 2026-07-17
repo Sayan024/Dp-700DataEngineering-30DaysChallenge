@@ -21,25 +21,6 @@ AI, BI & Analytics Consultant — Embee Software, Kolkata
 
 ---
 
-## 📅 Day 01 — OneLake Architecture & Exam Blueprint
-
-> *Posted on LinkedIn — [follow to see every day live](https://www.linkedin.com/in/sayanbanerjee24)*
-
-### Slides Preview
-
-![Day 01 — Slide 01: Cover](Day-01/slides/slide-01.png)
-![Day 01 — Slide 02: What is DP-700](Day-01/slides/slide-02.png)
-![Day 01 — Slide 03: Why Microsoft Fabric](Day-01/slides/slide-03.png)
-![Day 01 — Slide 04: 3 Exam Domains](Day-01/slides/slide-04.png)
-![Day 01 — Slide 05: OneLake Architecture](Day-01/slides/slide-05.png)
-![Day 01 — Slide 06: 9 Key Tools](Day-01/slides/slide-06.png)
-![Day 01 — Slide 07: 3 Languages for the Exam](Day-01/slides/slide-07.png)
-![Day 01 — Slide 08: 30-Day Roadmap](Day-01/slides/slide-08.png)
-![Day 01 — Slide 09: Pro Tip — Start with Shortcuts](Day-01/slides/slide-09.png)
-![Day 01 — Slide 10: CTA — Follow for Day 2](Day-01/slides/slide-10.png)
-
----
-
 ## 🗺️ Full 30-Day Roadmap
 
 | Week | Days | Theme |
@@ -54,7 +35,7 @@ AI, BI & Analytics Consultant — Embee Software, Kolkata
 
 | Day | Status | Topic |
 |-----|--------|-------|
-| **01** | ✅ Live | OneLake Architecture & Exam Blueprint |
+| **[Day 01](Day-01/)** | ✅ Live | [OneLake Architecture & Exam Blueprint](Day-01/) |
 | **02** | ⏳ | Spark Workspace Settings & Custom Pools |
 | **03** | ⏳ | OneLake Settings & Access Control |
 | **04** | ⏳ | Apache Airflow in Microsoft Fabric |
