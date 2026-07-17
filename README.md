@@ -110,26 +110,6 @@ The official Microsoft exam is balanced equally across three major focus domains
 
 ---
 
-## ⚙️ Slide Generation Workflow (Local Automation)
-
-The slide decks are programmed using standard **HTML5/CSS3** (using high-contrast typography, flexbox grids, and Fluent Design UI specs).
-
-To automate the PNG rendering process locally, a Node.js script using **Playwright** is utilized to capture pixel-perfect screenshots of the individual slides at LinkedIn's optimized vertical ratio (1080×1350px).
-
-```bash
-# 1. Install headless automation dependencies
-npm install playwright
-
-# 2. Install chromium browser binaries
-npx playwright install chromium
-
-# 3. Execute the local export pipeline script
-node export-slides.js
-```
-*Note: Automation tooling and script files are omitted from tracking via `.gitignore` to keep the public repository clean and focused strictly on the slide output.*
-
----
-
 ## 🛡️ License and Copyright
 
 This project uses a **split licensing model** to protect the original educational content while keeping utility code open:
