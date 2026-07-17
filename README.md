@@ -1,10 +1,10 @@
-# 🔷 30 Days of Microsoft Fabric — DP-700 Challenge
+# 🔷 30 Days of Microsoft Fabric — DP-700 Certification Challenge
 
 <div align="center">
 
-### by [Sayan Banerjee](https://www.linkedin.com/in/sayanbanerjee24)
-**Fabric Data Engineer (DP-700) &bull; Databricks Certified &bull; Power BI Analyst (PL-300)**  
-AI, BI & Analytics Consultant — Embee Software, Kolkata
+### Designed and Authored by [Sayan Banerjee](https://www.linkedin.com/in/sayanbanerjee24)
+**AI, BI & Analytics Consultant &bull; Embee Software Pvt. Ltd., Kolkata**  
+*Fabric Data Engineer (DP-700) &bull; Databricks Certified &bull; Power BI Analyst (PL-300)*
 
 [![LinkedIn](https://img.shields.io/badge/LinkedIn-Sayan%20Banerjee-0077B5?style=for-the-badge&logo=linkedin&logoColor=white)](https://www.linkedin.com/in/sayanbanerjee24)
 [![Microsoft Fabric](https://img.shields.io/badge/Microsoft-Fabric-0078d4?style=for-the-badge&logo=microsoft&logoColor=white)](https://learn.microsoft.com/en-us/fabric/)
@@ -14,10 +14,10 @@ AI, BI & Analytics Consultant — Embee Software, Kolkata
 <br/>
 
 <a href="https://learn.microsoft.com/api/credentials/share/en-in/SayanBanerjee-3854/2BD18E16EC520850?sharingId=4A16B92B473CC26C" target="_blank">
-  <img src="https://learn.microsoft.com/media/learn/certification/badges/microsoft-certified-associate-badge.svg?branch=main" width="130" alt="Microsoft Certified: Fabric Data Engineer Associate" />
+  <img src="https://learn.microsoft.com/media/learn/certification/badges/microsoft-certified-associate-badge.svg?branch=main" width="130" alt="Microsoft Certified: Fabric Data Engineer Associate Badge" />
 </a>
 
-#### [🏆 Verify My Microsoft Credential](https://learn.microsoft.com/api/credentials/share/en-in/SayanBanerjee-3854/2BD18E16EC520850?sharingId=4A16B92B473CC26C)
+#### [🏆 Verified Microsoft Credential Profile](https://learn.microsoft.com/api/credentials/share/en-in/SayanBanerjee-3854/2BD18E16EC520850?sharingId=4A16B92B473CC26C)
 **Credential ID:** `2BD18E16EC520850` | **Certification Number:** `0FI4FA-79E7AC`  
 *Earned on February 19, 2026 &bull; Validated via Microsoft Learn*
 
@@ -25,100 +25,123 @@ AI, BI & Analytics Consultant — Embee Software, Kolkata
 
 ---
 
-> A 30-day public learning series where I share one DP-700 exam topic every day —  
-> through designed carousel slides posted on LinkedIn. All content is original and  
-> authored by me. See [LICENSE](./LICENSE) before reusing anything.
+## 📖 Project Overview
+
+This repository hosts the official resources, slide deck source files, and detailed technical documentation for the **30-Day Microsoft Fabric DP-700 Challenge**. 
+
+Every day, a new core topic from the official **Microsoft Certified: Fabric Data Engineer Associate (DP-700)** curriculum is researched, structured, and published. The slides are modeled after the visual design language of the official **Microsoft Fabric Community** platform to maintain a clean, professional, and easily recognizable look.
 
 ---
 
-## 🗺️ Full 30-Day Roadmap
+## 🗺️ 30-Day Syllabus Roadmap
 
-| Week | Days | Theme |
-|------|------|-------|
-| **Week 1** | 1–6 | Architecture & Workspaces |
-| **Week 2** | 7–13 | Batch Ingestion & Transformation |
-| **Week 3** | 14–19 | Data Warehousing & T-SQL |
-| **Week 4** | 20–25 | Real-Time Intelligence & KQL |
-| **Week 5** | 26–30 | Monitor, Optimize & CI/CD |
+The curriculum is structured across 5 distinct blocks, fully covering all exam areas:
 
-### Content Index
+```
+├── Week 1 (Days 01-06): Core Architecture & Workspace Administration
+├── Week 2 (Days 07-13): Batch Data Ingestion & Transformation Design
+├── Week 3 (Days 14-19): Data Warehousing Implementation & T-SQL Optimization
+├── Week 4 (Days 20-25): Real-Time Intelligence & Streaming Pipelines
+└── Week 5 (Days 26-30): Production Monitoring, Performance Tuning & CI/CD
+```
 
-| Day | Status | Topic |
-|-----|--------|-------|
+### Content Directory Index
+
+| Day | Status | Target Topic |
+| :---: | :---: | :--- |
 | **[Day 01](Day-01/)** | ✅ Live | [OneLake Architecture & Exam Blueprint](Day-01/) |
-| **02** | ⏳ | Spark Workspace Settings & Custom Pools |
-| **03** | ⏳ | OneLake Settings & Access Control |
-| **04** | ⏳ | Apache Airflow in Microsoft Fabric |
-| **05** | ⏳ | Lakehouse — Files vs. Managed Delta Tables |
-| **06** | ⏳ | Delta Lake Deep Dive: V-Order, Time Travel, Schema Evolution |
-| **07** | ⏳ | Dataflows Gen2 vs Pipelines vs Notebooks |
-| **08** | ⏳ | OneLake Shortcuts: Cross-workspace & Multi-cloud |
-| **09** | ⏳ | Mirrored Databases: Real-time Replication |
-| **10** | ⏳ | Full vs Incremental Load Patterns |
-| **11** | ⏳ | PySpark Batch Transformation Techniques |
-| **12** | ⏳ | Denormalization & Star Schema in Fabric |
-| **13** | ⏳ | Handling Duplicate, Missing & Late-Arriving Data |
-| **14** | ⏳ | Data Warehouse vs Lakehouse SQL Endpoint |
-| **15** | ⏳ | COPY INTO & CTAS in Fabric Data Warehouse |
-| **16** | ⏳ | Cross-Database Querying with T-SQL |
-| **17** | ⏳ | Row-Level, Column-Level & Object-Level Security |
-| **18** | ⏳ | Dynamic Data Masking (DDM) |
-| **19** | ⏳ | Monitoring DW Queries with DMVs |
-| **20** | ⏳ | Real-Time Hub & Eventstream Architecture |
-| **21** | ⏳ | Stream Transformation with Eventstreams |
-| **22** | ⏳ | KQL Databases & Kusto Query Language |
-| **23** | ⏳ | Native Tables vs Shortcuts in Real-Time Intelligence |
-| **24** | ⏳ | Spark Structured Streaming in Fabric |
-| **25** | ⏳ | Real-Time Dashboards & Data Activator |
-| **26** | ⏳ | Git Integration & Workspace Version Control |
-| **27** | ⏳ | Database Projects for Schema Management |
-| **28** | ⏳ | Deployment Pipelines: Dev → Test → Production |
-| **29** | ⏳ | Monitoring & Resolving Ingestion Errors |
-| **30** | ⏳ | Spark, V-Order & DW Performance Optimization |
+| **Day 02** | ⏳ Pending | Spark Workspace Settings & Custom Pools |
+| **Day 03** | ⏳ Pending | OneLake Settings & Access Control |
+| **Day 04** | ⏳ Pending | Apache Airflow in Microsoft Fabric |
+| **Day 05** | ⏳ Pending | Lakehouse — Files vs. Managed Delta Tables |
+| **Day 06** | ⏳ Pending | Delta Lake Deep Dive: V-Order, Time Travel, Schema Evolution |
+| **Day 07** | ⏳ Pending | Dataflows Gen2 vs Pipelines vs Notebooks |
+| **Day 08** | ⏳ Pending | OneLake Shortcuts: Cross-workspace & Multi-cloud |
+| **Day 09** | ⏳ Pending | Mirrored Databases: Real-time Replication |
+| **Day 10** | ⏳ Pending | Full vs Incremental Load Patterns |
+| **Day 11** | ⏳ Pending | PySpark Batch Transformation Techniques |
+| **Day 12** | ⏳ Pending | Denormalization & Star Schema in Fabric |
+| **Day 13** | ⏳ Pending | Handling Duplicate, Missing & Late-Arriving Data |
+| **Day 14** | ⏳ Pending | Data Warehouse vs Lakehouse SQL Endpoint |
+| **Day 15** | ⏳ Pending | COPY INTO & CTAS in Fabric Data Warehouse |
+| **Day 16** | ⏳ Pending | Cross-Database Querying with T-SQL |
+| **Day 17** | ⏳ Pending | Row-Level, Column-Level & Object-Level Security |
+| **Day 18** | ⏳ Pending | Dynamic Data Masking (DDM) |
+| **Day 19** | ⏳ Pending | Monitoring DW Queries with DMVs |
+| **Day 20** | ⏳ Pending | Real-Time Hub & Eventstream Architecture |
+| **Day 21** | ⏳ Pending | Stream Transformation with Eventstreams |
+| **Day 22** | ⏳ Pending | KQL Databases & Kusto Query Language |
+| **Day 23** | ⏳ Pending | Native Tables vs Shortcuts in Real-Time Intelligence |
+| **Day 24** | ⏳ Pending | Spark Structured Streaming in Fabric |
+| **Day 25** | ⏳ Pending | Real-Time Dashboards & Data Activator |
+| **Day 26** | ⏳ Pending | Git Integration & Workspace Version Control |
+| **Day 27** | ⏳ Pending | Database Projects for Schema Management |
+| **Day 28** | ⏳ Pending | Deployment Pipelines: Dev → Test → Production |
+| **Day 29** | ⏳ Pending | Monitoring & Resolving Ingestion Errors |
+| **Day 30** | ⏳ Pending | Spark, V-Order & DW Performance Optimization |
 
 ---
 
-## 🎯 DP-700 Exam Quick Reference
+## 🎯 DP-700 Exam Blueprint (July 2026 update)
 
-| Domain | Weight | Coverage |
-|--------|--------|----------|
-| Implement & Manage Analytics | 30–35% | Workspace, Spark, security, Git, CI/CD |
-| Ingest & Transform Data | 30–35% | Pipelines, Dataflows, PySpark, KQL, Shortcuts |
-| Monitor & Optimize | 30–35% | Error resolution, Spark tuning, DW optimization |
+The official Microsoft exam is balanced equally across three major focus domains:
 
----
-
-## 📚 Official Resources
-
-| Resource | Link |
-|----------|------|
-| DP-700 Certification | [learn.microsoft.com](https://learn.microsoft.com/en-us/credentials/certifications/exams/dp-700) |
-| Official Study Guide | [Study Guide (July 2026)](https://learn.microsoft.com/en-gb/credentials/certifications/resources/study-guides/dp-700) |
-| Microsoft Fabric Docs | [learn.microsoft.com/fabric](https://learn.microsoft.com/en-us/fabric/) |
-| Official Lab Repo | [MicrosoftLearning/DP-700](https://github.com/MicrosoftLearning/DP-700-Microsoft-Fabric-Data-Engineer) |
+| Exam Domain | Weight | Core Focus Areas |
+| :--- | :---: | :--- |
+| **Implement & Manage Analytics** | 30–35% | Spark workspace custom pools, OneLake security, workspace governance, Git integration, deployment pipelines, orchestration. |
+| **Ingest & Transform Data** | 30–35% | Batch & streaming ingestion, Dataflows Gen2, pipelines, notebooks (PySpark/Scala), T-SQL warehouse loading, KQL Eventhouse. |
+| **Monitor & Optimize** | 30–35% | DMV performance monitoring, Spark optimizer logs, Data Warehouse optimization, Eventstream debugging. |
 
 ---
 
-## 🔧 How I Build This (My Workflow)
+## 📁 Repository Directory Structure
 
-Each day I write the content, design the slides in HTML/CSS,
-and export them as PNGs using a Playwright script.
-The design system and export pipeline are specific to my branding.
-
-See [LICENSE](./LICENSE) if you're interested in reusing any part of this.
+```
+.
+├── LICENSE                          # Split license details (Content vs Code)
+├── README.md                        # Master index and challenge overview
+└── Day-01/
+    ├── README.md                    # Day-specific study notes & slide index
+    ├── carousel.html                # Microsoft Fabric Community style source HTML
+    └── slides/
+        ├── slide-01.png             # Rendered high-resolution slide 01 (1080x1350px)
+        └── ...                      # Slides 02 through 10
+```
 
 ---
 
-## ⭐ Follow Along
+## ⚙️ Slide Generation Workflow (Local Automation)
 
-- **LinkedIn** (daily posts): [linkedin.com/in/sayanbanerjee24](https://www.linkedin.com/in/sayanbanerjee24)
-- **Star this repo** to get notified when new days are pushed
+The slide decks are programmed using standard **HTML5/CSS3** (using high-contrast typography, flexbox grids, and Fluent Design UI specs).
+
+To automate the PNG rendering process locally, a Node.js script using **Playwright** is utilized to capture pixel-perfect screenshots of the individual slides at LinkedIn's optimized vertical ratio (1080×1350px).
+
+```bash
+# 1. Install headless automation dependencies
+npm install playwright
+
+# 2. Install chromium browser binaries
+npx playwright install chromium
+
+# 3. Execute the local export pipeline script
+node export-slides.js
+```
+*Note: Automation tooling and script files are omitted from tracking via `.gitignore` to keep the public repository clean and focused strictly on the slide output.*
 
 ---
 
-<div align="center">
+## 🛡️ License and Copyright
 
-&copy; 2026 Sayan Banerjee &bull; All slide designs and written content are original.  
-Please read the [LICENSE](./LICENSE) before reusing.
+This project uses a **split licensing model** to protect the original educational content while keeping utility code open:
 
-</div>
+*   **Slide Content, Written Material & Visual Designs:** **All Rights Reserved &copy; 2026 Sayan Banerjee**. Unauthorized reproduction, republishing, or redistribution of the carousel layouts or post copy is strictly prohibited.
+*   **Tooling & Automation Scripts:** Licensed under the [MIT License](./LICENSE) (permissible for reuse and customization).
+
+For questions or permission requests, contact: **work.sayanbanerjee@gmail.com**
+
+---
+
+## ⭐ Join the Journey
+
+*   **LinkedIn Updates:** Follow my daily posts for technical deep-dives: [Sayan Banerjee on LinkedIn](https://www.linkedin.com/in/sayanbanerjee24).
+*   **Contribute with a Star:** If you find these notes helpful, please drop a star ⭐ on the repository to support the initiative.
