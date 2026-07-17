@@ -11,3 +11,8 @@ Thumbs.db
 
 # Logs
 *.log
+
+# Slide export tools and post templates
+export-slides.js
+package.json
+post-copy.md
