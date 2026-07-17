@@ -1,0 +1,13 @@
+# Node
+node_modules/
+package-lock.json
+
+# Playwright
+.playwright/
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Logs
+*.log
