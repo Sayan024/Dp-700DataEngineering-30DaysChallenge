@@ -11,6 +11,16 @@ AI, BI & Analytics Consultant — Embee Software, Kolkata
 [![DP-700](https://img.shields.io/badge/Exam-DP--700-00a2a2?style=for-the-badge)](https://learn.microsoft.com/en-gb/credentials/certifications/resources/study-guides/dp-700)
 [![License](https://img.shields.io/badge/Content-©%20Sayan%20Banerjee-red?style=for-the-badge)](./LICENSE)
 
+<br/>
+
+<a href="https://learn.microsoft.com/api/credentials/share/en-in/SayanBanerjee-3854/2BD18E16EC520850?sharingId=4A16B92B473CC26C" target="_blank">
+  <img src="https://learn.microsoft.com/media/learn/certification/badges/microsoft-certified-associate-badge.svg?branch=main" width="130" alt="Microsoft Certified: Fabric Data Engineer Associate" />
+</a>
+
+#### [🏆 Verify My Microsoft Credential](https://learn.microsoft.com/api/credentials/share/en-in/SayanBanerjee-3854/2BD18E16EC520850?sharingId=4A16B92B473CC26C)
+**Credential ID:** `2BD18E16EC520850` | **Certification Number:** `0FI4FA-79E7AC`  
+*Earned on February 19, 2026 &bull; Validated via Microsoft Learn*
+
 </div>
 
 ---
