@@ -1,6 +1,8 @@
 # 📅 Day 01 — OneLake Architecture & Exam Blueprint
 
-This folder contains the complete resources for Day 01 of the DP-700 Microsoft Fabric Data Engineering 30-Day Challenge.
+This folder contains the complete study materials and resources for Day 01 of the DP-700 Microsoft Fabric Data Engineering 30-Day Challenge.
+
+👉 **[📖 Read Full Day 01 Study Guide & Exam Practice Questions (study-guide.md)](study-guide.md)**
 
 ---
 
@@ -68,7 +70,6 @@ These slides are designed in the official Microsoft Fabric Community style.
 
 ## 📂 Files in this Folder
 
+*   [study-guide.md](study-guide.md) — Comprehensive Day 01 Study Guide & DP-700 Practice Questions.
 *   [carousel.html](carousel.html) — The editable HTML/CSS source code of the slides.
-*   [export-slides.js](export-slides.js) — The Playwright script to automate exporting the slides as PNG.
-*   [post-copy.md](post-copy.md) — The optimized LinkedIn post copy ready for copying.
 *   [slides/](slides/) — Directory containing all 10 exported PNG slide images.
