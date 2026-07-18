@@ -1,0 +1,759 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Day 2 – DP-700 | Sayan Banerjee | Spark Settings & Custom Pools</title>
+  <link href="https://fonts.googleapis.com/css2?family=Segoe+UI:wght@400;500;600;700&family=Inter:wght@400;500;600;700;800;900&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet" />
+  <style>
+    :root {
+      --ms-teal:       #00a2a2;
+      --ms-teal-dark:  #007a7a;
+      --ms-teal-light: #e0f5f5;
+      --ms-blue:       #0078d4;
+      --ms-blue-light: #eff6fc;
+      --ms-gold:       #f4c430;
+      --ms-gold-bg:    #fff8e1;
+      --ms-purple:     #7719aa;
+      --ms-purple-bg:  #f4edfb;
+      --ms-green:      #107c10;
+      --ms-green-bg:   #dff6dd;
+      --bg:            #f3f2f1;
+      --surface:       #ffffff;
+      --border:        #edebe9;
+      --border-med:    #c8c6c4;
+      --text-primary:  #201f1e;
+      --text-secondary:#605e5c;
+      --text-muted:    #a19f9d;
+    }
+
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      background: #e8e6e3;
+      font-family: 'Inter', 'Segoe UI', sans-serif;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 48px;
+      padding: 48px 20px 80px;
+    }
+
+    .page-title {
+      font-size: 14px;
+      color: #605e5c;
+      font-weight: 500;
+      letter-spacing: 0.5px;
+    }
+
+    .slide {
+      width: 1080px;
+      height: 1350px;
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 4px;
+      position: relative;
+      overflow: hidden;
+      display: flex;
+      flex-direction: column;
+      box-shadow: 0 2px 8px rgba(0,0,0,.08), 0 16px 40px rgba(0,0,0,.06);
+    }
+
+    .slide-topbar { height: 6px; background: var(--ms-teal); flex-shrink: 0; }
+    .slide-topbar.gold { background: var(--ms-gold); }
+    .slide-topbar.blue { background: var(--ms-blue); }
+    .slide-topbar.purple { background: var(--ms-purple); }
+    .slide-topbar.grad { background: linear-gradient(90deg, var(--ms-teal), var(--ms-blue)); }
+
+    .fabric-header {
+      display: flex; align-items: center; justify-content: space-between;
+      padding: 20px 48px; border-bottom: 1px solid var(--border);
+      background: var(--surface); flex-shrink: 0;
+    }
+
+    .fabric-logo { display: flex; align-items: center; gap: 12px; }
+    .fabric-logo-icon { width: 32px; height: 32px; }
+    .fabric-logo-text { font-size: 18px; font-weight: 700; color: var(--text-primary); }
+    .fabric-logo-sep { color: var(--border-med); font-size: 20px; font-weight: 200; margin: 0 4px; }
+    .fabric-logo-sub { font-size: 14px; font-weight: 500; color: var(--text-secondary); }
+
+    .header-badge {
+      display: inline-flex; align-items: center; gap: 8px;
+      background: var(--ms-teal-light); border: 1px solid var(--ms-teal);
+      border-radius: 4px; padding: 6px 16px;
+      font-size: 12px; font-weight: 600; color: var(--ms-teal-dark);
+    }
+    .header-badge .dot { width: 8px; height: 8px; background: var(--ms-teal); border-radius: 50%; }
+
+    .announce-bar {
+      background: #fff8e1; border-bottom: 1px solid #f4c430;
+      padding: 10px 48px; font-size: 13px; color: #3d2b00; font-weight: 500;
+      display: flex; align-items: center; gap: 8px; flex-shrink: 0;
+    }
+    .announce-bar span { color: var(--ms-blue); font-weight: 600; }
+
+    .slide-body {
+      display: flex; flex-direction: column; flex: 1;
+      padding: 44px 48px 0; overflow: hidden;
+    }
+
+    .breadcrumb { display: flex; align-items: center; gap: 8px; font-size: 13px; color: var(--text-secondary); margin-bottom: 20px; }
+    .breadcrumb a { color: var(--ms-blue); text-decoration: none; font-weight: 500; }
+    .breadcrumb .sep { color: var(--border-med); }
+    .breadcrumb .current { color: var(--text-primary); font-weight: 600; }
+
+    .section-tag {
+      display: inline-block; font-size: 11px; font-weight: 700;
+      letter-spacing: 1.5px; text-transform: uppercase;
+      color: var(--ms-teal-dark); padding: 4px 12px;
+      background: var(--ms-teal-light); border-radius: 3px; margin-bottom: 14px; width: fit-content;
+    }
+
+    .page-heading { font-size: 46px; font-weight: 800; color: var(--text-primary); line-height: 1.1; margin-bottom: 8px; }
+    .page-heading span { color: var(--ms-teal); }
+    .page-subheading { font-size: 19px; font-weight: 400; color: var(--text-secondary); line-height: 1.5; margin-bottom: 28px; }
+
+    .grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+    .grid-3 { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 14px; }
+
+    .feature-card {
+      background: var(--surface); border: 1px solid var(--border);
+      border-radius: 4px; padding: 22px 20px; border-left: 4px solid var(--ms-teal);
+    }
+    .feature-card.fc-blue { border-left-color: var(--ms-blue); }
+    .feature-card.fc-gold { border-left-color: var(--ms-gold); }
+    .feature-card.fc-purple { border-left-color: var(--ms-purple); }
+    .feature-card.fc-green { border-left-color: var(--ms-green); }
+
+    .fc-icon { font-size: 26px; margin-bottom: 10px; }
+    .fc-title { font-size: 15px; font-weight: 700; color: var(--text-primary); margin-bottom: 6px; }
+    .fc-desc { font-size: 13px; color: var(--text-secondary); line-height: 1.5; }
+
+    .ms-card { background: var(--surface); border: 1px solid var(--border); border-radius: 4px; box-shadow: 0 1px 4px rgba(0,0,0,.06); }
+    .ms-card-header {
+      padding: 14px 20px; border-bottom: 1px solid var(--border);
+      font-size: 13px; font-weight: 600; color: var(--text-secondary);
+      letter-spacing: 0.5px; text-transform: uppercase; background: #faf9f8;
+      display: flex; align-items: center; gap: 8px;
+    }
+    .ms-card-body { padding: 20px; }
+
+    .info-row { display: flex; align-items: center; gap: 16px; padding: 14px 0; border-bottom: 1px solid var(--border); }
+    .info-row:last-child { border-bottom: none; }
+    .info-icon { width: 38px; height: 38px; border-radius: 4px; display: flex; align-items: center; justify-content: center; font-size: 18px; flex-shrink: 0; }
+    .info-lbl { font-size: 11px; font-weight: 600; color: var(--text-muted); letter-spacing: 1px; text-transform: uppercase; }
+    .info-val { font-size: 15px; font-weight: 600; color: var(--text-primary); margin-top: 2px; }
+
+    .tip-box {
+      background: #e0f5f5; border: 1px solid var(--ms-teal);
+      border-radius: 4px; padding: 18px 22px; display: flex; gap: 14px;
+      align-items: flex-start; margin-top: 16px;
+    }
+    .tip-box-icon { font-size: 22px; flex-shrink: 0; }
+    .tip-box-title { font-size: 14px; font-weight: 700; color: var(--ms-teal-dark); margin-bottom: 4px; }
+    .tip-box-text { font-size: 13px; color: var(--text-secondary); line-height: 1.6; }
+
+    .chip-row { display: flex; gap: 8px; flex-wrap: wrap; margin-top: 20px; }
+    .chip { padding: 6px 14px; border-radius: 20px; font-size: 12px; font-weight: 600; border: 1px solid; }
+    .chip-teal { background: var(--ms-teal-light); color: var(--ms-teal-dark); border-color: var(--ms-teal); }
+    .chip-blue { background: var(--ms-blue-light); color: var(--ms-blue); border-color: var(--ms-blue); }
+    .chip-gold { background: var(--ms-gold-bg); color: #7a5700; border-color: var(--ms-gold); }
+    .chip-purple { background: var(--ms-purple-bg); color: var(--ms-purple); border-color: var(--ms-purple); }
+
+    .code-block {
+      background: #1e1e1e; color: #d4d4d4; font-family: 'JetBrains Mono', monospace;
+      padding: 16px; border-radius: 4px; font-size: 12px; line-height: 1.6;
+      border: 1px solid #333; margin-top: 12px; overflow-x: auto;
+    }
+    .code-keyword { color: #569cd6; }
+    .code-string { color: #ce9178; }
+    .code-comment { color: #6a9955; }
+
+    .slide-footer {
+      display: flex; align-items: center; justify-content: space-between;
+      padding: 16px 48px; border-top: 1px solid var(--border);
+      background: #faf9f8; margin-top: auto; flex-shrink: 0;
+    }
+    .footer-name { font-size: 14px; font-weight: 700; color: var(--text-primary); }
+    .footer-role { font-size: 12px; color: var(--text-secondary); margin-top: 2px; }
+    .footer-right { text-align: right; }
+    .footer-tags { font-size: 12px; color: var(--ms-teal-dark); font-weight: 600; }
+    .footer-page { font-size: 11px; color: var(--text-muted); margin-bottom: 2px; }
+  </style>
+</head>
+<body>
+
+<p class="page-title">30 Days of DP-700 &bull; Sayan Banerjee &bull; Day 2 &bull; Spark Workspace Settings &amp; Custom Pools</p>
+
+<!-- ============================================================
+     SLIDE 1 – COVER
+============================================================ -->
+<div class="slide" id="s1">
+  <div class="slide-topbar grad"></div>
+  <div class="fabric-header">
+    <div class="fabric-logo">
+      <svg class="fabric-logo-icon" viewBox="0 0 32 32" fill="none">
+        <rect width="32" height="32" rx="4" fill="#00a2a2"/>
+        <path d="M8 16L16 8L24 16L16 24L8 16Z" fill="white" opacity="0.9"/>
+        <path d="M12 16L16 12L20 16L16 20L12 16Z" fill="#00a2a2"/>
+      </svg>
+      <span class="fabric-logo-text">Microsoft</span><span class="fabric-logo-sep">|</span><span class="fabric-logo-sub">Fabric Community</span>
+    </div>
+    <div class="header-badge"><div class="dot"></div>Day 2 of 30</div>
+  </div>
+  <div class="announce-bar">
+    &#9888; Day 2 of 30 &mdash; <strong>Spark Workspace Settings &amp; Custom Pools</strong> &mdash; by Sayan Banerjee &nbsp;<span>linkedin.com/in/sayanbanerjee24</span>
+  </div>
+  <div class="slide-body">
+    <div class="breadcrumb">
+      <a href="#">Data Engineering</a><span class="sep">&rsaquo;</span>
+      <a href="#">DP-700</a><span class="sep">&rsaquo;</span>
+      <span class="current">Day 2: Spark Settings &amp; Custom Pools</span>
+    </div>
+    <div class="section-tag">Day 02 of 30</div>
+    <div class="page-heading">Spark Settings &amp;<br/><span>Custom Pools</span></div>
+    <div class="page-subheading">Mastering Fabric Spark compute architecture: Starter Pools, Custom Pools, High Concurrency, Native Execution Engine &amp; Environments.</div>
+
+    <div class="grid-2" style="margin-top: 12px;">
+      <div class="feature-card">
+        <div class="fc-icon">&#9889;</div>
+        <div class="fc-title">Starter Pools vs Custom Pools</div>
+        <div class="fc-desc">Learn when to leverage zero-wait Starter Pools vs tailoring custom node sizes and executor allocations.</div>
+      </div>
+      <div class="feature-card fc-blue">
+        <div class="fc-icon">&#128640;</div>
+        <div class="fc-title">Native Execution Engine</div>
+        <div class="fc-desc">Boost Spark performance up to 4x using the C++ Velox vectorized execution engine built into Fabric.</div>
+      </div>
+      <div class="feature-card fc-gold">
+        <div class="fc-icon">&#128256;</div>
+        <div class="fc-title">High Concurrency Sharing</div>
+        <div class="fc-desc">Share Spark sessions across multiple notebooks and users without queue delays or cold starts.</div>
+      </div>
+      <div class="feature-card fc-purple">
+        <div class="fc-icon">&#128230;</div>
+        <div class="fc-title">Environment Item Management</div>
+        <div class="fc-desc">Decouple PyPI/Conda libraries and Spark properties from code for reusable workspace governance.</div>
+      </div>
+    </div>
+
+    <div class="tip-box" style="margin-top: 24px;">
+      <div class="tip-box-icon">&#127919;</div>
+      <div>
+        <div class="tip-box-title">DP-700 Domain Alignment</div>
+        <div class="tip-box-text">Covers <strong>Domain 1: Implement &amp; Manage Analytics (30&ndash;35%)</strong> &mdash; Specifically "Configure Fabric Workspace Settings and Spark Compute Configurations."</div>
+      </div>
+    </div>
+  </div>
+  <div class="slide-footer">
+    <div><div class="footer-name">Sayan Banerjee</div><div class="footer-role">Fabric Data Engineer (DP-700) &bull; Embee Software &bull; Kolkata</div></div>
+    <div class="footer-right"><div class="footer-page">01 / 10</div><div class="footer-tags">linkedin.com/in/sayanbanerjee24</div></div>
+  </div>
+</div>
+
+<!-- ============================================================
+     SLIDE 2 – STARTER POOLS VS CUSTOM POOLS
+============================================================ -->
+<div class="slide" id="s2">
+  <div class="slide-topbar"></div>
+  <div class="fabric-header">
+    <div class="fabric-logo">
+      <svg class="fabric-logo-icon" viewBox="0 0 32 32" fill="none"><rect width="32" height="32" rx="4" fill="#00a2a2"/><path d="M8 16L16 8L24 16L16 24L8 16Z" fill="white" opacity="0.9"/><path d="M12 16L16 12L20 16L16 20L12 16Z" fill="#00a2a2"/></svg>
+      <span class="fabric-logo-text">Microsoft</span><span class="fabric-logo-sep">|</span><span class="fabric-logo-sub">Spark Pools Architecture</span>
+    </div>
+    <div class="header-badge"><div class="dot"></div>Compute Architecture</div>
+  </div>
+  <div class="slide-body">
+    <div class="section-tag">Pool Architecture</div>
+    <div class="page-heading">Starter Pools vs<br/><span>Custom Pools</span></div>
+    <div class="page-subheading">Choosing the right compute pool type directly impacts job startup latency, scalability, and capacity costs.</div>
+
+    <div class="grid-2" style="margin-top: 4px;">
+      <div class="ms-card" style="border-top: 4px solid var(--ms-teal);">
+        <div class="ms-card-header">&#9889; Starter Pools (Default)</div>
+        <div class="ms-card-body">
+          <div class="info-row">
+            <div class="info-icon" style="background:var(--ms-teal-light);">&#9201;</div>
+            <div><div class="info-lbl">Startup Time</div><div class="info-val">~5 to 10 Seconds (Pre-warmed)</div></div>
+          </div>
+          <div class="info-row">
+            <div class="info-icon" style="background:var(--ms-teal-light);">&#128736;</div>
+            <div><div class="info-lbl">Management</div><div class="info-val">Fully Managed by Fabric</div></div>
+          </div>
+          <div class="info-row">
+            <div class="info-icon" style="background:var(--ms-teal-light);">&#128200;</div>
+            <div><div class="info-lbl">Auto-Scale</div><div class="info-val">Dynamic Node Allocation</div></div>
+          </div>
+          <div class="info-row">
+            <div class="info-icon" style="background:var(--ms-teal-light);">&#128187;</div>
+            <div><div class="info-lbl">Best Used For</div><div class="info-val">Ad-hoc EDA &amp; Quick Notebook Runs</div></div>
+          </div>
+        </div>
+      </div>
+
+      <div class="ms-card" style="border-top: 4px solid var(--ms-blue);">
+        <div class="ms-card-header">&#9881; Custom Pools</div>
+        <div class="ms-card-body">
+          <div class="info-row">
+            <div class="info-icon" style="background:var(--ms-blue-light);">&#9201;</div>
+            <div><div class="info-lbl">Startup Time</div><div class="info-val">~2 to 3 Minutes (Cold Start)</div></div>
+          </div>
+          <div class="info-row">
+            <div class="info-icon" style="background:var(--ms-blue-light);">&#128207;</div>
+            <div><div class="info-lbl">Node Sizing</div><div class="info-val">Small to XX-Large (VCore Control)</div></div>
+          </div>
+          <div class="info-row">
+            <div class="info-icon" style="background:var(--ms-blue-light);">&#9208;</div>
+            <div><div class="info-lbl">Auto-Pause</div><div class="info-val">Configurable (Default 2 mins idle)</div></div>
+          </div>
+          <div class="info-row">
+            <div class="info-icon" style="background:var(--ms-blue-light);">&#128640;</div>
+            <div><div class="info-lbl">Best Used For</div><div class="info-val">Heavy Batch ETL &amp; Strict Memory Jobs</div></div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="tip-box">
+      <div class="tip-box-icon">&#128161;</div>
+      <div>
+        <div class="tip-box-title">Exam Decision Key</div>
+        <div class="tip-box-text">If an exam scenario requires <strong>instant startup time</strong> with minimal setup, choose <strong>Starter Pools</strong>. If it requires <strong>exact memory allocation, explicit executor counts, or specific node sizes</strong>, choose <strong>Custom Pools</strong>.</div>
+      </div>
+    </div>
+  </div>
+  <div class="slide-footer">
+    <div><div class="footer-name">Sayan Banerjee</div><div class="footer-role">linkedin.com/in/sayanbanerjee24</div></div>
+    <div class="footer-right"><div class="footer-page">02 / 10</div><div class="footer-tags">#FabricSpark #SparkPools</div></div>
+  </div>
+</div>
+
+<!-- ============================================================
+     SLIDE 3 – HIGH CONCURRENCY MODE
+============================================================ -->
+<div class="slide" id="s3">
+  <div class="slide-topbar blue"></div>
+  <div class="fabric-header">
+    <div class="fabric-logo">
+      <svg class="fabric-logo-icon" viewBox="0 0 32 32" fill="none"><rect width="32" height="32" rx="4" fill="#00a2a2"/><path d="M8 16L16 8L24 16L16 24L8 16Z" fill="white" opacity="0.9"/><path d="M12 16L16 12L20 16L16 20L12 16Z" fill="#00a2a2"/></svg>
+      <span class="fabric-logo-text">Microsoft</span><span class="fabric-logo-sep">|</span><span class="fabric-logo-sub">Session Concurrency</span>
+    </div>
+    <div class="header-badge"><div class="dot"></div>High Concurrency</div>
+  </div>
+  <div class="slide-body">
+    <div class="section-tag">Concurrency Model</div>
+    <div class="page-heading">High Concurrency &amp;<br/><span>Session Sharing</span></div>
+    <div class="page-subheading">Share active Spark clusters across multiple notebooks to eliminate startup delays and maximize Capacity Unit (CU) efficiency.</div>
+
+    <div class="grid-2" style="margin-top: 4px;">
+      <div class="feature-card">
+        <div class="fc-icon">&#128256;</div>
+        <div class="fc-title">Shared Spark Sessions</div>
+        <div class="fc-desc">Multiple notebooks attach to an existing active session in seconds instead of spinning up isolated clusters per notebook.</div>
+      </div>
+      <div class="feature-card fc-blue">
+        <div class="fc-icon">&#128178;</div>
+        <div class="fc-title">CU Cost Savings</div>
+        <div class="fc-desc">Prevents idle capacity consumption by reusing executor memory and CPU across concurrent data engineering workloads.</div>
+      </div>
+      <div class="feature-card fc-gold">
+        <div class="fc-icon">&#128274;</div>
+        <div class="fc-title">User Security Isolation</div>
+        <div class="fc-desc">Despite sharing compute nodes, Microsoft Fabric maintains user-level security boundaries and variable isolation across sessions.</div>
+      </div>
+      <div class="feature-card fc-purple">
+        <div class="fc-icon">&#128260;</div>
+        <div class="fc-title">Pipeline Integration</div>
+        <div class="fc-desc">Data Factory pipelines executing multiple notebook activities in parallel reuse the same high concurrency session automatically.</div>
+      </div>
+    </div>
+
+    <div class="ms-card" style="margin-top: 16px;">
+      <div class="ms-card-header">&#9989; When to Enable High Concurrency Mode</div>
+      <div class="ms-card-body" style="padding: 14px 20px; font-size: 13px; color: var(--text-secondary); line-height: 1.6;">
+        &bull; Interactive team development in shared workspaces.<br/>
+        &bull; Pipelines that trigger 5+ PySpark Notebooks concurrently.<br/>
+        &bull; Workspaces seeking to reduce overall Fabric Capacity Unit (CU) throttle risks.
+      </div>
+    </div>
+  </div>
+  <div class="slide-footer">
+    <div><div class="footer-name">Sayan Banerjee</div><div class="footer-role">linkedin.com/in/sayanbanerjee24</div></div>
+    <div class="footer-right"><div class="footer-page">03 / 10</div><div class="footer-tags">#SparkConcurrency #FabricCU</div></div>
+  </div>
+</div>
+
+<!-- ============================================================
+     SLIDE 4 – FABRIC SPARK RUNTIME
+============================================================ -->
+<div class="slide" id="s4">
+  <div class="slide-topbar gold"></div>
+  <div class="fabric-header">
+    <div class="fabric-logo">
+      <svg class="fabric-logo-icon" viewBox="0 0 32 32" fill="none"><rect width="32" height="32" rx="4" fill="#00a2a2"/><path d="M8 16L16 8L24 16L16 24L8 16Z" fill="white" opacity="0.9"/><path d="M12 16L16 12L20 16L16 20L12 16Z" fill="#00a2a2"/></svg>
+      <span class="fabric-logo-text">Microsoft</span><span class="fabric-logo-sep">|</span><span class="fabric-logo-sub">Spark Runtime Specs</span>
+    </div>
+    <div class="header-badge"><div class="dot"></div>Fabric Runtime</div>
+  </div>
+  <div class="slide-body">
+    <div class="section-tag">Engine Components</div>
+    <div class="page-heading">Fabric Spark <span>Runtime</span><br/>Architecture</div>
+    <div class="page-subheading">Understanding the pre-packaged Apache Spark, Delta Lake, and Python libraries provided out-of-the-box.</div>
+
+    <div class="ms-card" style="margin-top: 4px;">
+      <div class="ms-card-header">&#128230; Core Engine Specifications (Fabric Runtime 1.3 / 3.5)</div>
+      <div class="ms-card-body" style="padding: 0 20px;">
+        <div class="info-row">
+          <div class="info-icon" style="background:var(--ms-teal-light);">&#128293;</div>
+          <div><div class="info-lbl">Apache Spark Core</div><div class="info-val">Apache Spark 3.5.0</div></div>
+        </div>
+        <div class="info-row">
+          <div class="info-icon" style="background:var(--ms-blue-light);">&#128451;</div>
+          <div><div class="info-lbl">Delta Lake Protocol</div><div class="info-val">Delta Lake 3.1.0 (Full Deletion Vector &amp; Liquid Clustering support)</div></div>
+        </div>
+        <div class="info-row">
+          <div class="info-icon" style="background:var(--ms-gold-bg);">&#128013;</div>
+          <div><div class="info-lbl">Python Environment</div><div class="info-val">Python 3.10 / 3.11 with pre-installed Pandas, NumPy, PySpark</div></div>
+        </div>
+        <div class="info-row">
+          <div class="info-icon" style="background:var(--ms-purple-bg);">&#9889;</div>
+          <div><div class="info-lbl">Vectorized Engine</div><div class="info-val">Native Execution Engine (Velox C++ acceleration layer)</div></div>
+        </div>
+      </div>
+    </div>
+
+    <div class="tip-box" style="margin-top: 20px;">
+      <div class="tip-box-icon">&#9888;</div>
+      <div>
+        <div class="tip-box-title">Workspace Runtime Management</div>
+        <div class="tip-box-text">Workspace Admins can select the default runtime for all notebooks in <strong>Workspace Settings &rarr; Data Engineering &rarr; Spark Settings</strong>, ensuring version consistency across engineering teams.</div>
+      </div>
+    </div>
+  </div>
+  <div class="slide-footer">
+    <div><div class="footer-name">Sayan Banerjee</div><div class="footer-role">linkedin.com/in/sayanbanerjee24</div></div>
+    <div class="footer-right"><div class="footer-page">04 / 10</div><div class="footer-tags">#SparkRuntime #DeltaLake</div></div>
+  </div>
+</div>
+
+<!-- ============================================================
+     SLIDE 5 – NATIVE EXECUTION ENGINE
+============================================================ -->
+<div class="slide" id="s5">
+  <div class="slide-topbar"></div>
+  <div class="fabric-header">
+    <div class="fabric-logo">
+      <svg class="fabric-logo-icon" viewBox="0 0 32 32" fill="none"><rect width="32" height="32" rx="4" fill="#00a2a2"/><path d="M8 16L16 8L24 16L16 24L8 16Z" fill="white" opacity="0.9"/><path d="M12 16L16 12L20 16L16 20L12 16Z" fill="#00a2a2"/></svg>
+      <span class="fabric-logo-text">Microsoft</span><span class="fabric-logo-sep">|</span><span class="fabric-logo-sub">Performance Engine</span>
+    </div>
+    <div class="header-badge"><div class="dot"></div>Native Engine</div>
+  </div>
+  <div class="slide-body">
+    <div class="section-tag">Performance Boost</div>
+    <div class="page-heading">Native Execution <span>Engine</span><br/>(Up to 4x Faster)</div>
+    <div class="page-subheading">Replaces standard Java JVM execution with a C++ Velox vectorized processing engine directly inside Fabric.</div>
+
+    <div class="grid-2" style="margin-top: 4px;">
+      <div class="feature-card">
+        <div class="fc-icon">&#9889;</div>
+        <div class="fc-title">C++ Vectorized Processing</div>
+        <div class="fc-desc">Executes columnar operations directly on CPU SIMD instructions, bypassing JVM garbage collection overhead.</div>
+      </div>
+      <div class="feature-card fc-blue">
+        <div class="fc-icon">&#128200;</div>
+        <div class="fc-title">4x Speedup on Queries</div>
+        <div class="fc-desc">Dramatically speeds up heavy aggregations, joins, string operations, and Delta table scans.</div>
+      </div>
+    </div>
+
+    <div class="ms-card" style="margin-top: 16px;">
+      <div class="ms-card-header">&#128187; How to Enable in Spark Session / Notebook</div>
+      <div class="ms-card-body" style="padding: 0;">
+        <div class="code-block" style="margin: 0; border: none; border-radius: 0 0 4px 4px;">
+<span class="code-comment"># Enable Native Execution Engine in PySpark</span>
+spark.conf.set(<span class="code-string">"spark.native.enabled"</span>, <span class="code-string">"true"</span>)
+
+<span class="code-comment"># Verify engine execution status in Physical Plan</span>
+df.explain() <span class="code-comment"># Look for 'NativeScan' or 'Velox' operators</span>
+        </div>
+      </div>
+    </div>
+
+    <div class="tip-box">
+      <div class="tip-box-icon">&#127919;</div>
+      <div>
+        <div class="tip-box-title">Exam Tip</div>
+        <div class="tip-box-text">When an exam scenario asks how to optimize long-running PySpark transformation jobs <strong>without changing code or increasing pool size</strong>, enabling the <strong>Native Execution Engine</strong> is the top answer.</div>
+      </div>
+    </div>
+  </div>
+  <div class="slide-footer">
+    <div><div class="footer-name">Sayan Banerjee</div><div class="footer-role">linkedin.com/in/sayanbanerjee24</div></div>
+    <div class="footer-right"><div class="footer-page">05 / 10</div><div class="footer-tags">#VeloxEngine #SparkPerformance</div></div>
+  </div>
+</div>
+
+<!-- ============================================================
+     SLIDE 6 – LIBRARY MANAGEMENT
+============================================================ -->
+<div class="slide" id="s6">
+  <div class="slide-topbar grad"></div>
+  <div class="fabric-header">
+    <div class="fabric-logo">
+      <svg class="fabric-logo-icon" viewBox="0 0 32 32" fill="none"><rect width="32" height="32" rx="4" fill="#00a2a2"/><path d="M8 16L16 8L24 16L16 24L8 16Z" fill="white" opacity="0.9"/><path d="M12 16L16 12L20 16L16 20L12 16Z" fill="#00a2a2"/></svg>
+      <span class="fabric-logo-text">Microsoft</span><span class="fabric-logo-sep">|</span><span class="fabric-logo-sub">Library Governance</span>
+    </div>
+    <div class="header-badge"><div class="dot"></div>Library Management</div>
+  </div>
+  <div class="slide-body">
+    <div class="section-tag">Library Governance</div>
+    <div class="page-heading">Environments vs<br/><span>Inline Libraries</span></div>
+    <div class="page-subheading">Managing Python/PyPI dependencies efficiently across development workspaces.</div>
+
+    <div class="grid-2" style="margin-top: 4px;">
+      <div class="feature-card">
+        <div class="fc-icon">&#128230;</div>
+        <div class="fc-title">Environment Items (Recommended)</div>
+        <div class="fc-desc">Create reusable Environment items containing PyPI/Conda YAML specs. Attach to workspaces or specific notebooks for governance.</div>
+      </div>
+      <div class="feature-card fc-blue">
+        <div class="fc-icon">&#128221;</div>
+        <div class="fc-title">Inline %pip Commands</div>
+        <div class="fc-desc">Use <code>%pip install library_name</code> at the top of a notebook for temporary ad-hoc testing. Installs only for the current session.</div>
+      </div>
+    </div>
+
+    <div class="ms-card" style="margin-top: 16px;">
+      <div class="ms-card-header">&#128187; Example: Conda Environment YAML Definition</div>
+      <div class="ms-card-body" style="padding: 0;">
+        <div class="code-block" style="margin: 0; border: none; border-radius: 0 0 4px 4px;">
+<span class="code-keyword">name</span>: fabric_data_engineering_env
+<span class="code-keyword">channels</span>:
+  - conda-forge
+<span class="code-keyword">dependencies</span>:
+  - python=3.10
+  - pip:
+      - azure-storage-blob==12.19.0
+      - delta-spark==3.1.0
+        </div>
+      </div>
+    </div>
+
+    <div class="tip-box">
+      <div class="tip-box-icon">&#9432;</div>
+      <div>
+        <div class="tip-box-title">Best Practice</div>
+        <div class="tip-box-text">Avoid using inline <code>%pip install</code> in production scheduled pipelines because it adds installation latency on every pipeline run. Pre-publish dependencies into an <strong>Environment Item</strong>.</div>
+      </div>
+    </div>
+  </div>
+  <div class="slide-footer">
+    <div><div class="footer-name">Sayan Banerjee</div><div class="footer-role">linkedin.com/in/sayanbanerjee24</div></div>
+    <div class="footer-right"><div class="footer-page">06 / 10</div><div class="footer-tags">#FabricEnvironment #PythonDependencies</div></div>
+  </div>
+</div>
+
+<!-- ============================================================
+     SLIDE 7 – MONITORING SPARK METRICS
+============================================================ -->
+<div class="slide" id="s7">
+  <div class="slide-topbar"></div>
+  <div class="fabric-header">
+    <div class="fabric-logo">
+      <svg class="fabric-logo-icon" viewBox="0 0 32 32" fill="none"><rect width="32" height="32" rx="4" fill="#00a2a2"/><path d="M8 16L16 8L24 16L16 24L8 16Z" fill="white" opacity="0.9"/><path d="M12 16L16 12L20 16L16 20L12 16Z" fill="#00a2a2"/></svg>
+      <span class="fabric-logo-text">Microsoft</span><span class="fabric-logo-sep">|</span><span class="fabric-logo-sub">Monitoring &amp; Telemetry</span>
+    </div>
+    <div class="header-badge"><div class="dot"></div>Spark Monitoring</div>
+  </div>
+  <div class="slide-body">
+    <div class="section-tag">Telemetry &amp; Logs</div>
+    <div class="page-heading">Monitoring Spark<br/><span>Metrics &amp; Logs</span></div>
+    <div class="page-subheading">Track execution details, executor memory usage, and Capacity Unit (CU) consumption.</div>
+
+    <div class="grid-3" style="margin-top: 12px; flex: 1;">
+      <div class="feature-card">
+        <div class="fc-icon">&#128202;</div>
+        <div class="fc-title">Spark UI Integration</div>
+        <div class="fc-desc">Inspect Spark stages, tasks, DAG visualization, executor timelines, and memory spill directly in Fabric.</div>
+      </div>
+      <div class="feature-card fc-blue">
+        <div class="fc-icon">&#128451;</div>
+        <div class="fc-title">Capacity Metrics App</div>
+        <div class="fc-desc">Monitor Spark background CU usage, identify throttling, and detect high-cost batch notebook runs.</div>
+      </div>
+      <div class="feature-card fc-gold">
+        <div class="fc-icon">&#128196;</div>
+        <div class="fc-title">Diagnostic Logs</div>
+        <div class="fc-desc">Stream Spark driver and executor logs to Azure Log Analytics for centralized auditing and troubleshooting.</div>
+      </div>
+    </div>
+
+    <div class="ms-card" style="margin-top: 16px;">
+      <div class="ms-card-header">&#127891; What to Look for in Spark UI (Exam Scenarios)</div>
+      <div class="ms-card-body" style="padding: 16px 20px; font-size: 13px; color: var(--text-secondary); line-height: 1.6;">
+        &bull; <strong>Spill (Disk) &amp; Spill (Memory):</strong> Indicates memory pressure; increase executor size in Custom Pool.<br/>
+        &bull; <strong>Data Skew:</strong> One task taking 90% of job duration; apply repartitioning or skew hints.<br/>
+        &bull; <strong>Stragglers:</strong> Uneven partition distribution across executors.
+      </div>
+    </div>
+  </div>
+  <div class="slide-footer">
+    <div><div class="footer-name">Sayan Banerjee</div><div class="footer-role">linkedin.com/in/sayanbanerjee24</div></div>
+    <div class="footer-right"><div class="footer-page">07 / 10</div><div class="footer-tags">#SparkUI #FabricMonitoring</div></div>
+  </div>
+</div>
+
+<!-- ============================================================
+     SLIDE 8 – EXAM DECISION MATRIX
+============================================================ -->
+<div class="slide" id="s8">
+  <div class="slide-topbar blue"></div>
+  <div class="fabric-header">
+    <div class="fabric-logo">
+      <svg class="fabric-logo-icon" viewBox="0 0 32 32" fill="none"><rect width="32" height="32" rx="4" fill="#00a2a2"/><path d="M8 16L16 8L24 16L16 24L8 16Z" fill="white" opacity="0.9"/><path d="M12 16L16 12L20 16L16 20L12 16Z" fill="#00a2a2"/></svg>
+      <span class="fabric-logo-text">Microsoft</span><span class="fabric-logo-sep">|</span><span class="fabric-logo-sub">Exam Matrix</span>
+    </div>
+    <div class="header-badge"><div class="dot"></div>Decision Matrix</div>
+  </div>
+  <div class="slide-body">
+    <div class="section-tag">Exam Decision Guide</div>
+    <div class="page-heading">Spark Pool Choice <span>Matrix</span></div>
+    <div class="page-subheading">Quick reference guide to select the right Spark pool type for DP-700 scenarios.</div>
+
+    <div class="ms-card" style="margin-top: 4px;">
+      <div class="ms-card-header">&#128203; Scenario Selection Cheat Sheet</div>
+      <div class="ms-card-body" style="padding: 0 20px;">
+        <div class="info-row">
+          <div style="flex:1;"><div class="info-lbl">Scenario Requirement</div><div class="info-val">Interactive EDA notebook with instant startup requirement</div></div>
+          <div style="width:160px; text-align:right;"><span class="chip chip-teal">Starter Pool</span></div>
+        </div>
+        <div class="info-row">
+          <div style="flex:1;"><div class="info-lbl">Scenario Requirement</div><div class="info-val">Batch job requiring 128 GB memory &amp; explicit 16-node limit</div></div>
+          <div style="width:160px; text-align:right;"><span class="chip chip-blue">Custom Pool</span></div>
+        </div>
+        <div class="info-row">
+          <div style="flex:1;"><div class="info-lbl">Scenario Requirement</div><div class="info-val">5 concurrent notebook activities in a single pipeline</div></div>
+          <div style="width:160px; text-align:right;"><span class="chip chip-gold">High Concurrency</span></div>
+        </div>
+        <div class="info-row">
+          <div style="flex:1;"><div class="info-lbl">Scenario Requirement</div><div class="info-val">Optimize long-running Delta scan without code changes</div></div>
+          <div style="width:160px; text-align:right;"><span class="chip chip-purple">Native Engine</span></div>
+        </div>
+        <div class="info-row">
+          <div style="flex:1;"><div class="info-lbl">Scenario Requirement</div><div class="info-val">Standardize Python libraries across 10 engineering notebooks</div></div>
+          <div style="width:160px; text-align:right;"><span class="chip chip-teal">Environment Item</span></div>
+        </div>
+      </div>
+    </div>
+
+    <div class="tip-box">
+      <div class="tip-box-icon">&#128161;</div>
+      <div>
+        <div class="tip-box-title">Rule of Thumb for Exam Questions</div>
+        <div class="tip-box-text">Always prefer <strong>Starter Pools</strong> for fast startup unless the scenario explicitly mentions custom node hardware limits, specific executor memory configurations, or fixed core allocation rules.</div>
+      </div>
+    </div>
+  </div>
+  <div class="slide-footer">
+    <div><div class="footer-name">Sayan Banerjee</div><div class="footer-role">linkedin.com/in/sayanbanerjee24</div></div>
+    <div class="footer-right"><div class="footer-page">08 / 10</div><div class="footer-tags">#DP700CheatSheet #SparkMatrix</div></div>
+  </div>
+</div>
+
+<!-- ============================================================
+     SLIDE 9 – PRO TIP OF THE DAY
+============================================================ -->
+<div class="slide" id="s9">
+  <div class="slide-topbar"></div>
+  <div class="fabric-header">
+    <div class="fabric-logo">
+      <svg class="fabric-logo-icon" viewBox="0 0 32 32" fill="none"><rect width="32" height="32" rx="4" fill="#00a2a2"/><path d="M8 16L16 8L24 16L16 24L8 16Z" fill="white" opacity="0.9"/><path d="M12 16L16 12L20 16L16 20L12 16Z" fill="#00a2a2"/></svg>
+      <span class="fabric-logo-text">Microsoft</span><span class="fabric-logo-sep">|</span><span class="fabric-logo-sub">Pro Tip of the Day</span>
+    </div>
+    <div class="header-badge"><div class="dot"></div>Exam Insight</div>
+  </div>
+  <div class="slide-body" style="justify-content: center; align-items: center; text-align: center; padding: 48px 80px;">
+    <div style="font-size: 80px; margin-bottom: 20px;">&#9889;</div>
+    <div class="section-tag" style="margin: 0 auto 16px;">Tip #2 of 30</div>
+    <div style="font-size: 42px; font-weight: 900; color: var(--text-primary); line-height: 1.2; margin-bottom: 20px;">
+      Enable <span style="color: var(--ms-teal);">Native Execution Engine</span> for Instant Boost
+    </div>
+    <div style="font-size: 19px; color: var(--text-secondary); line-height: 1.7; margin-bottom: 32px;">
+      Before spending capacity units upgrading to larger Custom Pools, enable <strong style="color: var(--text-primary);">Native Execution Engine</strong> (<code>spark.native.enabled = true</code>). It uses C++ Velox processing to deliver up to <strong style="color: var(--ms-teal-dark);">4x query speedup</strong> at zero additional CU cost!
+    </div>
+
+    <div class="chip-row" style="justify-content: center;">
+      <div class="chip chip-teal">Zero CU Extra Cost</div>
+      <div class="chip chip-blue">4x Query Acceleration</div>
+      <div class="chip chip-gold">No Code Changes</div>
+      <div class="chip chip-purple">Exam Favorite</div>
+    </div>
+  </div>
+  <div class="slide-footer">
+    <div><div class="footer-name">Sayan Banerjee</div><div class="footer-role">linkedin.com/in/sayanbanerjee24</div></div>
+    <div class="footer-right"><div class="footer-page">09 / 10</div><div class="footer-tags">#ProTip #NativeEngine #SparkPerf</div></div>
+  </div>
+</div>
+
+<!-- ============================================================
+     SLIDE 10 – CTA
+============================================================ -->
+<div class="slide" id="s10">
+  <div class="slide-topbar grad"></div>
+  <div class="fabric-header">
+    <div class="fabric-logo">
+      <svg class="fabric-logo-icon" viewBox="0 0 32 32" fill="none"><rect width="32" height="32" rx="4" fill="#00a2a2"/><path d="M8 16L16 8L24 16L16 24L8 16Z" fill="white" opacity="0.9"/><path d="M12 16L16 12L20 16L16 20L12 16Z" fill="#00a2a2"/></svg>
+      <span class="fabric-logo-text">Microsoft</span><span class="fabric-logo-sep">|</span><span class="fabric-logo-sub">Fabric Community</span>
+    </div>
+    <div class="header-badge"><div class="dot"></div>Follow the Journey</div>
+  </div>
+  <div class="slide-body" style="justify-content: center; align-items: center; text-align: center; padding: 48px 80px;">
+    <div class="section-tag" style="margin: 0 auto 20px;">Day 2 Complete</div>
+    <div style="font-size: 60px; font-weight: 900; color: var(--text-primary); line-height: 1.1; margin-bottom: 16px;">
+      Day 2 &mdash; <span style="color: var(--ms-teal);">Done!</span>
+    </div>
+    <div style="font-size: 19px; color: var(--text-secondary); max-width: 680px; line-height: 1.6; margin-bottom: 36px;">
+      You now master <strong style="color: var(--text-primary);">Starter Pools</strong> vs <strong style="color: var(--text-primary);">Custom Pools</strong>, High Concurrency sharing, Native Execution Engine, and Environment item management for DP-700.
+    </div>
+
+    <div style="display:inline-block; padding:14px 40px; background:var(--ms-teal); color:white; font-size:16px; font-weight:600; border-radius:4px; margin-bottom:24px;">
+      Follow on LinkedIn for Day 3 &rarr;
+    </div>
+
+    <div style="font-size: 14px; color: var(--text-secondary); margin-bottom: 32px;">
+      <strong style="color: var(--text-primary);">Tomorrow:</strong> OneLake Settings &amp; Access Control &mdash; Data Access Roles, RLS, OLS &amp; Security Governance
+    </div>
+
+    <div class="ms-card" style="text-align: left; width: 100%;">
+      <div class="ms-card-header">&#128100; About the Author</div>
+      <div class="ms-card-body" style="display: flex; gap: 20px; align-items: center;">
+        <div style="width: 56px; height: 56px; background: var(--ms-teal); border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 24px; color: white; font-weight: 700; flex-shrink: 0;">SB</div>
+        <div>
+          <div style="font-size: 17px; font-weight: 700; color: var(--text-primary);">Sayan Banerjee</div>
+          <div style="font-size: 12px; color: var(--text-secondary); margin-top: 2px;">Databricks Certified Data Engineer &bull; Microsoft Fabric Data Engineer (DP-700) &bull; Power BI Analyst (PL-300)</div>
+          <div style="font-size: 12px; color: var(--ms-teal-dark); font-weight: 600; margin-top: 4px;">AI, BI &amp; Analytics Consultant &bull; Embee Software &bull; Kolkata</div>
+        </div>
+      </div>
+    </div>
+
+    <div style="display:flex;gap:8px;margin-top:24px;justify-content:center;">
+      <div style="width:8px;height:8px;border-radius:50%;background:var(--border-med);"></div>
+      <div style="width:28px;height:8px;border-radius:4px;background:var(--ms-teal);"></div>
+      <div style="width:8px;height:8px;border-radius:50%;background:var(--border-med);"></div>
+      <div style="width:8px;height:8px;border-radius:50%;background:var(--border-med);"></div>
+      <div style="width:8px;height:8px;border-radius:50%;background:var(--border-med);"></div>
+      <div style="width:8px;height:8px;border-radius:50%;background:var(--border-med);"></div>
+      <div style="width:8px;height:8px;border-radius:50%;background:var(--border-med);"></div>
+      <div style="width:8px;height:8px;border-radius:50%;background:var(--border-med);"></div>
+      <div style="width:8px;height:8px;border-radius:50%;background:var(--border-med);"></div>
+      <div style="width:8px;height:8px;border-radius:50%;background:var(--border-med);"></div>
+    </div>
+  </div>
+  <div class="slide-footer">
+    <div><div class="footer-name">Sayan Banerjee</div><div class="footer-role">linkedin.com/in/sayanbanerjee24 &bull; work.sayanbanerjee@gmail.com</div></div>
+    <div class="footer-right"><div class="footer-page">10 / 10</div><div class="footer-tags">#MicrosoftFabric #DP700 #30DaysOfFabric</div></div>
+  </div>
+</div>
+
+</body>
+</html>
