@@ -45,18 +45,6 @@ The **DP-700: Implementing Data Engineering Solutions Using Microsoft Fabric** e
 
 ---
 
-### ❌ Exam Scope Clarification: What is OUT OF SCOPE?
-
-| Topic | Status | Note |
-|---|---|---|
-| Data Engineering (Pipelines, Spark, T-SQL, KQL) | ✅ **IN SCOPE** | Core focus of DP-700 |
-| OneLake & Governance (Shortcuts, Security, Git, CI/CD) | ✅ **IN SCOPE** | Core focus of DP-700 |
-| Real-Time Streaming (Eventstream, KQL DB, Reflex) | ✅ **IN SCOPE** | Core focus of DP-700 |
-| Data Science (ML Model Training, MLflow, Data Wrangler) | ❌ **OUT OF SCOPE** | Part of DP-600 / AI certifications |
-| Deep Power BI DAX Modeling & Complex Visual Layouts | ❌ **OUT OF SCOPE** | Part of PL-300 / DP-600 |
-
----
-
 ## 🏗️ 2. OneLake Architecture: Deep Dive
 
 ### What is OneLake?
