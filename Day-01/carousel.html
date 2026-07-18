@@ -6,11 +6,7 @@
   <title>Day 1 – DP-700 | Sayan Banerjee | Microsoft Fabric Style</title>
   <link href="https://fonts.googleapis.com/css2?family=Segoe+UI:wght@400;500;600;700&family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet" />
   <style>
-    /* ==========================================
-       MICROSOFT FABRIC COMMUNITY COLOR TOKENS
-    ========================================== */
     :root {
-      /* Microsoft Fabric brand */
       --ms-teal:       #00a2a2;
       --ms-teal-dark:  #007a7a;
       --ms-teal-light: #e0f5f5;
@@ -22,8 +18,6 @@
       --ms-purple-bg:  #f4edfb;
       --ms-green:      #107c10;
       --ms-green-bg:   #dff6dd;
-      --ms-red:        #d13438;
-      /* Neutrals */
       --bg:            #f3f2f1;
       --surface:       #ffffff;
       --border:        #edebe9;
@@ -31,9 +25,6 @@
       --text-primary:  #201f1e;
       --text-secondary:#605e5c;
       --text-muted:    #a19f9d;
-      /* Header teal bar */
-      --header-teal:   #00a2a2;
-      --header-bar:    #f4c430;
     }
 
     * { box-sizing: border-box; margin: 0; padding: 0; }
@@ -49,507 +40,223 @@
     }
 
     .page-title {
-      font-size: 14px;
+      font-size: 15px;
       color: #605e5c;
-      font-weight: 500;
+      font-weight: 600;
       letter-spacing: 0.5px;
     }
 
-    /* ==========================================
-       SLIDE BASE — Microsoft Fabric Community
-    ========================================== */
     .slide {
-      width: 1080px;
-      height: 1350px;
+      width: 1920px;
+      height: 1080px;
       background: var(--surface);
       border: 1px solid var(--border);
-      border-radius: 4px;
+      border-radius: 6px;
       position: relative;
       overflow: hidden;
       display: flex;
       flex-direction: column;
-      box-shadow: 0 2px 8px rgba(0,0,0,.08), 0 16px 40px rgba(0,0,0,.06);
+      box-shadow: 0 4px 16px rgba(0,0,0,.08), 0 20px 50px rgba(0,0,0,.06);
     }
 
-    /* ==========================================
-       TOP TEAL HEADER BAR (Fabric Community)
-    ========================================== */
-    .slide-topbar {
-      height: 6px;
-      background: var(--header-teal);
-      flex-shrink: 0;
-    }
-
-    .slide-topbar.gold { background: var(--header-bar); }
+    .slide-topbar { height: 8px; background: var(--ms-teal); flex-shrink: 0; }
+    .slide-topbar.gold { background: var(--ms-gold); }
     .slide-topbar.blue { background: var(--ms-blue); }
-    .slide-topbar.grad { background: linear-gradient(90deg, var(--ms-teal), var(--ms-blue)); }
     .slide-topbar.purple { background: var(--ms-purple); }
+    .slide-topbar.grad { background: linear-gradient(90deg, var(--ms-teal), var(--ms-blue), var(--ms-gold)); }
 
-    /* ==========================================
-       FABRIC HEADER (nav-style)
-    ========================================== */
     .fabric-header {
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      padding: 20px 48px;
-      border-bottom: 1px solid var(--border);
-      background: var(--surface);
-      flex-shrink: 0;
+      display: flex; align-items: center; justify-content: space-between;
+      padding: 18px 64px; border-bottom: 1px solid var(--border);
+      background: var(--surface); flex-shrink: 0;
     }
 
-    .fabric-logo {
-      display: flex;
-      align-items: center;
-      gap: 12px;
-    }
-
-    .fabric-logo-icon {
-      width: 32px;
-      height: 32px;
-    }
-
-    .fabric-logo-text {
-      font-size: 18px;
-      font-weight: 700;
-      color: var(--text-primary);
-    }
-
-    .fabric-logo-sep {
-      color: var(--border-med);
-      font-size: 20px;
-      font-weight: 200;
-      margin: 0 4px;
-    }
-
-    .fabric-logo-sub {
-      font-size: 14px;
-      font-weight: 500;
-      color: var(--text-secondary);
-    }
+    .fabric-logo { display: flex; align-items: center; gap: 14px; }
+    .fabric-logo-icon { width: 36px; height: 36px; }
+    .fabric-logo-text { font-size: 22px; font-weight: 700; color: var(--text-primary); }
+    .fabric-logo-sep { color: var(--border-med); font-size: 22px; font-weight: 200; margin: 0 4px; }
+    .fabric-logo-sub { font-size: 16px; font-weight: 500; color: var(--text-secondary); }
 
     .header-badge {
-      display: inline-flex;
-      align-items: center;
-      gap: 8px;
-      background: var(--ms-teal-light);
-      border: 1px solid var(--ms-teal);
-      border-radius: 4px;
-      padding: 6px 16px;
-      font-size: 12px;
-      font-weight: 600;
-      color: var(--ms-teal-dark);
-      letter-spacing: 0.5px;
+      display: inline-flex; align-items: center; gap: 8px;
+      background: var(--ms-teal-light); border: 1px solid var(--ms-teal);
+      border-radius: 4px; padding: 6px 18px;
+      font-size: 13px; font-weight: 600; color: var(--ms-teal-dark);
     }
+    .header-badge .dot { width: 8px; height: 8px; background: var(--ms-teal); border-radius: 50%; }
 
-    .header-badge .dot {
-      width: 8px; height: 8px;
-      background: var(--ms-teal);
-      border-radius: 50%;
-    }
-
-    /* ==========================================
-       YELLOW ANNOUNCEMENT BAR
-    ========================================== */
     .announce-bar {
-      background: #fff8e1;
-      border-bottom: 1px solid #f4c430;
-      padding: 10px 48px;
-      font-size: 13px;
-      color: #3d2b00;
-      font-weight: 500;
-      display: flex;
-      align-items: center;
-      gap: 8px;
-      flex-shrink: 0;
+      background: #fff8e1; border-bottom: 1px solid #f4c430;
+      padding: 10px 64px; font-size: 14px; color: #3d2b00; font-weight: 500;
+      display: flex; align-items: center; justify-content: space-between; flex-shrink: 0;
     }
+    .announce-bar span { color: var(--ms-blue); font-weight: 600; }
 
-    .announce-bar span { color: var(--ms-blue); font-weight: 600; text-decoration: underline; }
-
-    /* ==========================================
-       SLIDE MAIN CONTENT AREA
-    ========================================== */
     .slide-body {
-      display: flex;
-      flex-direction: column;
-      flex: 1;
-      padding: 48px 48px 0;
-      overflow: hidden;
+      display: flex; flex-direction: column; flex: 1;
+      padding: 36px 64px 0; overflow: hidden;
     }
 
-    /* Breadcrumb */
-    .breadcrumb {
-      display: flex;
-      align-items: center;
-      gap: 8px;
-      font-size: 13px;
-      color: var(--text-secondary);
-      margin-bottom: 24px;
-    }
-
+    .breadcrumb { display: flex; align-items: center; gap: 8px; font-size: 14px; color: var(--text-secondary); margin-bottom: 18px; }
     .breadcrumb a { color: var(--ms-blue); text-decoration: none; font-weight: 500; }
     .breadcrumb .sep { color: var(--border-med); }
     .breadcrumb .current { color: var(--text-primary); font-weight: 600; }
 
-    /* Section heading */
     .section-tag {
-      display: inline-block;
-      font-size: 11px;
-      font-weight: 700;
-      letter-spacing: 1.5px;
-      text-transform: uppercase;
-      color: var(--ms-teal-dark);
-      padding: 4px 12px;
-      background: var(--ms-teal-light);
-      border-radius: 3px;
-      margin-bottom: 16px;
+      display: inline-block; font-size: 12px; font-weight: 700;
+      letter-spacing: 1.5px; text-transform: uppercase;
+      color: var(--ms-teal-dark); padding: 5px 14px;
+      background: var(--ms-teal-light); border-radius: 3px; margin-bottom: 12px; width: fit-content;
     }
 
-    .page-heading {
-      font-size: 48px;
-      font-weight: 800;
-      color: var(--text-primary);
-      line-height: 1.1;
-      margin-bottom: 8px;
-    }
+    .page-heading { font-size: 44px; font-weight: 800; color: var(--text-primary); line-height: 1.15; margin-bottom: 8px; }
+    .page-heading span { color: var(--ms-teal); }
+    .page-subheading { font-size: 18px; font-weight: 400; color: var(--text-secondary); line-height: 1.5; margin-bottom: 24px; }
 
-    .page-heading span {
-      color: var(--ms-teal);
-    }
-
-    .page-subheading {
-      font-size: 20px;
-      font-weight: 400;
-      color: var(--text-secondary);
-      line-height: 1.5;
-      margin-bottom: 32px;
-    }
-
-    /* ==========================================
-       CARDS — Microsoft Fluent style
-    ========================================== */
-    .ms-card {
-      background: var(--surface);
-      border: 1px solid var(--border);
-      border-radius: 4px;
-      box-shadow: 0 1px 4px rgba(0,0,0,.06);
-    }
-
-    .ms-card-header {
-      padding: 16px 20px;
-      border-bottom: 1px solid var(--border);
-      font-size: 13px;
-      font-weight: 600;
-      color: var(--text-secondary);
-      letter-spacing: 0.5px;
-      text-transform: uppercase;
-      background: #faf9f8;
-      display: flex;
-      align-items: center;
-      gap: 8px;
-    }
-
-    .ms-card-body {
-      padding: 20px;
-    }
-
-    /* ==========================================
-       INFO ROWS
-    ========================================== */
-    .info-row {
-      display: flex;
-      align-items: center;
-      gap: 16px;
-      padding: 16px 0;
-      border-bottom: 1px solid var(--border);
-    }
-    .info-row:last-child { border-bottom: none; }
-    .info-icon {
-      width: 40px; height: 40px;
-      border-radius: 4px;
-      display: flex; align-items: center; justify-content: center;
-      font-size: 18px; flex-shrink: 0;
-    }
-    .info-lbl { font-size: 11px; font-weight: 600; color: var(--text-muted); letter-spacing: 1px; text-transform: uppercase; }
-    .info-val { font-size: 16px; font-weight: 600; color: var(--text-primary); margin-top: 2px; }
-
-    /* ==========================================
-       STATS ROW
-    ========================================== */
-    .stats-row {
-      display: flex;
-      gap: 16px;
-      margin-top: 28px;
-    }
-
-    .stat-card {
-      flex: 1;
-      background: var(--surface);
-      border: 1px solid var(--border);
-      border-top: 4px solid var(--ms-teal);
-      border-radius: 4px;
-      padding: 20px;
-      text-align: center;
-    }
-
-    .stat-card.blue-top { border-top-color: var(--ms-blue); }
-    .stat-card.gold-top { border-top-color: var(--ms-gold); }
-    .stat-card.purple-top { border-top-color: var(--ms-purple); }
-
-    .stat-num { font-size: 32px; font-weight: 800; color: var(--text-primary); display: block; }
-    .stat-lbl { font-size: 12px; color: var(--text-secondary); text-transform: uppercase; letter-spacing: 1px; margin-top: 4px; }
-
-    /* ==========================================
-       2-COL GRID
-    ========================================== */
-    .grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
-    .grid-3 { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 14px; }
+    .grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; }
+    .grid-3 { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 18px; }
+    .grid-4 { display: grid; grid-template-columns: repeat(4, 1fr); gap: 16px; }
 
     .feature-card {
-      background: var(--surface);
-      border: 1px solid var(--border);
-      border-radius: 4px;
-      padding: 24px 20px;
-      border-left: 4px solid var(--ms-teal);
+      background: var(--surface); border: 1px solid var(--border);
+      border-radius: 4px; padding: 24px; border-left: 4px solid var(--ms-teal);
     }
-
     .feature-card.fc-blue { border-left-color: var(--ms-blue); }
     .feature-card.fc-gold { border-left-color: var(--ms-gold); }
     .feature-card.fc-purple { border-left-color: var(--ms-purple); }
     .feature-card.fc-green { border-left-color: var(--ms-green); }
 
-    .fc-icon { font-size: 28px; margin-bottom: 12px; }
-    .fc-title { font-size: 15px; font-weight: 700; color: var(--text-primary); margin-bottom: 8px; }
-    .fc-desc { font-size: 13px; color: var(--text-secondary); line-height: 1.5; }
+    .fc-icon { font-size: 28px; margin-bottom: 10px; }
+    .fc-title { font-size: 16px; font-weight: 700; color: var(--text-primary); margin-bottom: 6px; }
+    .fc-desc { font-size: 14px; color: var(--text-secondary); line-height: 1.5; }
 
-    /* ==========================================
-       DOMAIN PROGRESS BAR
-    ========================================== */
-    .domain-bar {
-      display: flex;
-      height: 14px;
-      border-radius: 2px;
-      overflow: hidden;
-      margin: 20px 0;
-      border: 1px solid var(--border);
+    .ms-card { background: var(--surface); border: 1px solid var(--border); border-radius: 4px; box-shadow: 0 1px 4px rgba(0,0,0,.06); }
+    .ms-card-header {
+      padding: 14px 24px; border-bottom: 1px solid var(--border);
+      font-size: 14px; font-weight: 600; color: var(--text-secondary);
+      letter-spacing: 0.5px; text-transform: uppercase; background: #faf9f8;
+      display: flex; align-items: center; gap: 8px;
     }
-    .domain-seg {
-      height: 100%;
-      display: flex; align-items: center; justify-content: center;
-      font-size: 10px; font-weight: 700; color: white; letter-spacing: 0.5px;
-    }
+    .ms-card-body { padding: 20px 24px; }
 
-    .domain-item {
-      background: var(--surface);
-      border: 1px solid var(--border);
-      border-radius: 4px;
-      padding: 20px 24px;
-      margin-bottom: 14px;
-      display: flex;
-      align-items: flex-start;
-      gap: 16px;
-      border-left: 4px solid;
-    }
-    .di-teal { border-left-color: var(--ms-teal); }
-    .di-blue { border-left-color: var(--ms-blue); }
-    .di-gold { border-left-color: var(--ms-gold); }
+    .info-row { display: flex; align-items: center; gap: 18px; padding: 12px 0; border-bottom: 1px solid var(--border); }
+    .info-row:last-child { border-bottom: none; }
+    .info-icon { width: 42px; height: 42px; border-radius: 4px; display: flex; align-items: center; justify-content: center; font-size: 20px; flex-shrink: 0; }
+    .info-lbl { font-size: 11px; font-weight: 600; color: var(--text-muted); letter-spacing: 1px; text-transform: uppercase; }
+    .info-val { font-size: 16px; font-weight: 600; color: var(--text-primary); margin-top: 2px; }
 
-    .di-icon { font-size: 22px; flex-shrink: 0; margin-top: 2px; }
-    .di-title { font-size: 16px; font-weight: 700; color: var(--text-primary); }
-    .di-pct {
-      margin-left: auto; flex-shrink: 0;
-      font-size: 14px; font-weight: 700;
-      padding: 4px 12px;
-      border-radius: 20px;
-    }
-    .pct-teal { background: var(--ms-teal-light); color: var(--ms-teal-dark); }
-    .pct-blue { background: var(--ms-blue-light); color: var(--ms-blue); }
-    .pct-gold { background: var(--ms-gold-bg); color: #7a5700; }
-    .di-tags { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 8px; }
-    .di-tag { font-size: 11px; color: var(--text-secondary); background: #f3f2f1; border: 1px solid var(--border); padding: 2px 8px; border-radius: 2px; }
-
-    /* ==========================================
-       ARCH LAYERS
-    ========================================== */
-    .arch-wrap { flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 0; padding: 0 0 8px; }
-    .arch-layer {
-      width: 100%; padding: 18px 28px;
-      display: flex; align-items: center; gap: 12px;
-      font-size: 15px; font-weight: 600;
-      border-radius: 3px; border: 1px solid;
-    }
-    .arch-icon { font-size: 20px; flex-shrink: 0; }
-    .arch-connector { width: 2px; height: 20px; background: var(--border-med); margin: 0 auto; }
-    .arch-row { display: flex; gap: 12px; width: 100%; }
-    .arch-row .arch-layer { flex: 1; font-size: 14px; padding: 16px 20px; }
-    .al-teal { background: var(--ms-teal-light); border-color: var(--ms-teal); color: var(--ms-teal-dark); }
-    .al-blue { background: var(--ms-blue-light); border-color: var(--ms-blue); color: var(--ms-blue); }
-    .al-gold { background: var(--ms-gold-bg); border-color: var(--ms-gold); color: #7a5700; }
-    .al-purple { background: var(--ms-purple-bg); border-color: var(--ms-purple); color: var(--ms-purple); }
-    .al-green { background: var(--ms-green-bg); border-color: var(--ms-green); color: var(--ms-green); }
-    .al-base { background: #f3f2f1; border-color: var(--border-med); color: var(--text-primary); font-size: 16px; padding: 22px 28px; }
-
-    /* ==========================================
-       TOOL CARDS (3-col)
-    ========================================== */
-    .tool-card {
-      background: var(--surface);
-      border: 1px solid var(--border);
-      border-radius: 4px;
-      padding: 20px 16px;
-      display: flex; flex-direction: column; gap: 8px;
-      transition: box-shadow .15s;
-    }
-    .tool-icon { font-size: 22px; }
-    .tool-name { font-size: 14px; font-weight: 700; color: var(--text-primary); }
-    .tool-desc { font-size: 12px; color: var(--text-secondary); line-height: 1.5; }
-    .tool-pill {
-      font-size: 11px; font-weight: 600;
-      padding: 3px 10px; border-radius: 2px;
-      width: fit-content; margin-top: auto;
-    }
-    .pill-teal { background: var(--ms-teal-light); color: var(--ms-teal-dark); }
-    .pill-blue { background: var(--ms-blue-light); color: var(--ms-blue); }
-    .pill-gold { background: var(--ms-gold-bg); color: #7a5700; }
-    .pill-purple { background: var(--ms-purple-bg); color: var(--ms-purple); }
-    .pill-green { background: var(--ms-green-bg); color: var(--ms-green); }
-
-    /* ==========================================
-       SKILL BARS
-    ========================================== */
-    .skill-item {
-      display: flex; align-items: center; gap: 20px;
-      background: var(--surface);
-      border: 1px solid var(--border);
-      border-radius: 4px;
-      padding: 20px 24px;
-      margin-bottom: 16px;
-    }
-    .sk-rank { font-size: 28px; font-weight: 800; color: var(--border-med); width: 40px; text-align: center; flex-shrink: 0; }
-    .sk-info { flex: 1; }
-    .sk-name { font-size: 18px; font-weight: 700; color: var(--text-primary); }
-    .sk-desc { font-size: 13px; color: var(--text-secondary); margin-top: 4px; }
-    .sk-bar-wrap { width: 140px; }
-    .sk-bar-bg { height: 6px; background: var(--border); border-radius: 3px; overflow: hidden; }
-    .sk-bar { height: 100%; border-radius: 3px; }
-    .sk-label { font-size: 11px; color: var(--text-muted); margin-top: 4px; text-align: right; }
-
-    /* ==========================================
-       ROADMAP TIMELINE
-    ========================================== */
-    .roadmap { flex: 1; display: flex; flex-direction: column; }
-    .rm-item { display: flex; gap: 20px; }
-    .rm-track { display: flex; flex-direction: column; align-items: center; flex-shrink: 0; }
-    .rm-dot { width: 16px; height: 16px; border-radius: 50%; border: 3px solid; background: var(--surface); flex-shrink: 0; margin-top: 2px; }
-    .rm-line { width: 2px; flex: 1; min-height: 28px; background: var(--border); }
-    .rm-body { padding-bottom: 24px; flex: 1; }
-    .rm-week { font-size: 11px; font-weight: 700; letter-spacing: 1.5px; text-transform: uppercase; margin-bottom: 4px; }
-    .rm-title { font-size: 17px; font-weight: 700; color: var(--text-primary); }
-    .rm-tags { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 8px; }
-    .rm-tag { font-size: 11px; color: var(--text-secondary); background: #f3f2f1; border: 1px solid var(--border); padding: 3px 10px; border-radius: 2px; }
-
-    /* ==========================================
-       CTA BUTTON
-    ========================================== */
-    .ms-btn {
-      display: inline-block;
-      padding: 14px 40px;
-      background: var(--ms-teal);
-      color: white;
-      font-size: 16px;
-      font-weight: 600;
-      border-radius: 4px;
-      text-decoration: none;
-      letter-spacing: 0.3px;
-    }
-    .ms-btn:hover { background: var(--ms-teal-dark); }
-    .ms-btn-outline {
-      display: inline-block;
-      padding: 14px 40px;
-      background: transparent;
-      color: var(--ms-teal);
-      font-size: 16px;
-      font-weight: 600;
-      border-radius: 4px;
-      border: 2px solid var(--ms-teal);
-      text-decoration: none;
-    }
-
-    /* ==========================================
-       FOOTER
-    ========================================== */
-    .slide-footer {
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      padding: 16px 48px;
-      border-top: 1px solid var(--border);
-      background: #faf9f8;
-      margin-top: auto;
-      flex-shrink: 0;
-    }
-    .footer-name { font-size: 14px; font-weight: 700; color: var(--text-primary); }
-    .footer-role { font-size: 12px; color: var(--text-secondary); margin-top: 2px; }
-    .footer-right { text-align: right; }
-    .footer-tags { font-size: 12px; color: var(--ms-teal-dark); font-weight: 600; }
-    .footer-page { font-size: 11px; color: var(--text-muted); margin-bottom: 2px; }
-
-    /* ==========================================
-       TIP CALLOUT BOX
-    ========================================== */
     .tip-box {
-      background: #e0f5f5;
-      border: 1px solid var(--ms-teal);
-      border-radius: 4px;
-      padding: 20px 24px;
-      display: flex;
-      gap: 16px;
-      align-items: flex-start;
-      margin-top: 20px;
+      background: #e0f5f5; border: 1px solid var(--ms-teal);
+      border-radius: 4px; padding: 18px 24px; display: flex; gap: 16px;
+      align-items: flex-start; margin-top: 20px;
     }
     .tip-box-icon { font-size: 24px; flex-shrink: 0; }
-    .tip-box-title { font-size: 14px; font-weight: 700; color: var(--ms-teal-dark); margin-bottom: 6px; }
+    .tip-box-title { font-size: 15px; font-weight: 700; color: var(--ms-teal-dark); margin-bottom: 4px; }
     .tip-box-text { font-size: 14px; color: var(--text-secondary); line-height: 1.6; }
 
-    /* ==========================================
-       CHIP PILLS
-    ========================================== */
-    .chip-row { display: flex; gap: 10px; flex-wrap: wrap; margin-top: 24px; }
-    .chip { padding: 8px 18px; border-radius: 20px; font-size: 14px; font-weight: 600; border: 1px solid; }
+    .chip-row { display: flex; gap: 10px; flex-wrap: wrap; margin-top: 20px; }
+    .chip { padding: 8px 18px; border-radius: 20px; font-size: 13px; font-weight: 600; border: 1px solid; }
     .chip-teal { background: var(--ms-teal-light); color: var(--ms-teal-dark); border-color: var(--ms-teal); }
     .chip-blue { background: var(--ms-blue-light); color: var(--ms-blue); border-color: var(--ms-blue); }
     .chip-gold { background: var(--ms-gold-bg); color: #7a5700; border-color: var(--ms-gold); }
     .chip-purple { background: var(--ms-purple-bg); color: var(--ms-purple); border-color: var(--ms-purple); }
 
-    .slide-num {
-      position: absolute;
-      top: 24px; right: 48px;
-      font-size: 12px; font-weight: 600;
-      color: var(--text-muted);
-      letter-spacing: 1px;
-      z-index: 10;
+    .slide-footer {
+      display: flex; align-items: center; justify-content: space-between;
+      padding: 16px 64px; border-top: 1px solid var(--border);
+      background: #faf9f8; margin-top: auto; flex-shrink: 0;
+    }
+    .footer-name { font-size: 15px; font-weight: 700; color: var(--text-primary); }
+    .footer-role { font-size: 13px; color: var(--text-secondary); margin-top: 2px; }
+    .footer-right { text-align: right; }
+    .footer-tags { font-size: 13px; color: var(--ms-teal-dark); font-weight: 600; }
+    .footer-page { font-size: 12px; color: var(--text-muted); margin-bottom: 2px; }
+
+    .cover-split {
+      display: grid;
+      grid-template-columns: 1.15fr 0.85fr;
+      gap: 36px;
+      align-items: center;
+      flex: 1;
+      padding-bottom: 12px;
     }
 
-    /* Number big hero */
-    .hero-num {
-      font-size: 120px;
+    .cover-hook-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 10px;
+      background: #ffebe6;
+      border: 1px solid #ff5630;
+      color: #bf2600;
+      font-size: 13px;
+      font-weight: 700;
+      padding: 6px 16px;
+      border-radius: 4px;
+      text-transform: uppercase;
+      letter-spacing: 1px;
+      margin-bottom: 16px;
+    }
+
+    .cover-main-title {
+      font-size: 56px;
       font-weight: 900;
-      line-height: 1;
-      color: var(--ms-teal);
-      opacity: 0.08;
-      position: absolute;
-      bottom: 100px;
-      right: 40px;
-      font-family: 'Inter', sans-serif;
+      color: var(--text-primary);
+      line-height: 1.08;
+      letter-spacing: -1px;
+      margin-bottom: 16px;
+    }
+
+    .cover-main-title span {
+      background: linear-gradient(135deg, var(--ms-teal), var(--ms-blue));
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+    }
+
+    .cover-sub-text {
+      font-size: 21px;
+      color: var(--text-secondary);
+      line-height: 1.5;
+      margin-bottom: 28px;
+    }
+
+    .cover-hero-card {
+      background: linear-gradient(145deg, #ffffff, #f7fbfb);
+      border: 2px solid var(--ms-teal);
+      border-radius: 8px;
+      padding: 32px;
+      box-shadow: 0 12px 32px rgba(0,162,162,0.12);
+      display: flex;
+      flex-direction: column;
+      gap: 20px;
+    }
+
+    .hero-stat-box {
+      display: flex;
+      align-items: center;
+      gap: 16px;
+      padding: 16px;
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 6px;
+    }
+
+    .hero-stat-num {
+      font-size: 36px;
+      font-weight: 900;
+      color: var(--ms-teal-dark);
+      font-family: 'JetBrains Mono', monospace;
+      flex-shrink: 0;
+      width: 80px;
+      text-align: center;
     }
   </style>
 </head>
 <body>
 
-<p class="page-title">30 Days of DP-700 &bull; Sayan Banerjee &bull; Day 1 &bull; Microsoft Fabric Community Style (1080&times;1350px)</p>
+<p class="page-title">30 Days of DP-700 &bull; Sayan Banerjee &bull; Day 1 &bull; 1920 &times; 1080 Widescreen Landscape</p>
 
 <!-- ============================================================
-     SLIDE 1 – COVER
+     SLIDE 1 – HIGH IMPACT COVER HOOK (1920x1080)
 ============================================================ -->
 <div class="slide" id="s1">
   <div class="slide-topbar grad"></div>
@@ -560,626 +267,67 @@
         <path d="M8 16L16 8L24 16L16 24L8 16Z" fill="white" opacity="0.9"/>
         <path d="M12 16L16 12L20 16L16 20L12 16Z" fill="#00a2a2"/>
       </svg>
-      <span class="fabric-logo-text">Microsoft</span>
-      <span class="fabric-logo-sep">|</span>
-      <span class="fabric-logo-sub">Fabric Community</span>
+      <span class="fabric-logo-text">Microsoft</span><span class="fabric-logo-sep">|</span><span class="fabric-logo-sub">Fabric Community</span>
     </div>
-    <div class="header-badge"><div class="dot"></div>30-Day Challenge</div>
+    <div class="header-badge"><div class="dot"></div>Day 01 of 30 &bull; DP-700 Series</div>
   </div>
   <div class="announce-bar">
-    &#9888; Day 1 of 30 &mdash; <strong>DP-700 Microsoft Fabric Data Engineer</strong> &mdash; by Sayan Banerjee &nbsp;<span>linkedin.com/in/sayanbanerjee24</span>
+    <div>🚀 <strong>30-DAY MICROSOFT FABRIC CHALLENGE</strong> &mdash; Day 1: OneLake Architecture &amp; Exam Blueprint</div>
+    <div>by Sayan Banerjee &bull; <span>linkedin.com/in/sayanbanerjee24</span></div>
   </div>
   <div class="slide-body">
-    <div class="breadcrumb">
-      <a href="#">Data Engineering</a><span class="sep">&rsaquo;</span>
-      <a href="#">DP-700</a><span class="sep">&rsaquo;</span>
-      <span class="current">Day 1: OneLake &amp; Exam Blueprint</span>
-    </div>
-    <div class="section-tag">Day 1 of 30</div>
-    <div class="page-heading">OneLake &amp;<br/><span>Exam Blueprint</span></div>
-    <div class="page-subheading">Everything you need to know to start your DP-700 journey &mdash; the architecture that powers Microsoft Fabric.</div>
-
-    <div class="stats-row">
-      <div class="stat-card">
-        <span class="stat-num">30</span>
-        <div class="stat-lbl">Days of Content</div>
-      </div>
-      <div class="stat-card blue-top">
-        <span class="stat-num">3</span>
-        <div class="stat-lbl">Exam Domains</div>
-      </div>
-      <div class="stat-card gold-top">
-        <span class="stat-num">700</span>
-        <div class="stat-lbl">Pass Score</div>
-      </div>
-      <div class="stat-card purple-top">
-        <span class="stat-num">9</span>
-        <div class="stat-lbl">Core Tools</div>
-      </div>
-    </div>
-
-    <div class="tip-box" style="margin-top: 32px;">
-      <div class="tip-box-icon">&#128161;</div>
+    <div class="cover-split">
       <div>
-        <div class="tip-box-title">What is DP-700?</div>
-        <div class="tip-box-text">The <strong>Microsoft Certified: Fabric Data Engineer Associate</strong> validates your ability to implement scalable data engineering solutions using Microsoft Fabric's unified analytics platform.</div>
-      </div>
-    </div>
+        <div class="cover-hook-badge">🔷 Certification &amp; Architecture Roadmap</div>
+        <div class="cover-main-title">
+          One Storage Layer.<br/><span>Every Workload.</span> Master DP-700.
+        </div>
+        <div class="cover-sub-text">
+          Everything you need to know to pass the Microsoft Certified: Fabric Data Engineer Associate exam &mdash; simplified in 30 days.
+        </div>
 
-    <div style="margin-top: 32px; padding: 28px; background: #f9f8f7; border: 1px solid var(--border); border-radius: 4px; border-left: 4px solid var(--ms-teal);">
-      <div style="font-size: 14px; font-weight: 700; color: var(--ms-teal-dark); margin-bottom: 10px;">30-Day Topics at a Glance</div>
-      <div style="display: flex; flex-wrap: wrap; gap: 8px;">
-        <span class="chip chip-teal">Architecture</span>
-        <span class="chip chip-blue">Batch ETL</span>
-        <span class="chip chip-teal">Data Warehouse</span>
-        <span class="chip chip-gold">Real-Time KQL</span>
-        <span class="chip chip-purple">CI/CD</span>
-        <span class="chip chip-blue">Security</span>
-        <span class="chip chip-teal">Spark</span>
-        <span class="chip chip-gold">Monitoring</span>
+        <div style="display: flex; gap: 12px; flex-wrap: wrap;">
+          <div class="chip chip-teal" style="font-size: 14px; padding: 10px 20px;">📅 30 Days Challenge</div>
+          <div class="chip chip-blue" style="font-size: 14px; padding: 10px 20px;">📊 3 Equal Domains</div>
+          <div class="chip chip-gold" style="font-size: 14px; padding: 10px 20px;">🎯 700 Pass Score</div>
+        </div>
+      </div>
+
+      <div class="cover-hero-card">
+        <div style="display: flex; align-items: center; justify-content: space-between; border-bottom: 1px solid var(--border); padding-bottom: 12px;">
+          <div style="font-size: 14px; font-weight: 700; text-transform: uppercase; color: var(--ms-teal-dark); letter-spacing: 1px;">🏗️ ONELAKE FOUNDATION AT A GLANCE</div>
+          <span class="chip chip-purple" style="font-size: 11px; padding: 4px 10px;">Core Concept</span>
+        </div>
+
+        <div class="hero-stat-box" style="border-left: 4px solid var(--ms-teal);">
+          <div class="hero-stat-num">1</div>
+          <div>
+            <div style="font-size: 15px; font-weight: 700; color: var(--text-primary);">Single Tenant Data Lake</div>
+            <div style="font-size: 13px; color: var(--text-secondary);">OneLake unifies all workspaces without data silos</div>
+          </div>
+        </div>
+
+        <div class="hero-stat-box" style="border-left: 4px solid var(--ms-blue);">
+          <div class="hero-stat-num">0</div>
+          <div>
+            <div style="font-size: 15px; font-weight: 700; color: var(--text-primary);">Zero Data Copying</div>
+            <div style="font-size: 13px; color: var(--text-secondary);">Direct Lake &amp; OneLake Shortcuts eliminate sync latency</div>
+          </div>
+        </div>
+
+        <div class="hero-stat-box" style="border-left: 4px solid var(--ms-gold);">
+          <div class="hero-stat-num">100%</div>
+          <div>
+            <div style="font-size: 15px; font-weight: 700; color: var(--text-primary);">DP-700 Syllabus Aligned</div>
+            <div style="font-size: 13px; color: var(--text-secondary);">Aligned with official July 2026 study guide</div>
+          </div>
+        </div>
       </div>
     </div>
   </div>
   <div class="slide-footer">
     <div><div class="footer-name">Sayan Banerjee</div><div class="footer-role">Fabric Data Engineer (DP-700) &bull; Embee Software &bull; Kolkata</div></div>
     <div class="footer-right"><div class="footer-page">01 / 10</div><div class="footer-tags">linkedin.com/in/sayanbanerjee24</div></div>
-  </div>
-</div>
-
-<!-- ============================================================
-     SLIDE 2 – WHAT IS DP-700
-============================================================ -->
-<div class="slide" id="s2">
-  <div class="slide-topbar"></div>
-  <div class="fabric-header">
-    <div class="fabric-logo">
-      <svg class="fabric-logo-icon" viewBox="0 0 32 32" fill="none">
-        <rect width="32" height="32" rx="4" fill="#00a2a2"/>
-        <path d="M8 16L16 8L24 16L16 24L8 16Z" fill="white" opacity="0.9"/>
-        <path d="M12 16L16 12L20 16L16 20L12 16Z" fill="#00a2a2"/>
-      </svg>
-      <span class="fabric-logo-text">Microsoft</span><span class="fabric-logo-sep">|</span><span class="fabric-logo-sub">Fabric DP-700</span>
-    </div>
-    <div class="header-badge"><div class="dot"></div>What is DP-700?</div>
-  </div>
-  <div class="slide-body">
-    <div class="section-tag">The Certification</div>
-    <div class="page-heading">Microsoft <span>Fabric</span><br/>Data Engineer</div>
-    <div class="page-subheading">A role-based Microsoft certification for data engineers who build solutions on Fabric.</div>
-
-    <div class="ms-card" style="margin-top: 8px;">
-      <div class="ms-card-header">&#127907; Exam Quick Facts</div>
-      <div class="ms-card-body" style="padding: 0 20px;">
-        <div class="info-row">
-          <div class="info-icon" style="background: var(--ms-teal-light);">&#127919;</div>
-          <div><div class="info-lbl">Target Role</div><div class="info-val">Data Engineer / Analytics Engineer</div></div>
-        </div>
-        <div class="info-row">
-          <div class="info-icon" style="background: var(--ms-green-bg);">&#9989;</div>
-          <div><div class="info-lbl">Pass Score</div><div class="info-val">700 out of 1000 points</div></div>
-        </div>
-        <div class="info-row">
-          <div class="info-icon" style="background: var(--ms-blue-light);">&#128202;</div>
-          <div><div class="info-lbl">Exam Format</div><div class="info-val">40&ndash;60 questions &bull; Online or Prometric Centre</div></div>
-        </div>
-        <div class="info-row">
-          <div class="info-icon" style="background: var(--ms-gold-bg);">&#128197;</div>
-          <div><div class="info-lbl">Renewal</div><div class="info-val">Annual &mdash; Free online assessment on Microsoft Learn</div></div>
-        </div>
-        <div class="info-row">
-          <div class="info-icon" style="background: var(--ms-purple-bg);">&#128187;</div>
-          <div><div class="info-lbl">Core Languages</div><div class="info-val">SQL / T-SQL &bull; PySpark / Python &bull; KQL</div></div>
-        </div>
-      </div>
-    </div>
-
-    <div class="tip-box">
-      <div class="tip-box-icon">&#9432;</div>
-      <div>
-        <div class="tip-box-title">Who Should Take This Exam?</div>
-        <div class="tip-box-text">Data engineers, analytics engineers, and architects who design, build, monitor, and optimize data pipelines, lakehouses, and warehouses using Microsoft Fabric.</div>
-      </div>
-    </div>
-  </div>
-  <div class="slide-footer">
-    <div><div class="footer-name">Sayan Banerjee</div><div class="footer-role">linkedin.com/in/sayanbanerjee24</div></div>
-    <div class="footer-right"><div class="footer-page">02 / 10</div><div class="footer-tags">#DP700 #MicrosoftFabric</div></div>
-  </div>
-</div>
-
-<!-- ============================================================
-     SLIDE 3 – WHY FABRIC
-============================================================ -->
-<div class="slide" id="s3">
-  <div class="slide-topbar blue"></div>
-  <div class="fabric-header">
-    <div class="fabric-logo">
-      <svg class="fabric-logo-icon" viewBox="0 0 32 32" fill="none"><rect width="32" height="32" rx="4" fill="#00a2a2"/><path d="M8 16L16 8L24 16L16 24L8 16Z" fill="white" opacity="0.9"/><path d="M12 16L16 12L20 16L16 20L12 16Z" fill="#00a2a2"/></svg>
-      <span class="fabric-logo-text">Microsoft</span><span class="fabric-logo-sep">|</span><span class="fabric-logo-sub">Fabric Platform</span>
-    </div>
-    <div class="header-badge"><div class="dot"></div>Why Fabric?</div>
-  </div>
-  <div class="slide-body">
-    <div class="section-tag">The Platform</div>
-    <div class="page-heading">One Platform.<br/><span>Everything.</span></div>
-    <div class="page-subheading">Microsoft Fabric unifies the entire analytics stack under a single SaaS platform.</div>
-    <div class="grid-2" style="margin-top: 8px; flex: 1;">
-      <div class="feature-card">
-        <div class="fc-icon">&#127959;</div>
-        <div class="fc-title">Unified Architecture</div>
-        <div class="fc-desc">Replaces Azure Synapse, Power BI Premium, and Data Factory &mdash; all connected through OneLake.</div>
-      </div>
-      <div class="feature-card fc-blue">
-        <div class="fc-icon">&#9889;</div>
-        <div class="fc-title">One Copy of Data</div>
-        <div class="fc-desc">No more silos. OneLake stores data once and makes it available to every Fabric workload simultaneously.</div>
-      </div>
-      <div class="feature-card fc-gold">
-        <div class="fc-icon">&#128188;</div>
-        <div class="fc-title">Fastest-Growing Platform</div>
-        <div class="fc-desc">Microsoft Fabric is one of their fastest-growing cloud services. Demand for Fabric engineers is exploding globally.</div>
-      </div>
-      <div class="feature-card fc-purple">
-        <div class="fc-icon">&#128274;</div>
-        <div class="fc-title">Enterprise Security</div>
-        <div class="fc-desc">Built-in governance, sensitivity labels, OneLake security, RLS, OLS, and audit logs &mdash; out of the box.</div>
-      </div>
-      <div class="feature-card fc-green" style="grid-column: 1 / -1; border-left: 4px solid var(--ms-green); display: flex; flex-direction: row; align-items: center; gap: 16px; padding: 20px;">
-        <div style="font-size: 32px;">&#128640;</div>
-        <div>
-          <div class="fc-title">The Unified Data Stack</div>
-          <div class="fc-desc">Lakehouse &bull; Data Warehouse &bull; Pipelines &bull; Notebooks &bull; Real-Time Intelligence &bull; Power BI &bull; OneLake</div>
-        </div>
-      </div>
-    </div>
-  </div>
-  <div class="slide-footer">
-    <div><div class="footer-name">Sayan Banerjee</div><div class="footer-role">linkedin.com/in/sayanbanerjee24</div></div>
-    <div class="footer-right"><div class="footer-page">03 / 10</div><div class="footer-tags">#MicrosoftFabric #DataPlatform</div></div>
-  </div>
-</div>
-
-<!-- ============================================================
-     SLIDE 4 – EXAM DOMAINS
-============================================================ -->
-<div class="slide" id="s4">
-  <div class="slide-topbar gold"></div>
-  <div class="fabric-header">
-    <div class="fabric-logo">
-      <svg class="fabric-logo-icon" viewBox="0 0 32 32" fill="none"><rect width="32" height="32" rx="4" fill="#00a2a2"/><path d="M8 16L16 8L24 16L16 24L8 16Z" fill="white" opacity="0.9"/><path d="M12 16L16 12L20 16L16 20L12 16Z" fill="#00a2a2"/></svg>
-      <span class="fabric-logo-text">Microsoft</span><span class="fabric-logo-sep">|</span><span class="fabric-logo-sub">DP-700 Study Guide</span>
-    </div>
-    <div class="header-badge"><div class="dot"></div>Skills Measured &bull; July 2026</div>
-  </div>
-  <div class="slide-body">
-    <div class="section-tag">Exam Blueprint</div>
-    <div class="page-heading">3 Equal <span>Domains</span></div>
-    <div class="page-subheading">Each domain carries <strong>30&ndash;35%</strong> of the exam weight &mdash; study all three equally.</div>
-
-    <div class="domain-bar">
-      <div class="domain-seg" style="width:33.3%;background:var(--ms-teal);">Manage</div>
-      <div class="domain-seg" style="width:33.3%;background:var(--ms-blue);">Ingest</div>
-      <div class="domain-seg" style="width:33.4%;background:#f4a100;">Monitor</div>
-    </div>
-
-    <div class="domain-item di-teal" style="margin-top: 4px;">
-      <div class="di-icon">&#128736;</div>
-      <div style="flex: 1;">
-        <div class="di-title">Implement &amp; Manage Analytics</div>
-        <div class="di-tags">
-          <span class="di-tag">Workspace Settings</span><span class="di-tag">Lifecycle &amp; Git</span><span class="di-tag">Security</span><span class="di-tag">Orchestration</span><span class="di-tag">OneLake</span>
-        </div>
-      </div>
-      <div class="di-pct pct-teal">30&ndash;35%</div>
-    </div>
-
-    <div class="domain-item di-blue">
-      <div class="di-icon">&#9889;</div>
-      <div style="flex: 1;">
-        <div class="di-title">Ingest &amp; Transform Data</div>
-        <div class="di-tags">
-          <span class="di-tag">Batch Loading</span><span class="di-tag">Streaming</span><span class="di-tag">PySpark</span><span class="di-tag">SQL</span><span class="di-tag">KQL</span><span class="di-tag">Shortcuts</span>
-        </div>
-      </div>
-      <div class="di-pct pct-blue">30&ndash;35%</div>
-    </div>
-
-    <div class="domain-item di-gold">
-      <div class="di-icon">&#128202;</div>
-      <div style="flex: 1;">
-        <div class="di-title">Monitor &amp; Optimize</div>
-        <div class="di-tags">
-          <span class="di-tag">Error Resolution</span><span class="di-tag">Spark Tuning</span><span class="di-tag">DW Optimization</span><span class="di-tag">Alerts</span>
-        </div>
-      </div>
-      <div class="di-pct pct-gold">30&ndash;35%</div>
-    </div>
-
-    <div class="tip-box" style="margin-top: 20px;">
-      <div class="tip-box-icon">&#9432;</div>
-      <div>
-        <div class="tip-box-title">Study Tip</div>
-        <div class="tip-box-text">Unlike many Microsoft exams, DP-700 is perfectly balanced. Don&rsquo;t over-invest in one domain &mdash; spread your study time equally across all three.</div>
-      </div>
-    </div>
-  </div>
-  <div class="slide-footer">
-    <div><div class="footer-name">Sayan Banerjee</div><div class="footer-role">linkedin.com/in/sayanbanerjee24</div></div>
-    <div class="footer-right"><div class="footer-page">04 / 10</div><div class="footer-tags">#DP700Exam #StudyGuide</div></div>
-  </div>
-</div>
-
-<!-- ============================================================
-     SLIDE 5 – ONELAKE ARCHITECTURE
-============================================================ -->
-<div class="slide" id="s5">
-  <div class="slide-topbar"></div>
-  <div class="fabric-header">
-    <div class="fabric-logo">
-      <svg class="fabric-logo-icon" viewBox="0 0 32 32" fill="none"><rect width="32" height="32" rx="4" fill="#00a2a2"/><path d="M8 16L16 8L24 16L16 24L8 16Z" fill="white" opacity="0.9"/><path d="M12 16L16 12L20 16L16 20L12 16Z" fill="#00a2a2"/></svg>
-      <span class="fabric-logo-text">Microsoft</span><span class="fabric-logo-sep">|</span><span class="fabric-logo-sub">OneLake Architecture</span>
-    </div>
-    <div class="header-badge"><div class="dot"></div>Core Concept</div>
-  </div>
-  <div class="slide-body">
-    <div class="section-tag">The Foundation</div>
-    <div class="page-heading"><span>OneLake</span> &mdash;<br/>How It Works</div>
-    <div class="page-subheading">One storage layer. Every Fabric workload reads from the same Delta Parquet foundation.</div>
-
-    <div class="arch-wrap">
-      <div class="arch-layer al-teal" style="width: 75%;">
-        <div class="arch-icon">&#127760;</div>Consumer Applications (Power BI, APIs, ML)
-      </div>
-      <div class="arch-connector"></div>
-      <div class="arch-row">
-        <div class="arch-layer al-green"><div class="arch-icon">&#127981;</div>Lakehouse</div>
-        <div class="arch-layer al-blue"><div class="arch-icon">&#127970;</div>Data Warehouse</div>
-        <div class="arch-layer al-gold"><div class="arch-icon">&#9889;</div>Eventhouse</div>
-      </div>
-      <div class="arch-connector"></div>
-      <div class="arch-layer al-purple" style="width: 90%;">
-        <div class="arch-icon">&#128260;</div>Pipelines &bull; Dataflows Gen2 &bull; Notebooks &bull; Eventstreams
-      </div>
-      <div class="arch-connector"></div>
-      <div class="arch-layer al-base" style="width: 100%; border-top: 4px solid var(--ms-teal); font-size: 17px;">
-        <div class="arch-icon" style="font-size: 24px;">&#128451;</div>
-        <strong>OneLake</strong> &mdash; Single Source of Truth (Delta Parquet format)
-      </div>
-    </div>
-
-    <div style="display:flex;gap:10px;margin-top:16px;margin-bottom:4px;">
-      <div class="chip chip-teal" style="font-size:12px;">Delta Parquet</div>
-      <div class="chip chip-blue" style="font-size:12px;">No Data Duplication</div>
-      <div class="chip chip-gold" style="font-size:12px;">Cross-workload Access</div>
-      <div class="chip chip-purple" style="font-size:12px;">Shortcuts Support</div>
-    </div>
-  </div>
-  <div class="slide-footer">
-    <div><div class="footer-name">Sayan Banerjee</div><div class="footer-role">linkedin.com/in/sayanbanerjee24</div></div>
-    <div class="footer-right"><div class="footer-page">05 / 10</div><div class="footer-tags">#OneLake #DeltaLake</div></div>
-  </div>
-</div>
-
-<!-- ============================================================
-     SLIDE 6 – KEY TOOLS
-============================================================ -->
-<div class="slide" id="s6">
-  <div class="slide-topbar grad"></div>
-  <div class="fabric-header">
-    <div class="fabric-logo">
-      <svg class="fabric-logo-icon" viewBox="0 0 32 32" fill="none"><rect width="32" height="32" rx="4" fill="#00a2a2"/><path d="M8 16L16 8L24 16L16 24L8 16Z" fill="white" opacity="0.9"/><path d="M12 16L16 12L20 16L16 20L12 16Z" fill="#00a2a2"/></svg>
-      <span class="fabric-logo-text">Microsoft</span><span class="fabric-logo-sep">|</span><span class="fabric-logo-sub">Fabric Tools</span>
-    </div>
-    <div class="header-badge"><div class="dot"></div>9 Tools to Master</div>
-  </div>
-  <div class="slide-body">
-    <div class="section-tag">The Toolkit</div>
-    <div class="page-heading">9 Tools for <span>the Exam</span></div>
-    <div class="grid-3" style="margin-top:16px; flex:1;">
-      <div class="tool-card">
-        <div class="tool-icon">&#127959;</div>
-        <div class="tool-name">Lakehouse</div>
-        <div class="tool-desc">Files + Delta tables. SQL analytics endpoint built-in.</div>
-        <div class="tool-pill pill-teal">Ingest</div>
-      </div>
-      <div class="tool-card">
-        <div class="tool-icon">&#128260;</div>
-        <div class="tool-name">Pipelines</div>
-        <div class="tool-desc">Copy &amp; Spark activities. Schedule &amp; event triggers.</div>
-        <div class="tool-pill pill-blue">Orchestrate</div>
-      </div>
-      <div class="tool-card">
-        <div class="tool-icon">&#128161;</div>
-        <div class="tool-name">Dataflows Gen2</div>
-        <div class="tool-desc">Low-code Power Query ETL. 150+ connectors.</div>
-        <div class="tool-pill pill-gold">Low-Code</div>
-      </div>
-      <div class="tool-card">
-        <div class="tool-icon">&#128211;</div>
-        <div class="tool-name">Notebooks</div>
-        <div class="tool-desc">PySpark &amp; SQL. Spark 3.5 + Delta support.</div>
-        <div class="tool-pill pill-purple">PySpark</div>
-      </div>
-      <div class="tool-card">
-        <div class="tool-icon">&#127970;</div>
-        <div class="tool-name">Data Warehouse</div>
-        <div class="tool-desc">Serverless T-SQL. Cross-DB queries.</div>
-        <div class="tool-pill pill-teal">T-SQL</div>
-      </div>
-      <div class="tool-card">
-        <div class="tool-icon">&#9889;</div>
-        <div class="tool-name">Eventhouse / KQL</div>
-        <div class="tool-desc">Real-time analytics with Kusto Query Language.</div>
-        <div class="tool-pill pill-blue">KQL</div>
-      </div>
-      <div class="tool-card">
-        <div class="tool-icon">&#127754;</div>
-        <div class="tool-name">Eventstream</div>
-        <div class="tool-desc">Capture &amp; route real-time event streams.</div>
-        <div class="tool-pill pill-gold">Streaming</div>
-      </div>
-      <div class="tool-card">
-        <div class="tool-icon">&#128279;</div>
-        <div class="tool-name">Shortcuts</div>
-        <div class="tool-desc">Virtual links to ADLS, S3, GCS without copying.</div>
-        <div class="tool-pill pill-purple">Cross-Cloud</div>
-      </div>
-      <div class="tool-card">
-        <div class="tool-icon">&#128640;</div>
-        <div class="tool-name">Deploy Pipelines</div>
-        <div class="tool-desc">Dev &rarr; Test &rarr; Prod CI/CD via Git.</div>
-        <div class="tool-pill pill-teal">CI/CD</div>
-      </div>
-    </div>
-  </div>
-  <div class="slide-footer">
-    <div><div class="footer-name">Sayan Banerjee</div><div class="footer-role">linkedin.com/in/sayanbanerjee24</div></div>
-    <div class="footer-right"><div class="footer-page">06 / 10</div><div class="footer-tags">#FabricTools #DataEngineer</div></div>
-  </div>
-</div>
-
-<!-- ============================================================
-     SLIDE 7 – SKILLS NEEDED
-============================================================ -->
-<div class="slide" id="s7">
-  <div class="slide-topbar"></div>
-  <div class="fabric-header">
-    <div class="fabric-logo">
-      <svg class="fabric-logo-icon" viewBox="0 0 32 32" fill="none"><rect width="32" height="32" rx="4" fill="#00a2a2"/><path d="M8 16L16 8L24 16L16 24L8 16Z" fill="white" opacity="0.9"/><path d="M12 16L16 12L20 16L16 20L12 16Z" fill="#00a2a2"/></svg>
-      <span class="fabric-logo-text">Microsoft</span><span class="fabric-logo-sep">|</span><span class="fabric-logo-sub">Prerequisite Skills</span>
-    </div>
-    <div class="header-badge"><div class="dot"></div>Skills You Need</div>
-  </div>
-  <div class="slide-body">
-    <div class="section-tag">Prerequisites</div>
-    <div class="page-heading">3 Languages,<br/><span>1 Exam</span></div>
-    <div class="page-subheading">Master these three languages and you will cover the transformation core of DP-700.</div>
-
-    <div class="skill-item" style="margin-top: 8px;">
-      <div class="sk-rank">01</div>
-      <div class="sk-info">
-        <div class="sk-name">SQL / T-SQL</div>
-        <div class="sk-desc">COPY INTO, CTAS, cross-DB queries, RLS, Dynamic Data Masking in the Fabric Data Warehouse workload.</div>
-      </div>
-      <div class="sk-bar-wrap">
-        <div class="sk-bar-bg"><div class="sk-bar" style="width:90%;background:var(--ms-teal);"></div></div>
-        <div class="sk-label" style="color:var(--ms-teal-dark);">Critical</div>
-      </div>
-    </div>
-    <div class="skill-item">
-      <div class="sk-rank">02</div>
-      <div class="sk-info">
-        <div class="sk-name">PySpark / Python</div>
-        <div class="sk-desc">ETL transformations, Delta table operations, structured streaming, and Spark performance optimization in Notebooks.</div>
-      </div>
-      <div class="sk-bar-wrap">
-        <div class="sk-bar-bg"><div class="sk-bar" style="width:85%;background:var(--ms-blue);"></div></div>
-        <div class="sk-label" style="color:var(--ms-blue);">Critical</div>
-      </div>
-    </div>
-    <div class="skill-item">
-      <div class="sk-rank">03</div>
-      <div class="sk-info">
-        <div class="sk-name">KQL &mdash; Kusto Query Language</div>
-        <div class="sk-desc">Real-time event queries, time-series analysis, windowing functions in Eventhouse / KQL Databases.</div>
-      </div>
-      <div class="sk-bar-wrap">
-        <div class="sk-bar-bg"><div class="sk-bar" style="width:70%;background:#f4a100;"></div></div>
-        <div class="sk-label" style="color:#7a5700;">Important</div>
-      </div>
-    </div>
-    <div class="skill-item">
-      <div class="sk-rank">04</div>
-      <div class="sk-info">
-        <div class="sk-name">Data Architecture</div>
-        <div class="sk-desc">Medallion patterns, dimensional modeling, incremental loading, streaming pipeline design, and OneLake topology.</div>
-      </div>
-      <div class="sk-bar-wrap">
-        <div class="sk-bar-bg"><div class="sk-bar" style="width:80%;background:var(--ms-purple);"></div></div>
-        <div class="sk-label" style="color:var(--ms-purple);">High</div>
-      </div>
-    </div>
-  </div>
-  <div class="slide-footer">
-    <div><div class="footer-name">Sayan Banerjee</div><div class="footer-role">linkedin.com/in/sayanbanerjee24</div></div>
-    <div class="footer-right"><div class="footer-page">07 / 10</div><div class="footer-tags">#PySpark #KQL #SQL</div></div>
-  </div>
-</div>
-
-<!-- ============================================================
-     SLIDE 8 – 30-DAY ROADMAP
-============================================================ -->
-<div class="slide" id="s8">
-  <div class="slide-topbar blue"></div>
-  <div class="fabric-header">
-    <div class="fabric-logo">
-      <svg class="fabric-logo-icon" viewBox="0 0 32 32" fill="none"><rect width="32" height="32" rx="4" fill="#00a2a2"/><path d="M8 16L16 8L24 16L16 24L8 16Z" fill="white" opacity="0.9"/><path d="M12 16L16 12L20 16L16 20L12 16Z" fill="#00a2a2"/></svg>
-      <span class="fabric-logo-text">Microsoft</span><span class="fabric-logo-sep">|</span><span class="fabric-logo-sub">30-Day Learning Path</span>
-    </div>
-    <div class="header-badge"><div class="dot"></div>Your Study Roadmap</div>
-  </div>
-  <div class="slide-body">
-    <div class="section-tag">The Plan</div>
-    <div class="page-heading">5 Weeks,<br/><span>3 Domains</span></div>
-
-    <div class="roadmap" style="margin-top: 24px;">
-      <div class="rm-item">
-        <div class="rm-track"><div class="rm-dot" style="border-color:var(--ms-teal);background:var(--ms-teal-light);"></div><div class="rm-line"></div></div>
-        <div class="rm-body">
-          <div class="rm-week" style="color:var(--ms-teal-dark);">Days 1&ndash;6 &bull; Architecture &amp; Workspaces</div>
-          <div class="rm-title">OneLake, Spark Settings, Delta Lake, Airflow</div>
-          <div class="rm-tags"><span class="rm-tag">OneLake</span><span class="rm-tag">Spark Settings</span><span class="rm-tag">Delta Lake</span><span class="rm-tag">Apache Airflow</span></div>
-        </div>
-      </div>
-      <div class="rm-item">
-        <div class="rm-track"><div class="rm-dot" style="border-color:var(--ms-blue);background:var(--ms-blue-light);"></div><div class="rm-line"></div></div>
-        <div class="rm-body">
-          <div class="rm-week" style="color:var(--ms-blue);">Days 7&ndash;13 &bull; Batch Ingestion &amp; Transformation</div>
-          <div class="rm-title">Pipelines, Shortcuts, Mirroring, PySpark ETL</div>
-          <div class="rm-tags"><span class="rm-tag">Pipelines</span><span class="rm-tag">Shortcuts</span><span class="rm-tag">Mirroring</span><span class="rm-tag">PySpark ETL</span></div>
-        </div>
-      </div>
-      <div class="rm-item">
-        <div class="rm-track"><div class="rm-dot" style="border-color:#f4a100;background:var(--ms-gold-bg);"></div><div class="rm-line"></div></div>
-        <div class="rm-body">
-          <div class="rm-week" style="color:#7a5700;">Days 14&ndash;19 &bull; Data Warehousing &amp; T-SQL</div>
-          <div class="rm-title">DW Load Patterns, Cross-DB, RLS, DDM</div>
-          <div class="rm-tags"><span class="rm-tag">COPY INTO</span><span class="rm-tag">Cross-DB</span><span class="rm-tag">RLS / DDM</span></div>
-        </div>
-      </div>
-      <div class="rm-item">
-        <div class="rm-track"><div class="rm-dot" style="border-color:var(--ms-purple);background:var(--ms-purple-bg);"></div><div class="rm-line"></div></div>
-        <div class="rm-body">
-          <div class="rm-week" style="color:var(--ms-purple);">Days 20&ndash;25 &bull; Real-Time Intelligence &amp; KQL</div>
-          <div class="rm-title">Eventstream, KQL DB, Structured Streaming</div>
-          <div class="rm-tags"><span class="rm-tag">Eventstream</span><span class="rm-tag">KQL DB</span><span class="rm-tag">Spark Streaming</span></div>
-        </div>
-      </div>
-      <div class="rm-item">
-        <div class="rm-track"><div class="rm-dot" style="border-color:var(--ms-green);background:var(--ms-green-bg);"></div></div>
-        <div class="rm-body" style="padding-bottom:0;">
-          <div class="rm-week" style="color:var(--ms-green);">Days 26&ndash;30 &bull; Monitor, Optimize &amp; CI/CD</div>
-          <div class="rm-title">Git, DB Projects, Deployment Pipelines, Spark Tuning</div>
-          <div class="rm-tags"><span class="rm-tag">Git</span><span class="rm-tag">DB Projects</span><span class="rm-tag">Deployment Pipelines</span><span class="rm-tag">Spark Tuning</span></div>
-        </div>
-      </div>
-    </div>
-  </div>
-  <div class="slide-footer">
-    <div><div class="footer-name">Sayan Banerjee</div><div class="footer-role">linkedin.com/in/sayanbanerjee24</div></div>
-    <div class="footer-right"><div class="footer-page">08 / 10</div><div class="footer-tags">#StudyPlan #DP700Roadmap</div></div>
-  </div>
-</div>
-
-<!-- ============================================================
-     SLIDE 9 – PRO TIP
-============================================================ -->
-<div class="slide" id="s9">
-  <div class="slide-topbar"></div>
-  <div class="fabric-header">
-    <div class="fabric-logo">
-      <svg class="fabric-logo-icon" viewBox="0 0 32 32" fill="none"><rect width="32" height="32" rx="4" fill="#00a2a2"/><path d="M8 16L16 8L24 16L16 24L8 16Z" fill="white" opacity="0.9"/><path d="M12 16L16 12L20 16L16 20L12 16Z" fill="#00a2a2"/></svg>
-      <span class="fabric-logo-text">Microsoft</span><span class="fabric-logo-sep">|</span><span class="fabric-logo-sub">Pro Tip of the Day</span>
-    </div>
-    <div class="header-badge"><div class="dot"></div>Exam Insight</div>
-  </div>
-  <div class="slide-body" style="justify-content: center; align-items: center; text-align: center; padding: 48px 80px;">
-    <div style="font-size: 80px; margin-bottom: 24px;">&#9889;</div>
-    <div class="section-tag" style="margin: 0 auto 20px;">Tip #1 of 30</div>
-    <div style="font-size: 44px; font-weight: 900; color: var(--text-primary); line-height: 1.2; margin-bottom: 20px;">
-      Start with<br/><span style="color: var(--ms-teal);">OneLake<br/>Shortcuts</span>
-    </div>
-    <div style="font-size: 20px; color: var(--text-secondary); line-height: 1.7; margin-bottom: 36px;">
-      Before learning pipelines, understand how <strong style="color: var(--text-primary);">OneLake Shortcuts</strong> let you access external data without copying it. The exam frequently tests <em>when to use Shortcuts vs Pipelines</em> &mdash; Shortcuts are often the right choice.
-    </div>
-
-    <div class="grid-2" style="text-align: left;">
-      <div class="tip-box">
-        <div class="tip-box-icon">&#128279;</div>
-        <div>
-          <div class="tip-box-title">What is a Shortcut?</div>
-          <div class="tip-box-text">A virtual link to data in ADLS Gen2, Amazon S3, or Google Cloud Storage that appears as a folder inside your Lakehouse &mdash; no data movement.</div>
-        </div>
-      </div>
-      <div class="tip-box" style="background: var(--ms-blue-light); border-color: var(--ms-blue);">
-        <div class="tip-box-icon">&#127919;</div>
-        <div>
-          <div class="tip-box-title" style="color: var(--ms-blue);">Exam Focus</div>
-          <div class="tip-box-text">Know the difference between native tables, OneLake shortcuts, and Query Acceleration shortcuts in Real-Time Intelligence.</div>
-        </div>
-      </div>
-    </div>
-
-    <div class="chip-row" style="justify-content: center;">
-      <div class="chip chip-teal">No Data Copy</div>
-      <div class="chip chip-blue">Cross-Cloud</div>
-      <div class="chip chip-gold">Exam Favorite</div>
-      <div class="chip chip-purple">Cost-Efficient</div>
-    </div>
-  </div>
-  <div class="slide-footer">
-    <div><div class="footer-name">Sayan Banerjee</div><div class="footer-role">linkedin.com/in/sayanbanerjee24</div></div>
-    <div class="footer-right"><div class="footer-page">09 / 10</div><div class="footer-tags">#ProTip #OneLake #Shortcuts</div></div>
-  </div>
-</div>
-
-<!-- ============================================================
-     SLIDE 10 – CTA
-============================================================ -->
-<div class="slide" id="s10">
-  <div class="slide-topbar grad"></div>
-  <div class="fabric-header">
-    <div class="fabric-logo">
-      <svg class="fabric-logo-icon" viewBox="0 0 32 32" fill="none"><rect width="32" height="32" rx="4" fill="#00a2a2"/><path d="M8 16L16 8L24 16L16 24L8 16Z" fill="white" opacity="0.9"/><path d="M12 16L16 12L20 16L16 20L12 16Z" fill="#00a2a2"/></svg>
-      <span class="fabric-logo-text">Microsoft</span><span class="fabric-logo-sep">|</span><span class="fabric-logo-sub">Fabric Community</span>
-    </div>
-    <div class="header-badge"><div class="dot"></div>Follow the Journey</div>
-  </div>
-  <div class="slide-body" style="justify-content: center; align-items: center; text-align: center; padding: 48px 80px;">
-    <div class="section-tag" style="margin: 0 auto 24px;">Day 1 Complete</div>
-    <div style="font-size: 64px; font-weight: 900; color: var(--text-primary); line-height: 1.1; margin-bottom: 16px;">
-      Day 1 &mdash; <span style="color: var(--ms-teal);">Done!</span>
-    </div>
-    <div style="font-size: 20px; color: var(--text-secondary); max-width: 680px; line-height: 1.7; margin-bottom: 40px;">
-      You now understand the <strong style="color: var(--text-primary);">DP-700 exam blueprint</strong>, the <strong style="color: var(--text-primary);">OneLake architecture</strong>, and the 9 key tools you&rsquo;ll master over the next 30 days.
-    </div>
-
-    <div class="ms-btn" style="margin-bottom: 24px; cursor: pointer;">
-      Follow on LinkedIn for Day 2 &rarr;
-    </div>
-
-    <div style="font-size: 14px; color: var(--text-secondary); margin-bottom: 36px;">
-      <strong style="color: var(--text-primary);">Tomorrow:</strong> Spark Workspace Settings &mdash; Custom pools, runtimes &amp; executor configs
-    </div>
-
-    <div class="ms-card" style="text-align: left; width: 100%;">
-      <div class="ms-card-header">&#128100; About the Author</div>
-      <div class="ms-card-body" style="display: flex; gap: 20px; align-items: center;">
-        <div style="width: 64px; height: 64px; background: var(--ms-teal); border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 28px; color: white; font-weight: 700; flex-shrink: 0;">SB</div>
-        <div>
-          <div style="font-size: 18px; font-weight: 700; color: var(--text-primary);">Sayan Banerjee</div>
-          <div style="font-size: 13px; color: var(--text-secondary); margin-top: 4px;">Databricks Certified Data Engineer &bull; Microsoft Fabric Data Engineer (DP-700) &bull; Power BI Analyst (PL-300)</div>
-          <div style="font-size: 13px; color: var(--ms-teal-dark); font-weight: 600; margin-top: 6px;">AI, BI &amp; Analytics Consultant &bull; Embee Software &bull; Kolkata</div>
-        </div>
-      </div>
-    </div>
-
-    <div style="display:flex;gap:8px;margin-top:28px;justify-content:center;">
-      <div style="width:28px;height:8px;border-radius:4px;background:var(--ms-teal);"></div>
-      <div style="width:8px;height:8px;border-radius:50%;background:var(--border-med);"></div>
-      <div style="width:8px;height:8px;border-radius:50%;background:var(--border-med);"></div>
-      <div style="width:8px;height:8px;border-radius:50%;background:var(--border-med);"></div>
-      <div style="width:8px;height:8px;border-radius:50%;background:var(--border-med);"></div>
-      <div style="width:8px;height:8px;border-radius:50%;background:var(--border-med);"></div>
-      <div style="width:8px;height:8px;border-radius:50%;background:var(--border-med);"></div>
-      <div style="width:8px;height:8px;border-radius:50%;background:var(--border-med);"></div>
-      <div style="width:8px;height:8px;border-radius:50%;background:var(--border-med);"></div>
-      <div style="width:8px;height:8px;border-radius:50%;background:var(--border-med);"></div>
-    </div>
-  </div>
-  <div class="slide-footer">
-    <div><div class="footer-name">Sayan Banerjee</div><div class="footer-role">linkedin.com/in/sayanbanerjee24 &bull; work.sayanbanerjee@gmail.com</div></div>
-    <div class="footer-right"><div class="footer-page">10 / 10</div><div class="footer-tags">#MicrosoftFabric #DP700 #30DaysOfFabric</div></div>
   </div>
 </div>
 
