@@ -1,0 +1,697 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Day 04 — Apache Airflow & Pipeline Orchestration | DP-700</title>
+<link href="https://fonts.googleapis.com/css2?family=Segoe+UI:wght@400;600;700;800&family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  :root {
+    --ms-teal: #0E7C7B;
+    --ms-teal-dark: #085954;
+    --ms-teal-light: #E6F4F3;
+    --ms-blue: #0078D4;
+    --ms-blue-light: #EFF6FC;
+    --ms-gold: #C47F17;
+    --ms-gold-light: #FDF6E3;
+    --ms-purple: #7719AA;
+    --ms-purple-light: #F3E8FC;
+    --ms-orange: #CA5010;
+    --ms-orange-light: #FFF2EC;
+    --ms-red: #C50F1F;
+    --ms-red-light: #FDE7E9;
+    --ms-green: #107C10;
+    --ms-green-light: #DFF6DD;
+    --surface: #FFFFFF;
+    --bg: #F8F9FA;
+    --border: #E5E7EB;
+    --border-med: #D0D5DD;
+    --text-primary: #111827;
+    --text-secondary: #4B5563;
+    --text-muted: #9CA3AF;
+  }
+
+  body { font-family: 'Inter', 'Segoe UI', sans-serif; background: #f0f2f5; }
+
+  .slide {
+    width: 1920px; height: 1080px;
+    background: var(--surface);
+    display: flex; flex-direction: column;
+    overflow: hidden; position: relative;
+    border: 1px solid var(--border);
+    margin-bottom: 32px;
+  }
+
+  .slide-topbar { height: 8px; background: var(--ms-teal); flex-shrink: 0; }
+  .slide-topbar.gold { background: var(--ms-gold); }
+  .slide-topbar.blue { background: var(--ms-blue); }
+  .slide-topbar.purple { background: var(--ms-purple); }
+  .slide-topbar.orange { background: var(--ms-orange); }
+  .slide-topbar.grad { background: linear-gradient(90deg, var(--ms-teal), var(--ms-blue), var(--ms-gold)); }
+
+  /* ── SHARED HEADER ── */
+  .fabric-header {
+    display: flex; align-items: center; justify-content: space-between;
+    padding: 18px 64px; border-bottom: 1px solid var(--border);
+    background: var(--surface); flex-shrink: 0;
+  }
+  .fabric-logo { display: flex; align-items: center; gap: 12px; }
+  .fabric-logo-icon { width: 40px; height: 40px; flex-shrink: 0; }
+  .fabric-logo-icon svg { width: 40px; height: 40px; }
+  .fabric-logo-text { font-size: 22px; font-weight: 700; color: var(--text-primary); }
+
+  .header-badge {
+    display: inline-flex; align-items: center; gap: 8px;
+    background: var(--ms-teal-light); border: 1px solid var(--ms-teal);
+    border-radius: 4px; padding: 6px 18px;
+    font-size: 13px; font-weight: 600; color: var(--ms-teal-dark);
+  }
+  .header-badge .dot { width: 8px; height: 8px; background: var(--ms-teal); border-radius: 50%; }
+  .header-badge.gold-badge { background: var(--ms-gold-light); border-color: var(--ms-gold); color: var(--ms-gold); }
+  .header-badge.gold-badge .dot { background: var(--ms-gold); }
+  .header-badge.blue-badge { background: var(--ms-blue-light); border-color: var(--ms-blue); color: var(--ms-blue); }
+  .header-badge.blue-badge .dot { background: var(--ms-blue); }
+  .header-badge.orange-badge { background: var(--ms-orange-light); border-color: var(--ms-orange); color: var(--ms-orange); }
+  .header-badge.orange-badge .dot { background: var(--ms-orange); }
+
+  /* ── SLIDE BODY ── */
+  .slide-body {
+    display: flex; flex-direction: column; flex: 1;
+    padding: 36px 64px 0; overflow: hidden;
+  }
+
+  .breadcrumb { display: flex; align-items: center; gap: 8px; font-size: 14px; color: var(--text-secondary); margin-bottom: 18px; }
+  .breadcrumb-tag { background: var(--ms-teal-light); color: var(--ms-teal-dark); font-weight: 700; padding: 3px 10px; border-radius: 3px; font-size: 12px; }
+  .breadcrumb-tag.blue { background: var(--ms-blue-light); color: var(--ms-blue); }
+  .breadcrumb-tag.gold { background: var(--ms-gold-light); color: var(--ms-gold); }
+  .breadcrumb-tag.orange { background: var(--ms-orange-light); color: var(--ms-orange); }
+
+  .slide-heading { font-size: 42px; font-weight: 800; color: var(--text-primary); letter-spacing: -0.5px; line-height: 1.15; margin-bottom: 12px; }
+  .slide-subheading { font-size: 20px; color: var(--text-secondary); font-weight: 400; line-height: 1.4; margin-bottom: 28px; max-width: 1400px; }
+
+  .content-area { flex: 1; display: flex; gap: 28px; overflow: hidden; }
+  .grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 28px; width: 100%; }
+  .grid-3 { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 24px; width: 100%; }
+  .grid-4 { display: grid; grid-template-columns: 1fr 1fr 1fr 1fr; gap: 20px; width: 100%; }
+
+  .card {
+    background: var(--surface); border: 1px solid var(--border); border-radius: 6px;
+    padding: 28px; display: flex; flex-direction: column; gap: 14px;
+    box-shadow: 0 2px 6px rgba(0,0,0,.03);
+  }
+  .card.teal-border { border-left: 5px solid var(--ms-teal); }
+  .card.blue-border { border-left: 5px solid var(--ms-blue); }
+  .card.gold-border { border-left: 5px solid var(--ms-gold); }
+  .card.purple-border { border-left: 5px solid var(--ms-purple); }
+  .card.orange-border { border-left: 5px solid var(--ms-orange); }
+  .card.red-border { border-left: 5px solid var(--ms-red); }
+  .card.green-border { border-left: 5px solid var(--ms-green); }
+
+  .card-icon { font-size: 32px; line-height: 1; }
+  .card-title { font-size: 20px; font-weight: 700; color: var(--text-primary); display: flex; align-items: center; gap: 10px; }
+  .card-subtitle { font-size: 13px; font-weight: 600; color: var(--text-secondary); text-transform: uppercase; letter-spacing: 0.5px; }
+  .card-text { font-size: 16px; color: var(--text-secondary); line-height: 1.6; }
+
+  /* ── TABLE ── */
+  .table-wrap { width: 100%; overflow: hidden; border-radius: 6px; border: 1px solid var(--border); }
+  table { width: 100%; border-collapse: collapse; font-size: 15px; }
+  thead { background: var(--ms-teal); color: white; }
+  thead.blue { background: var(--ms-blue); }
+  thead.gold { background: #B8690F; }
+  thead.orange { background: var(--ms-orange); }
+  th { padding: 14px 20px; font-weight: 700; text-align: left; font-size: 14px; }
+  td { padding: 13px 20px; border-bottom: 1px solid var(--border); color: var(--text-primary); font-size: 14px; }
+  tr:last-child td { border-bottom: none; }
+  tr:nth-child(even) td { background: var(--bg); }
+  .td-check { color: var(--ms-green); font-weight: 700; }
+  .td-cross { color: var(--ms-red); font-weight: 700; }
+  .td-teal { color: var(--ms-teal); font-weight: 600; }
+  .td-blue { color: var(--ms-blue); font-weight: 600; }
+  .td-gold { color: var(--ms-gold); font-weight: 600; }
+
+  /* ── PILL TAGS ── */
+  .pill { display: inline-block; padding: 4px 12px; border-radius: 20px; font-size: 12px; font-weight: 700; }
+  .pill.teal { background: var(--ms-teal-light); color: var(--ms-teal-dark); }
+  .pill.blue { background: var(--ms-blue-light); color: var(--ms-blue); }
+  .pill.gold { background: var(--ms-gold-light); color: var(--ms-gold); }
+  .pill.orange { background: var(--ms-orange-light); color: var(--ms-orange); }
+  .pill.red { background: var(--ms-red-light); color: var(--ms-red); }
+  .pill.green { background: var(--ms-green-light); color: var(--ms-green); }
+
+  /* ── CODE ── */
+  .code-block {
+    background: #1E1E1E; border-radius: 6px; padding: 20px 24px;
+    font-family: 'Consolas', 'Monaco', monospace; font-size: 13px;
+    color: #D4D4D4; line-height: 1.6; overflow: hidden;
+  }
+  .code-comment { color: #6A9955; }
+  .code-keyword { color: #569CD6; }
+  .code-string { color: #CE9178; }
+  .code-fn { color: #DCDCAA; }
+  .code-var { color: #9CDCFE; }
+
+  /* ── LIST ── */
+  .bullet-list { list-style: none; display: flex; flex-direction: column; gap: 10px; }
+  .bullet-list li { display: flex; align-items: flex-start; gap: 12px; font-size: 16px; color: var(--text-secondary); line-height: 1.5; }
+  .bullet-list li::before { content: '▸'; color: var(--ms-teal); font-weight: 700; flex-shrink: 0; margin-top: 1px; }
+  .bullet-list.blue li::before { color: var(--ms-blue); }
+  .bullet-list.gold li::before { color: var(--ms-gold); }
+  .bullet-list.orange li::before { color: var(--ms-orange); }
+
+  /* ── HIGHLIGHT BOX ── */
+  .highlight-box {
+    border-radius: 6px; padding: 20px 24px; display: flex; gap: 16px; align-items: flex-start;
+  }
+  .highlight-box.teal { background: var(--ms-teal-light); border-left: 5px solid var(--ms-teal); }
+  .highlight-box.blue { background: var(--ms-blue-light); border-left: 5px solid var(--ms-blue); }
+  .highlight-box.gold { background: var(--ms-gold-light); border-left: 5px solid var(--ms-gold); }
+  .highlight-box.orange { background: var(--ms-orange-light); border-left: 5px solid var(--ms-orange); }
+  .highlight-box.red { background: var(--ms-red-light); border-left: 5px solid var(--ms-red); }
+  .highlight-box .hb-icon { font-size: 24px; line-height: 1; flex-shrink: 0; }
+  .highlight-box .hb-text { font-size: 15px; color: var(--text-primary); line-height: 1.6; }
+  .highlight-box .hb-text strong { display: block; margin-bottom: 4px; font-size: 16px; }
+
+  /* ── SLIDE FOOTER ── */
+  .slide-footer {
+    padding: 14px 64px; border-top: 1px solid var(--border);
+    display: flex; align-items: center; justify-content: space-between;
+    font-size: 13px; color: var(--text-muted); flex-shrink: 0; background: var(--surface);
+  }
+  .footer-counter { font-size: 14px; font-weight: 700; color: var(--text-secondary); }
+
+  /* ── COVER SLIDE ── */
+  .cover-body {
+    flex: 1; display: flex; flex-direction: column; justify-content: center;
+    padding: 64px 120px; background: linear-gradient(135deg, #F0FAF9 0%, #EFF6FC 50%, #FFFBF0 100%);
+    position: relative;
+  }
+  .cover-day-tag {
+    display: inline-flex; align-items: center; gap: 8px;
+    background: white; border: 2px solid var(--ms-teal); border-radius: 24px;
+    padding: 8px 20px; font-size: 14px; font-weight: 700; color: var(--ms-teal-dark);
+    margin-bottom: 28px; width: fit-content;
+  }
+  .cover-heading { font-size: 72px; font-weight: 800; color: var(--text-primary); letter-spacing: -2px; line-height: 1.05; margin-bottom: 24px; }
+  .cover-heading span { color: var(--ms-teal); }
+  .cover-sub { font-size: 24px; color: var(--text-secondary); font-weight: 400; line-height: 1.5; margin-bottom: 40px; max-width: 900px; }
+  .cover-topics { display: flex; flex-wrap: wrap; gap: 12px; }
+  .cover-topic { background: white; border: 1px solid var(--border); border-radius: 6px; padding: 10px 18px; font-size: 15px; font-weight: 600; color: var(--text-secondary); }
+
+  /* ── TITLE SLIDES ── */
+  .title-body {
+    flex: 1; display: flex; flex-direction: column; justify-content: center;
+    padding: 64px 120px; position: relative;
+  }
+
+  /* ── CTA SLIDE ── */
+  .cta-body {
+    flex: 1; display: flex; flex-direction: column; justify-content: center; align-items: center;
+    padding: 64px; background: linear-gradient(135deg, #F0FAF9 0%, #EFF6FC 50%, #FFFBF0 100%);
+    text-align: center; gap: 28px;
+  }
+  .cta-icon { font-size: 64px; }
+  .cta-heading { font-size: 52px; font-weight: 800; color: var(--text-primary); letter-spacing: -1px; }
+  .cta-sub { font-size: 22px; color: var(--text-secondary); max-width: 900px; line-height: 1.5; }
+  .cta-author { font-size: 16px; color: var(--text-secondary); }
+  .cta-author strong { color: var(--text-primary); font-weight: 700; }
+  .cta-next { background: var(--ms-teal); color: white; border-radius: 8px; padding: 16px 36px; font-size: 18px; font-weight: 700; display: inline-block; }
+
+  /* ── DAG DIAGRAM ── */
+  .dag-node {
+    background: var(--ms-blue-light); border: 2px solid var(--ms-blue);
+    border-radius: 8px; padding: 14px 20px; font-size: 14px; font-weight: 700;
+    color: var(--ms-blue); text-align: center; white-space: nowrap;
+  }
+  .dag-node.teal { background: var(--ms-teal-light); border-color: var(--ms-teal); color: var(--ms-teal-dark); }
+  .dag-node.gold { background: var(--ms-gold-light); border-color: var(--ms-gold); color: var(--ms-gold); }
+  .dag-node.green { background: var(--ms-green-light); border-color: var(--ms-green); color: var(--ms-green); }
+  .dag-arrow { font-size: 24px; color: var(--border-med); font-weight: 700; display: flex; align-items: center; }
+</style>
+</head>
+<body>
+
+<!-- ═══════════════════════════════════════════════
+     SLIDE 01 — COVER
+═══════════════════════════════════════════════ -->
+<div class="slide">
+  <div class="slide-topbar grad"></div>
+  <div class="fabric-header">
+    <div class="fabric-logo">
+      <div class="fabric-logo-icon"><svg xmlns="http://www.w3.org/2000/svg" width="40" height="40" fill="currentColor" viewBox="3.999685764312744 3.999889373779297 39.99939727783203 40.001121520996094"><path fill="url(#fab-a)" fill-rule="evenodd" d="m5.64 31.6-.586 2.144c-.218.685-.524 1.693-.689 2.59a5.63 5.63 0 0 0 4.638 7.588c.792.114 1.688.108 2.692-.04l4.613-.636a2.92 2.92 0 0 0 2.421-2.127l3.175-11.662L5.64 31.599Z" clip-rule="evenodd"/><path fill="url(#fab-b)" d="M10.14 32.152c-4.863.753-5.861 4.423-5.861 4.423l4.656-17.11 24.333-3.292-3.318 12.052a1.71 1.71 0 0 1-1.388 1.244l-.136.022-18.423 2.684z"/><path fill="url(#fab-d)" d="m12.899 21.235 26.938-3.98a1.6 1.6 0 0 0 1.323-1.17l2.78-10.06a1.595 1.595 0 0 0-1.74-2.012L16.498 7.81a7.19 7.19 0 0 0-5.777 5.193L7.013 26.438c.744-2.717 1.202-4.355 5.886-5.203"/><path fill="url(#fab-g)" d="M12.899 21.236c-3.901.706-4.87 1.962-5.514 3.932L4.279 36.577s.992-3.633 5.796-4.41l18.352-2.673.136-.022a1.71 1.71 0 0 0 1.388-1.244l2.73-9.915z"/><defs><linearGradient id="fab-a" x1="12.953" x2="12.953" y1="44.001" y2="29.457" gradientUnits="userSpaceOnUse"><stop offset=".056" stop-color="#2AAC94"/><stop offset="1" stop-color="#085954"/></linearGradient><linearGradient id="fab-b" x1="31.331" x2="17.286" y1="33.448" y2="18.173" gradientUnits="userSpaceOnUse"><stop offset=".042" stop-color="#ABE88E"/><stop offset=".549" stop-color="#2AAA92"/><stop offset=".906" stop-color="#117865"/></linearGradient><linearGradient id="fab-d" x1="7.013" x2="42.589" y1="15.219" y2="15.219" gradientUnits="userSpaceOnUse"><stop offset=".043" stop-color="#25FFD4"/><stop offset=".874" stop-color="#55DDB9"/></linearGradient><linearGradient id="fab-g" x1="15.756" x2="16.168" y1="27.96" y2="15.74" gradientUnits="userSpaceOnUse"><stop offset=".205" stop-color="#063D3B" stop-opacity="0"/><stop offset=".872" stop-color="#063D3B" stop-opacity=".75"/></linearGradient></defs></svg></div>
+      <span class="fabric-logo-text">Microsoft Fabric</span>
+    </div>
+    <div class="header-badge"><div class="dot"></div>DP-700 Certification Challenge</div>
+  </div>
+  <div class="cover-body">
+    <div class="cover-day-tag">🗓️ DAY 04 OF 30</div>
+    <div class="cover-heading">Apache Airflow &<br/><span>Pipeline Orchestration</span></div>
+    <div class="cover-sub">Configure Managed Airflow, design DAGs, choose the right tool, and master triggers for the DP-700 exam</div>
+    <div class="cover-topics">
+      <div class="cover-topic">✅ Now in DP-700 Syllabus</div>
+      <div class="cover-topic">🔷 Managed Airflow in Fabric</div>
+      <div class="cover-topic">📋 DAG Architecture</div>
+      <div class="cover-topic">⏱️ Schedule vs Event Triggers</div>
+      <div class="cover-topic">🎯 3 Practice Questions</div>
+    </div>
+  </div>
+  <div class="slide-footer">
+    <span>Authored by Sayan Banerjee • Microsoft Certified: Fabric Data Engineer Associate</span>
+    <span class="footer-counter">01 / 10</span>
+  </div>
+</div>
+
+<!-- ═══════════════════════════════════════════════
+     SLIDE 02 — SYLLABUS CONFIRMATION
+═══════════════════════════════════════════════ -->
+<div class="slide">
+  <div class="slide-topbar gold"></div>
+  <div class="fabric-header">
+    <div class="fabric-logo"><div class="fabric-logo-icon"><svg xmlns="http://www.w3.org/2000/svg" width="40" height="40" fill="currentColor" viewBox="3.999685764312744 3.999889373779297 39.99939727783203 40.001121520996094"><path fill="url(#fab-a)" fill-rule="evenodd" d="m5.64 31.6-.586 2.144c-.218.685-.524 1.693-.689 2.59a5.63 5.63 0 0 0 4.638 7.588c.792.114 1.688.108 2.692-.04l4.613-.636a2.92 2.92 0 0 0 2.421-2.127l3.175-11.662L5.64 31.599Z" clip-rule="evenodd"/><path fill="url(#fab-b)" d="M10.14 32.152c-4.863.753-5.861 4.423-5.861 4.423l4.656-17.11 24.333-3.292-3.318 12.052a1.71 1.71 0 0 1-1.388 1.244l-.136.022-18.423 2.684z"/><path fill="url(#fab-d)" d="m12.899 21.235 26.938-3.98a1.6 1.6 0 0 0 1.323-1.17l2.78-10.06a1.595 1.595 0 0 0-1.74-2.012L16.498 7.81a7.19 7.19 0 0 0-5.777 5.193L7.013 26.438c.744-2.717 1.202-4.355 5.886-5.203"/><path fill="url(#fab-g)" d="M12.899 21.236c-3.901.706-4.87 1.962-5.514 3.932L4.279 36.577s.992-3.633 5.796-4.41l18.352-2.673.136-.022a1.71 1.71 0 0 0 1.388-1.244l2.73-9.915z"/><defs><linearGradient id="fab-a" x1="12.953" x2="12.953" y1="44.001" y2="29.457" gradientUnits="userSpaceOnUse"><stop offset=".056" stop-color="#2AAC94"/><stop offset="1" stop-color="#085954"/></linearGradient><linearGradient id="fab-b" x1="31.331" x2="17.286" y1="33.448" y2="18.173" gradientUnits="userSpaceOnUse"><stop offset=".042" stop-color="#ABE88E"/><stop offset=".549" stop-color="#2AAA92"/><stop offset=".906" stop-color="#117865"/></linearGradient><linearGradient id="fab-d" x1="7.013" x2="42.589" y1="15.219" y2="15.219" gradientUnits="userSpaceOnUse"><stop offset=".043" stop-color="#25FFD4"/><stop offset=".874" stop-color="#55DDB9"/></linearGradient><linearGradient id="fab-g" x1="15.756" x2="16.168" y1="27.96" y2="15.74" gradientUnits="userSpaceOnUse"><stop offset=".205" stop-color="#063D3B" stop-opacity="0"/><stop offset=".872" stop-color="#063D3B" stop-opacity=".75"/></linearGradient></defs></svg></div><span class="fabric-logo-text">Microsoft Fabric</span></div>
+    <div class="header-badge gold-badge"><div class="dot"></div>Syllabus Update</div>
+  </div>
+  <div class="slide-body">
+    <div class="breadcrumb"><span class="breadcrumb-tag gold">OFFICIAL EXAM UPDATE</span><span>→</span><span>DP-700 Study Guide • July 21, 2026</span></div>
+    <div class="slide-heading">Apache Airflow is Now<br/>on the DP-700 Exam ✅</div>
+    <div class="slide-subheading">We verified this live from the official Microsoft Learn study guide — this is NOT optional knowledge</div>
+    <div class="content-area">
+      <div style="display:flex;flex-direction:column;gap:20px;flex:1;">
+        <div class="highlight-box gold">
+          <div class="hb-icon">📋</div>
+          <div class="hb-text">
+            <strong>Official Exam Objective (July 21, 2026)</strong>
+            "Configure Microsoft Fabric workspace settings" → <strong>"Configure Apache Airflow workspace settings"</strong><br/>
+            Domain: Implement and manage an analytics solution (30–35%)
+          </div>
+        </div>
+        <div class="grid-3" style="margin-top:8px;">
+          <div class="card teal-border">
+            <div class="card-title">🎯 Why It Matters</div>
+            <div class="card-text">30–35% of the exam is "Implement & Manage". Airflow workspace config is directly in this domain — high probability question.</div>
+          </div>
+          <div class="card gold-border">
+            <div class="card-title">📅 When Added</div>
+            <div class="card-text">Added in the July 21, 2026 revision as a <strong>Minor change</strong> to workspace settings configuration skills.</div>
+          </div>
+          <div class="card blue-border">
+            <div class="card-title">🔗 Also Covers</div>
+            <div class="card-text">Orchestrate processes → Choose Pipeline vs Notebook vs Airflow → Design triggers → Parameters & dynamic expressions.</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+  <div class="slide-footer">
+    <span>Source: learn.microsoft.com/credentials/certifications/resources/study-guides/dp-700</span>
+    <span class="footer-counter">02 / 10</span>
+  </div>
+</div>
+
+<!-- ═══════════════════════════════════════════════
+     SLIDE 03 — 4 ORCHESTRATION TOOLS
+═══════════════════════════════════════════════ -->
+<div class="slide">
+  <div class="slide-topbar blue"></div>
+  <div class="fabric-header">
+    <div class="fabric-logo"><div class="fabric-logo-icon"><svg xmlns="http://www.w3.org/2000/svg" width="40" height="40" fill="currentColor" viewBox="3.999685764312744 3.999889373779297 39.99939727783203 40.001121520996094"><path fill="url(#fab-a)" fill-rule="evenodd" d="m5.64 31.6-.586 2.144c-.218.685-.524 1.693-.689 2.59a5.63 5.63 0 0 0 4.638 7.588c.792.114 1.688.108 2.692-.04l4.613-.636a2.92 2.92 0 0 0 2.421-2.127l3.175-11.662L5.64 31.599Z" clip-rule="evenodd"/><path fill="url(#fab-b)" d="M10.14 32.152c-4.863.753-5.861 4.423-5.861 4.423l4.656-17.11 24.333-3.292-3.318 12.052a1.71 1.71 0 0 1-1.388 1.244l-.136.022-18.423 2.684z"/><path fill="url(#fab-d)" d="m12.899 21.235 26.938-3.98a1.6 1.6 0 0 0 1.323-1.17l2.78-10.06a1.595 1.595 0 0 0-1.74-2.012L16.498 7.81a7.19 7.19 0 0 0-5.777 5.193L7.013 26.438c.744-2.717 1.202-4.355 5.886-5.203"/><path fill="url(#fab-g)" d="M12.899 21.236c-3.901.706-4.87 1.962-5.514 3.932L4.279 36.577s.992-3.633 5.796-4.41l18.352-2.673.136-.022a1.71 1.71 0 0 0 1.388-1.244l2.73-9.915z"/><defs><linearGradient id="fab-a" x1="12.953" x2="12.953" y1="44.001" y2="29.457" gradientUnits="userSpaceOnUse"><stop offset=".056" stop-color="#2AAC94"/><stop offset="1" stop-color="#085954"/></linearGradient><linearGradient id="fab-b" x1="31.331" x2="17.286" y1="33.448" y2="18.173" gradientUnits="userSpaceOnUse"><stop offset=".042" stop-color="#ABE88E"/><stop offset=".549" stop-color="#2AAA92"/><stop offset=".906" stop-color="#117865"/></linearGradient><linearGradient id="fab-d" x1="7.013" x2="42.589" y1="15.219" y2="15.219" gradientUnits="userSpaceOnUse"><stop offset=".043" stop-color="#25FFD4"/><stop offset=".874" stop-color="#55DDB9"/></linearGradient><linearGradient id="fab-g" x1="15.756" x2="16.168" y1="27.96" y2="15.74" gradientUnits="userSpaceOnUse"><stop offset=".205" stop-color="#063D3B" stop-opacity="0"/><stop offset=".872" stop-color="#063D3B" stop-opacity=".75"/></linearGradient></defs></svg></div><span class="fabric-logo-text">Microsoft Fabric</span></div>
+    <div class="header-badge blue-badge"><div class="dot"></div>Orchestration Tools</div>
+  </div>
+  <div class="slide-body">
+    <div class="breadcrumb"><span class="breadcrumb-tag blue">ORCHESTRATE PROCESSES</span><span>→</span><span>Choose the right tool for the job</span></div>
+    <div class="slide-heading">4 Orchestration Tools in Fabric</div>
+    <div class="slide-subheading">The DP-700 tests your ability to choose the correct tool for each scenario</div>
+    <div class="content-area">
+      <div class="grid-4" style="width:100%;">
+        <div class="card teal-border">
+          <div class="card-icon">🔧</div>
+          <div class="card-title">Data Pipeline</div>
+          <div class="card-subtitle">GUI Low-Code</div>
+          <ul class="bullet-list" style="margin-top:8px;">
+            <li>Multi-activity chains</li>
+            <li>Copy, notebook, SP, web</li>
+            <li>Schedule + event triggers</li>
+            <li>Parameters &amp; expressions</li>
+            <li>Retry &amp; error routing</li>
+          </ul>
+          <div class="pill teal" style="margin-top:auto;">Best for ELT flows</div>
+        </div>
+        <div class="card blue-border">
+          <div class="card-icon">📓</div>
+          <div class="card-title">Notebook</div>
+          <div class="card-subtitle">PySpark / SQL / KQL</div>
+          <ul class="bullet-list blue" style="margin-top:8px;">
+            <li>PySpark at Spark scale</li>
+            <li>Called via Pipeline</li>
+            <li>Cannot self-schedule ⚠️</li>
+            <li>mssparkutils for control</li>
+            <li>Interactive + scheduled</li>
+          </ul>
+          <div class="pill blue" style="margin-top:auto;">Best for compute</div>
+        </div>
+        <div class="card gold-border">
+          <div class="card-icon">⚙️</div>
+          <div class="card-title">Dataflow Gen2</div>
+          <div class="card-subtitle">Power Query M</div>
+          <ul class="bullet-list gold" style="margin-top:8px;">
+            <li>No-code drag &amp; drop</li>
+            <li>Power Query M engine</li>
+            <li>Built-in scheduler</li>
+            <li>DirectQuery sources</li>
+            <li>NOT for PySpark logic</li>
+          </ul>
+          <div class="pill gold" style="margin-top:auto;">Best for M transforms</div>
+        </div>
+        <div class="card orange-border">
+          <div class="card-icon">🌀</div>
+          <div class="card-title">Apache Airflow</div>
+          <div class="card-subtitle">Managed / DAG-Based</div>
+          <ul class="bullet-list orange" style="margin-top:8px;">
+            <li>Python DAG definitions</li>
+            <li>Complex dependencies</li>
+            <li>Multi-system operators</li>
+            <li>Fabric-native operators</li>
+            <li>Configured in Workspace</li>
+          </ul>
+          <div class="pill orange" style="margin-top:auto;">Best for complex DAGs</div>
+        </div>
+      </div>
+    </div>
+  </div>
+  <div class="slide-footer">
+    <span>Authored by Sayan Banerjee • Microsoft Certified: Fabric Data Engineer Associate</span>
+    <span class="footer-counter">03 / 10</span>
+  </div>
+</div>
+
+<!-- ═══════════════════════════════════════════════
+     SLIDE 04 — AIRFLOW WORKSPACE SETTINGS
+═══════════════════════════════════════════════ -->
+<div class="slide">
+  <div class="slide-topbar orange"></div>
+  <div class="fabric-header">
+    <div class="fabric-logo"><div class="fabric-logo-icon"><svg xmlns="http://www.w3.org/2000/svg" width="40" height="40" fill="currentColor" viewBox="3.999685764312744 3.999889373779297 39.99939727783203 40.001121520996094"><path fill="url(#fab-a)" fill-rule="evenodd" d="m5.64 31.6-.586 2.144c-.218.685-.524 1.693-.689 2.59a5.63 5.63 0 0 0 4.638 7.588c.792.114 1.688.108 2.692-.04l4.613-.636a2.92 2.92 0 0 0 2.421-2.127l3.175-11.662L5.64 31.599Z" clip-rule="evenodd"/><path fill="url(#fab-b)" d="M10.14 32.152c-4.863.753-5.861 4.423-5.861 4.423l4.656-17.11 24.333-3.292-3.318 12.052a1.71 1.71 0 0 1-1.388 1.244l-.136.022-18.423 2.684z"/><path fill="url(#fab-d)" d="m12.899 21.235 26.938-3.98a1.6 1.6 0 0 0 1.323-1.17l2.78-10.06a1.595 1.595 0 0 0-1.74-2.012L16.498 7.81a7.19 7.19 0 0 0-5.777 5.193L7.013 26.438c.744-2.717 1.202-4.355 5.886-5.203"/><path fill="url(#fab-g)" d="M12.899 21.236c-3.901.706-4.87 1.962-5.514 3.932L4.279 36.577s.992-3.633 5.796-4.41l18.352-2.673.136-.022a1.71 1.71 0 0 0 1.388-1.244l2.73-9.915z"/><defs><linearGradient id="fab-a" x1="12.953" x2="12.953" y1="44.001" y2="29.457" gradientUnits="userSpaceOnUse"><stop offset=".056" stop-color="#2AAC94"/><stop offset="1" stop-color="#085954"/></linearGradient><linearGradient id="fab-b" x1="31.331" x2="17.286" y1="33.448" y2="18.173" gradientUnits="userSpaceOnUse"><stop offset=".042" stop-color="#ABE88E"/><stop offset=".549" stop-color="#2AAA92"/><stop offset=".906" stop-color="#117865"/></linearGradient><linearGradient id="fab-d" x1="7.013" x2="42.589" y1="15.219" y2="15.219" gradientUnits="userSpaceOnUse"><stop offset=".043" stop-color="#25FFD4"/><stop offset=".874" stop-color="#55DDB9"/></linearGradient><linearGradient id="fab-g" x1="15.756" x2="16.168" y1="27.96" y2="15.74" gradientUnits="userSpaceOnUse"><stop offset=".205" stop-color="#063D3B" stop-opacity="0"/><stop offset=".872" stop-color="#063D3B" stop-opacity=".75"/></linearGradient></defs></svg></div><span class="fabric-logo-text">Microsoft Fabric</span></div>
+    <div class="header-badge orange-badge"><div class="dot"></div>Apache Airflow</div>
+  </div>
+  <div class="slide-body">
+    <div class="breadcrumb"><span class="breadcrumb-tag orange">WORKSPACE SETTINGS</span><span>→</span><span>Configure Apache Airflow (Exam Objective)</span></div>
+    <div class="slide-heading">Managed Airflow:<br/>Workspace Configuration</div>
+    <div class="content-area">
+      <div style="flex:1;display:flex;flex-direction:column;gap:20px;">
+        <div class="highlight-box orange">
+          <div class="hb-icon">⚠️</div>
+          <div class="hb-text"><strong>Exam Key Fact</strong> Apache Airflow is configured at the WORKSPACE level → Workspace Settings → Apache Airflow — NOT at tenant level or item level.</div>
+        </div>
+        <div class="table-wrap">
+          <table>
+            <thead class="orange"><tr><th>Workspace Setting</th><th>What It Controls</th><th>Notes</th></tr></thead>
+            <tbody>
+              <tr><td><strong>Enable Airflow</strong></td><td>Activates managed Airflow in the workspace</td><td>Toggle on/off</td></tr>
+              <tr><td><strong>Environment Size</strong></td><td>Small / Medium / Large compute allocation</td><td>Cost driver</td></tr>
+              <tr><td><strong>DAG Folder (OneLake path)</strong></td><td>Where Python DAG .py files are stored</td><td>Native OneLake integration</td></tr>
+              <tr><td><strong>Plugin Folder</strong></td><td>Custom Airflow operators and plugins</td><td>Optional</td></tr>
+              <tr><td><strong>Requirements.txt</strong></td><td>Extra Python packages for DAG dependencies</td><td>pip install on startup</td></tr>
+              <tr><td><strong>Config Overrides</strong></td><td>Key-value pairs overriding airflow.cfg defaults</td><td>e.g. parallelism, max_active_runs</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+  </div>
+  <div class="slide-footer">
+    <span>Authored by Sayan Banerjee • Microsoft Certified: Fabric Data Engineer Associate</span>
+    <span class="footer-counter">04 / 10</span>
+  </div>
+</div>
+
+<!-- ═══════════════════════════════════════════════
+     SLIDE 05 — DAG ARCHITECTURE
+═══════════════════════════════════════════════ -->
+<div class="slide">
+  <div class="slide-topbar"></div>
+  <div class="fabric-header">
+    <div class="fabric-logo"><div class="fabric-logo-icon"><svg xmlns="http://www.w3.org/2000/svg" width="40" height="40" fill="currentColor" viewBox="3.999685764312744 3.999889373779297 39.99939727783203 40.001121520996094"><path fill="url(#fab-a)" fill-rule="evenodd" d="m5.64 31.6-.586 2.144c-.218.685-.524 1.693-.689 2.59a5.63 5.63 0 0 0 4.638 7.588c.792.114 1.688.108 2.692-.04l4.613-.636a2.92 2.92 0 0 0 2.421-2.127l3.175-11.662L5.64 31.599Z" clip-rule="evenodd"/><path fill="url(#fab-b)" d="M10.14 32.152c-4.863.753-5.861 4.423-5.861 4.423l4.656-17.11 24.333-3.292-3.318 12.052a1.71 1.71 0 0 1-1.388 1.244l-.136.022-18.423 2.684z"/><path fill="url(#fab-d)" d="m12.899 21.235 26.938-3.98a1.6 1.6 0 0 0 1.323-1.17l2.78-10.06a1.595 1.595 0 0 0-1.74-2.012L16.498 7.81a7.19 7.19 0 0 0-5.777 5.193L7.013 26.438c.744-2.717 1.202-4.355 5.886-5.203"/><path fill="url(#fab-g)" d="M12.899 21.236c-3.901.706-4.87 1.962-5.514 3.932L4.279 36.577s.992-3.633 5.796-4.41l18.352-2.673.136-.022a1.71 1.71 0 0 0 1.388-1.244l2.73-9.915z"/><defs><linearGradient id="fab-a" x1="12.953" x2="12.953" y1="44.001" y2="29.457" gradientUnits="userSpaceOnUse"><stop offset=".056" stop-color="#2AAC94"/><stop offset="1" stop-color="#085954"/></linearGradient><linearGradient id="fab-b" x1="31.331" x2="17.286" y1="33.448" y2="18.173" gradientUnits="userSpaceOnUse"><stop offset=".042" stop-color="#ABE88E"/><stop offset=".549" stop-color="#2AAA92"/><stop offset=".906" stop-color="#117865"/></linearGradient><linearGradient id="fab-d" x1="7.013" x2="42.589" y1="15.219" y2="15.219" gradientUnits="userSpaceOnUse"><stop offset=".043" stop-color="#25FFD4"/><stop offset=".874" stop-color="#55DDB9"/></linearGradient><linearGradient id="fab-g" x1="15.756" x2="16.168" y1="27.96" y2="15.74" gradientUnits="userSpaceOnUse"><stop offset=".205" stop-color="#063D3B" stop-opacity="0"/><stop offset=".872" stop-color="#063D3B" stop-opacity=".75"/></linearGradient></defs></svg></div><span class="fabric-logo-text">Microsoft Fabric</span></div>
+    <div class="header-badge"><div class="dot"></div>DAG Architecture</div>
+  </div>
+  <div class="slide-body">
+    <div class="breadcrumb"><span class="breadcrumb-tag">AIRFLOW DAGs</span><span>→</span><span>Directed Acyclic Graph — the core orchestration unit</span></div>
+    <div class="slide-heading">DAGs + Fabric-Native Operators</div>
+    <div class="content-area">
+      <div class="grid-2">
+        <div style="display:flex;flex-direction:column;gap:20px;">
+          <div class="highlight-box teal">
+            <div class="hb-icon">🔗</div>
+            <div class="hb-text"><strong>What is a DAG?</strong> A Python script defining Tasks + Dependencies with no circular paths. "Acyclic" = no loops allowed.</div>
+          </div>
+          <div class="code-block" style="font-size:12px;">
+<span class="code-keyword">from</span> airflow <span class="code-keyword">import</span> DAG<br/>
+<span class="code-keyword">from</span> airflow.providers.microsoft.fabric.operators.notebook <span class="code-keyword">import</span> FabricRunNotebookOperator<br/>
+<br/>
+<span class="code-keyword">with</span> <span class="code-fn">DAG</span>(<br/>
+&nbsp;&nbsp;<span class="code-var">dag_id</span>=<span class="code-string">'dp700_bronze_to_silver'</span>,<br/>
+&nbsp;&nbsp;<span class="code-var">schedule_interval</span>=<span class="code-string">'0 6 * * *'</span>, <span class="code-comment"># Daily 06:00</span><br/>
+&nbsp;&nbsp;<span class="code-var">catchup</span>=<span class="code-keyword">False</span><br/>
+) <span class="code-keyword">as</span> dag:<br/>
+&nbsp;&nbsp;ingest = <span class="code-fn">FabricRunNotebookOperator</span>(<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="code-var">task_id</span>=<span class="code-string">'ingest_raw_data'</span>,<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="code-var">notebook_id</span>=<span class="code-string">'&lt;id&gt;'</span><br/>
+&nbsp;&nbsp;)<br/>
+&nbsp;&nbsp;transform = <span class="code-fn">FabricRunNotebookOperator</span>(<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="code-var">task_id</span>=<span class="code-string">'transform_bronze'</span>,<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="code-var">notebook_id</span>=<span class="code-string">'&lt;id&gt;'</span><br/>
+&nbsp;&nbsp;)<br/>
+&nbsp;&nbsp;ingest &gt;&gt; transform <span class="code-comment"># dependency arrow</span>
+          </div>
+        </div>
+        <div style="display:flex;flex-direction:column;gap:16px;">
+          <div class="card-title" style="font-size:18px;margin-bottom:4px;">Fabric-Native Airflow Operators</div>
+          <div class="card blue-border" style="padding:20px;gap:10px;">
+            <div class="card-title" style="font-size:16px;">🟦 FabricRunNotebookOperator</div>
+            <div class="card-text" style="font-size:14px;">Triggers a Fabric Notebook by workspace_id + notebook_id. Supports parameters.</div>
+          </div>
+          <div class="card teal-border" style="padding:20px;gap:10px;">
+            <div class="card-title" style="font-size:16px;">🔷 FabricRunPipelineOperator</div>
+            <div class="card-text" style="font-size:14px;">Triggers a Data Factory Pipeline in Fabric. Waits for completion by default.</div>
+          </div>
+          <div class="card gold-border" style="padding:20px;gap:10px;">
+            <div class="card-title" style="font-size:16px;">🟡 FabricRunDataflowOperator</div>
+            <div class="card-text" style="font-size:14px;">Refreshes a Dataflow Gen2. Useful for chaining Dataflows with other Fabric workloads.</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+  <div class="slide-footer">
+    <span>Authored by Sayan Banerjee • Microsoft Certified: Fabric Data Engineer Associate</span>
+    <span class="footer-counter">05 / 10</span>
+  </div>
+</div>
+
+<!-- ═══════════════════════════════════════════════
+     SLIDE 06 — TRIGGERS
+═══════════════════════════════════════════════ -->
+<div class="slide">
+  <div class="slide-topbar blue"></div>
+  <div class="fabric-header">
+    <div class="fabric-logo"><div class="fabric-logo-icon"><svg xmlns="http://www.w3.org/2000/svg" width="40" height="40" fill="currentColor" viewBox="3.999685764312744 3.999889373779297 39.99939727783203 40.001121520996094"><path fill="url(#fab-a)" fill-rule="evenodd" d="m5.64 31.6-.586 2.144c-.218.685-.524 1.693-.689 2.59a5.63 5.63 0 0 0 4.638 7.588c.792.114 1.688.108 2.692-.04l4.613-.636a2.92 2.92 0 0 0 2.421-2.127l3.175-11.662L5.64 31.599Z" clip-rule="evenodd"/><path fill="url(#fab-b)" d="M10.14 32.152c-4.863.753-5.861 4.423-5.861 4.423l4.656-17.11 24.333-3.292-3.318 12.052a1.71 1.71 0 0 1-1.388 1.244l-.136.022-18.423 2.684z"/><path fill="url(#fab-d)" d="m12.899 21.235 26.938-3.98a1.6 1.6 0 0 0 1.323-1.17l2.78-10.06a1.595 1.595 0 0 0-1.74-2.012L16.498 7.81a7.19 7.19 0 0 0-5.777 5.193L7.013 26.438c.744-2.717 1.202-4.355 5.886-5.203"/><path fill="url(#fab-g)" d="M12.899 21.236c-3.901.706-4.87 1.962-5.514 3.932L4.279 36.577s.992-3.633 5.796-4.41l18.352-2.673.136-.022a1.71 1.71 0 0 0 1.388-1.244l2.73-9.915z"/><defs><linearGradient id="fab-a" x1="12.953" x2="12.953" y1="44.001" y2="29.457" gradientUnits="userSpaceOnUse"><stop offset=".056" stop-color="#2AAC94"/><stop offset="1" stop-color="#085954"/></linearGradient><linearGradient id="fab-b" x1="31.331" x2="17.286" y1="33.448" y2="18.173" gradientUnits="userSpaceOnUse"><stop offset=".042" stop-color="#ABE88E"/><stop offset=".549" stop-color="#2AAA92"/><stop offset=".906" stop-color="#117865"/></linearGradient><linearGradient id="fab-d" x1="7.013" x2="42.589" y1="15.219" y2="15.219" gradientUnits="userSpaceOnUse"><stop offset=".043" stop-color="#25FFD4"/><stop offset=".874" stop-color="#55DDB9"/></linearGradient><linearGradient id="fab-g" x1="15.756" x2="16.168" y1="27.96" y2="15.74" gradientUnits="userSpaceOnUse"><stop offset=".205" stop-color="#063D3B" stop-opacity="0"/><stop offset=".872" stop-color="#063D3B" stop-opacity=".75"/></linearGradient></defs></svg></div><span class="fabric-logo-text">Microsoft Fabric</span></div>
+    <div class="header-badge blue-badge"><div class="dot"></div>Triggers & Schedules</div>
+  </div>
+  <div class="slide-body">
+    <div class="breadcrumb"><span class="breadcrumb-tag blue">ORCHESTRATE PROCESSES</span><span>→</span><span>Design and implement schedules and event-based triggers</span></div>
+    <div class="slide-heading">Schedule vs Event-Based Triggers</div>
+    <div class="content-area">
+      <div class="table-wrap" style="height:fit-content;">
+        <table>
+          <thead class="blue"><tr><th>Trigger Type</th><th>Tool</th><th>When to Use</th><th>Exam Notes</th></tr></thead>
+          <tbody>
+            <tr><td><strong>⏱️ Schedule Trigger</strong></td><td><span class="td-blue">Pipeline, Dataflow Gen2, Airflow DAG</span></td><td>Fixed time intervals — daily, hourly, CRON</td><td>Notebook CANNOT self-schedule</td></tr>
+            <tr><td><strong>📂 Storage Event Trigger</strong></td><td><span class="td-blue">Pipeline</span></td><td>File arrives/modified in OneLake or ADLS Gen2</td><td>Most common event trigger in DP-700</td></tr>
+            <tr><td><strong>🪟 Tumbling Window</strong></td><td><span class="td-blue">Pipeline</span></td><td>Time-sliced micro-batches with no overlap</td><td>Distinct from schedule — has "window" concept</td></tr>
+            <tr><td><strong>🔔 Fabric Activator (Reflex)</strong></td><td><span class="td-blue">Activator item</span></td><td>Metric threshold / data condition met</td><td>Not a Pipeline trigger — separate Fabric item</td></tr>
+            <tr><td><strong>🌀 Airflow Sensor</strong></td><td><span class="td-blue">Airflow DAG</span></td><td>Wait for external condition (file, task, API)</td><td>ExternalTaskSensor, FileSensor, HttpSensor</td></tr>
+          </tbody>
+        </table>
+      </div>
+      <div class="highlight-box blue" style="margin-top:20px;">
+        <div class="hb-icon">💡</div>
+        <div class="hb-text"><strong>Key DP-700 Distinction</strong> Schedule trigger = time-driven. Storage event trigger = data-driven. Tumbling window = time-sliced batches. Activator = metric-driven. These are all different trigger types — the exam may ask you to pick the right one.</div>
+      </div>
+    </div>
+  </div>
+  <div class="slide-footer">
+    <span>Authored by Sayan Banerjee • Microsoft Certified: Fabric Data Engineer Associate</span>
+    <span class="footer-counter">06 / 10</span>
+  </div>
+</div>
+
+<!-- ═══════════════════════════════════════════════
+     SLIDE 07 — ORCHESTRATION PATTERNS
+═══════════════════════════════════════════════ -->
+<div class="slide">
+  <div class="slide-topbar"></div>
+  <div class="fabric-header">
+    <div class="fabric-logo"><div class="fabric-logo-icon"><svg xmlns="http://www.w3.org/2000/svg" width="40" height="40" fill="currentColor" viewBox="3.999685764312744 3.999889373779297 39.99939727783203 40.001121520996094"><path fill="url(#fab-a)" fill-rule="evenodd" d="m5.64 31.6-.586 2.144c-.218.685-.524 1.693-.689 2.59a5.63 5.63 0 0 0 4.638 7.588c.792.114 1.688.108 2.692-.04l4.613-.636a2.92 2.92 0 0 0 2.421-2.127l3.175-11.662L5.64 31.599Z" clip-rule="evenodd"/><path fill="url(#fab-b)" d="M10.14 32.152c-4.863.753-5.861 4.423-5.861 4.423l4.656-17.11 24.333-3.292-3.318 12.052a1.71 1.71 0 0 1-1.388 1.244l-.136.022-18.423 2.684z"/><path fill="url(#fab-d)" d="m12.899 21.235 26.938-3.98a1.6 1.6 0 0 0 1.323-1.17l2.78-10.06a1.595 1.595 0 0 0-1.74-2.012L16.498 7.81a7.19 7.19 0 0 0-5.777 5.193L7.013 26.438c.744-2.717 1.202-4.355 5.886-5.203"/><path fill="url(#fab-g)" d="M12.899 21.236c-3.901.706-4.87 1.962-5.514 3.932L4.279 36.577s.992-3.633 5.796-4.41l18.352-2.673.136-.022a1.71 1.71 0 0 0 1.388-1.244l2.73-9.915z"/><defs><linearGradient id="fab-a" x1="12.953" x2="12.953" y1="44.001" y2="29.457" gradientUnits="userSpaceOnUse"><stop offset=".056" stop-color="#2AAC94"/><stop offset="1" stop-color="#085954"/></linearGradient><linearGradient id="fab-b" x1="31.331" x2="17.286" y1="33.448" y2="18.173" gradientUnits="userSpaceOnUse"><stop offset=".042" stop-color="#ABE88E"/><stop offset=".549" stop-color="#2AAA92"/><stop offset=".906" stop-color="#117865"/></linearGradient><linearGradient id="fab-d" x1="7.013" x2="42.589" y1="15.219" y2="15.219" gradientUnits="userSpaceOnUse"><stop offset=".043" stop-color="#25FFD4"/><stop offset=".874" stop-color="#55DDB9"/></linearGradient><linearGradient id="fab-g" x1="15.756" x2="16.168" y1="27.96" y2="15.74" gradientUnits="userSpaceOnUse"><stop offset=".205" stop-color="#063D3B" stop-opacity="0"/><stop offset=".872" stop-color="#063D3B" stop-opacity=".75"/></linearGradient></defs></svg></div><span class="fabric-logo-text">Microsoft Fabric</span></div>
+    <div class="header-badge"><div class="dot"></div>Orchestration Patterns</div>
+  </div>
+  <div class="slide-body">
+    <div class="breadcrumb"><span class="breadcrumb-tag">ORCHESTRATION</span><span>→</span><span>Parameters, dynamic expressions, and control flow patterns</span></div>
+    <div class="slide-heading">Orchestration Patterns & Parameters</div>
+    <div class="content-area">
+      <div class="grid-2">
+        <div style="display:flex;flex-direction:column;gap:16px;">
+          <div class="card teal-border" style="padding:20px;gap:10px;">
+            <div class="card-title" style="font-size:17px;">➡️ Sequential Pattern</div>
+            <div style="display:flex;align-items:center;gap:10px;padding:10px 0;">
+              <div class="dag-node teal" style="font-size:12px;padding:10px 14px;">Ingest</div>
+              <div class="dag-arrow">→</div>
+              <div class="dag-node teal" style="font-size:12px;padding:10px 14px;">Transform</div>
+              <div class="dag-arrow">→</div>
+              <div class="dag-node teal" style="font-size:12px;padding:10px 14px;">Load</div>
+            </div>
+            <div class="card-text" style="font-size:14px;">Default pipeline chain. Activity A must succeed before B starts.</div>
+          </div>
+          <div class="card blue-border" style="padding:20px;gap:10px;">
+            <div class="card-title" style="font-size:17px;">⚡ Parallel Pattern (ForEach)</div>
+            <div class="card-text" style="font-size:14px;">Use <code style="background:#f0f4ff;padding:2px 6px;border-radius:3px;font-size:13px;">ForEach</code> with <strong>isSequential: false</strong> to process multiple items concurrently. Example: ingest 5 tables in parallel.</div>
+          </div>
+          <div class="card gold-border" style="padding:20px;gap:10px;">
+            <div class="card-title" style="font-size:17px;">🔀 Conditional Pattern (If)</div>
+            <div class="card-text" style="font-size:14px;">Use <code style="background:#fffbf0;padding:2px 6px;border-radius:3px;font-size:13px;">If Condition</code> activity. Expression evaluates to true/false → routes to different activity branches.</div>
+          </div>
+        </div>
+        <div style="display:flex;flex-direction:column;gap:16px;">
+          <div class="card-title" style="font-size:18px;">📐 Dynamic Parameters & Expressions</div>
+          <div class="code-block" style="font-size:12px;flex:1;">
+<span class="code-comment">// Pipeline parameter — dynamic date</span><br/>
+{<br/>
+&nbsp;&nbsp;<span class="code-var">"load_date"</span>: <span class="code-string">"@formatDateTime(utcNow(), 'yyyy-MM-dd')"</span>,<br/>
+&nbsp;&nbsp;<span class="code-var">"env"</span>: <span class="code-string">"production"</span><br/>
+}<br/>
+<br/>
+<span class="code-comment"># Notebook receives parameters via:</span><br/>
+mssparkutils.notebook.<span class="code-fn">run</span>(<br/>
+&nbsp;&nbsp;<span class="code-string">"Silver_Transform"</span>, <span class="code-var">600</span>,<br/>
+&nbsp;&nbsp;{<span class="code-string">"load_date"</span>: <span class="code-string">"2026-07-21"</span>}<br/>
+)<br/>
+<br/>
+<span class="code-comment"># Airflow Jinja template equivalent:</span><br/>
+<span class="code-var">execution_date</span> = <span class="code-string">"{{ ds }}"</span> <span class="code-comment"># run date</span>
+          </div>
+          <div class="highlight-box teal">
+            <div class="hb-icon">🔁</div>
+            <div class="hb-text"><strong>Retry & Error Handling</strong> Each pipeline activity has: Retry count, Retry interval (seconds), On Failure / On Skip / On Success paths for routing.</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+  <div class="slide-footer">
+    <span>Authored by Sayan Banerjee • Microsoft Certified: Fabric Data Engineer Associate</span>
+    <span class="footer-counter">07 / 10</span>
+  </div>
+</div>
+
+<!-- ═══════════════════════════════════════════════
+     SLIDE 08 — EXAM TRAPS
+═══════════════════════════════════════════════ -->
+<div class="slide">
+  <div class="slide-topbar gold"></div>
+  <div class="fabric-header">
+    <div class="fabric-logo"><div class="fabric-logo-icon"><svg xmlns="http://www.w3.org/2000/svg" width="40" height="40" fill="currentColor" viewBox="3.999685764312744 3.999889373779297 39.99939727783203 40.001121520996094"><path fill="url(#fab-a)" fill-rule="evenodd" d="m5.64 31.6-.586 2.144c-.218.685-.524 1.693-.689 2.59a5.63 5.63 0 0 0 4.638 7.588c.792.114 1.688.108 2.692-.04l4.613-.636a2.92 2.92 0 0 0 2.421-2.127l3.175-11.662L5.64 31.599Z" clip-rule="evenodd"/><path fill="url(#fab-b)" d="M10.14 32.152c-4.863.753-5.861 4.423-5.861 4.423l4.656-17.11 24.333-3.292-3.318 12.052a1.71 1.71 0 0 1-1.388 1.244l-.136.022-18.423 2.684z"/><path fill="url(#fab-d)" d="m12.899 21.235 26.938-3.98a1.6 1.6 0 0 0 1.323-1.17l2.78-10.06a1.595 1.595 0 0 0-1.74-2.012L16.498 7.81a7.19 7.19 0 0 0-5.777 5.193L7.013 26.438c.744-2.717 1.202-4.355 5.886-5.203"/><path fill="url(#fab-g)" d="M12.899 21.236c-3.901.706-4.87 1.962-5.514 3.932L4.279 36.577s.992-3.633 5.796-4.41l18.352-2.673.136-.022a1.71 1.71 0 0 0 1.388-1.244l2.73-9.915z"/><defs><linearGradient id="fab-a" x1="12.953" x2="12.953" y1="44.001" y2="29.457" gradientUnits="userSpaceOnUse"><stop offset=".056" stop-color="#2AAC94"/><stop offset="1" stop-color="#085954"/></linearGradient><linearGradient id="fab-b" x1="31.331" x2="17.286" y1="33.448" y2="18.173" gradientUnits="userSpaceOnUse"><stop offset=".042" stop-color="#ABE88E"/><stop offset=".549" stop-color="#2AAA92"/><stop offset=".906" stop-color="#117865"/></linearGradient><linearGradient id="fab-d" x1="7.013" x2="42.589" y1="15.219" y2="15.219" gradientUnits="userSpaceOnUse"><stop offset=".043" stop-color="#25FFD4"/><stop offset=".874" stop-color="#55DDB9"/></linearGradient><linearGradient id="fab-g" x1="15.756" x2="16.168" y1="27.96" y2="15.74" gradientUnits="userSpaceOnUse"><stop offset=".205" stop-color="#063D3B" stop-opacity="0"/><stop offset=".872" stop-color="#063D3B" stop-opacity=".75"/></linearGradient></defs></svg></div><span class="fabric-logo-text">Microsoft Fabric</span></div>
+    <div class="header-badge gold-badge"><div class="dot"></div>Exam Traps</div>
+  </div>
+  <div class="slide-body">
+    <div class="breadcrumb"><span class="breadcrumb-tag gold">DP-700 CAUTION</span><span>→</span><span>Orchestration questions that trick candidates</span></div>
+    <div class="slide-heading">Top 4 Orchestration Exam Traps ⚠️</div>
+    <div class="content-area">
+      <div class="grid-2">
+        <div style="display:flex;flex-direction:column;gap:16px;">
+          <div class="highlight-box red">
+            <div class="hb-icon">🚫</div>
+            <div class="hb-text"><strong>Trap 1: "Schedule a Notebook directly"</strong> ❌ WRONG. Notebooks CANNOT self-schedule. You must wrap them in a Pipeline with a Schedule Trigger, or call them via an Airflow DAG.</div>
+          </div>
+          <div class="highlight-box red">
+            <div class="hb-icon">🚫</div>
+            <div class="hb-text"><strong>Trap 2: "Configure Airflow at tenant level"</strong> ❌ WRONG. Airflow is configured at WORKSPACE level: Workspace Settings → Apache Airflow. Not Admin Portal, not item level.</div>
+          </div>
+        </div>
+        <div style="display:flex;flex-direction:column;gap:16px;">
+          <div class="highlight-box red">
+            <div class="hb-icon">🚫</div>
+            <div class="hb-text"><strong>Trap 3: "Use Dataflow Gen2 for PySpark logic"</strong> ❌ WRONG. Dataflow Gen2 uses Power Query M — no PySpark. For PySpark at scale, use a Notebook called from a Pipeline.</div>
+          </div>
+          <div class="highlight-box red">
+            <div class="hb-icon">🚫</div>
+            <div class="hb-text"><strong>Trap 4: "Tumbling Window = Schedule Trigger"</strong> ❌ WRONG. Tumbling Window is time-sliced with non-overlapping windows and backfill support. Schedule trigger is a simple recurrence. They solve different problems.</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+  <div class="slide-footer">
+    <span>Authored by Sayan Banerjee • Microsoft Certified: Fabric Data Engineer Associate</span>
+    <span class="footer-counter">08 / 10</span>
+  </div>
+</div>
+
+<!-- ═══════════════════════════════════════════════
+     SLIDE 09 — DECISION CHEAT SHEET
+═══════════════════════════════════════════════ -->
+<div class="slide">
+  <div class="slide-topbar"></div>
+  <div class="fabric-header">
+    <div class="fabric-logo"><div class="fabric-logo-icon"><svg xmlns="http://www.w3.org/2000/svg" width="40" height="40" fill="currentColor" viewBox="3.999685764312744 3.999889373779297 39.99939727783203 40.001121520996094"><path fill="url(#fab-a)" fill-rule="evenodd" d="m5.64 31.6-.586 2.144c-.218.685-.524 1.693-.689 2.59a5.63 5.63 0 0 0 4.638 7.588c.792.114 1.688.108 2.692-.04l4.613-.636a2.92 2.92 0 0 0 2.421-2.127l3.175-11.662L5.64 31.599Z" clip-rule="evenodd"/><path fill="url(#fab-b)" d="M10.14 32.152c-4.863.753-5.861 4.423-5.861 4.423l4.656-17.11 24.333-3.292-3.318 12.052a1.71 1.71 0 0 1-1.388 1.244l-.136.022-18.423 2.684z"/><path fill="url(#fab-d)" d="m12.899 21.235 26.938-3.98a1.6 1.6 0 0 0 1.323-1.17l2.78-10.06a1.595 1.595 0 0 0-1.74-2.012L16.498 7.81a7.19 7.19 0 0 0-5.777 5.193L7.013 26.438c.744-2.717 1.202-4.355 5.886-5.203"/><path fill="url(#fab-g)" d="M12.899 21.236c-3.901.706-4.87 1.962-5.514 3.932L4.279 36.577s.992-3.633 5.796-4.41l18.352-2.673.136-.022a1.71 1.71 0 0 0 1.388-1.244l2.73-9.915z"/><defs><linearGradient id="fab-a" x1="12.953" x2="12.953" y1="44.001" y2="29.457" gradientUnits="userSpaceOnUse"><stop offset=".056" stop-color="#2AAC94"/><stop offset="1" stop-color="#085954"/></linearGradient><linearGradient id="fab-b" x1="31.331" x2="17.286" y1="33.448" y2="18.173" gradientUnits="userSpaceOnUse"><stop offset=".042" stop-color="#ABE88E"/><stop offset=".549" stop-color="#2AAA92"/><stop offset=".906" stop-color="#117865"/></linearGradient><linearGradient id="fab-d" x1="7.013" x2="42.589" y1="15.219" y2="15.219" gradientUnits="userSpaceOnUse"><stop offset=".043" stop-color="#25FFD4"/><stop offset=".874" stop-color="#55DDB9"/></linearGradient><linearGradient id="fab-g" x1="15.756" x2="16.168" y1="27.96" y2="15.74" gradientUnits="userSpaceOnUse"><stop offset=".205" stop-color="#063D3B" stop-opacity="0"/><stop offset=".872" stop-color="#063D3B" stop-opacity=".75"/></linearGradient></defs></svg></div><span class="fabric-logo-text">Microsoft Fabric</span></div>
+    <div class="header-badge"><div class="dot"></div>Decision Cheat Sheet</div>
+  </div>
+  <div class="slide-body">
+    <div class="breadcrumb"><span class="breadcrumb-tag">QUICK REFERENCE</span><span>→</span><span>When to use which orchestration tool</span></div>
+    <div class="slide-heading">Orchestration Decision Matrix</div>
+    <div class="content-area">
+      <div class="table-wrap">
+        <table>
+          <thead><tr><th>Scenario</th><th>Best Tool</th><th>Why</th></tr></thead>
+          <tbody>
+            <tr><td>Simple ELT: Copy data → Transform notebook → Write to Lakehouse</td><td><span class="td-teal">Data Pipeline</span></td><td>Native Fabric-to-Fabric GUI, schedule trigger, sequential activities</td></tr>
+            <tr><td>Complex cross-system DAG with 20+ tasks and conditional branches</td><td><span class="td-gold">Apache Airflow</span></td><td>Full DAG dependencies, Python operators, multi-system support</td></tr>
+            <tr><td>Non-technical team needs to transform data without code</td><td><span class="td-blue">Dataflow Gen2</span></td><td>Power Query M, no-code UI, direct semantic model refresh</td></tr>
+            <tr><td>Run PySpark transformations at large scale</td><td><span class="td-teal">Notebook (via Pipeline)</span></td><td>Notebook runs on Spark; Pipeline schedules and passes parameters</td></tr>
+            <tr><td>Trigger pipeline when CSV file arrives in OneLake folder</td><td><span class="td-blue">Pipeline Storage Event Trigger</span></td><td>Event-driven — fires on file arrival/modification</td></tr>
+            <tr><td>Alert and trigger action when sales metric drops below threshold</td><td><span class="td-gold">Fabric Activator (Reflex)</span></td><td>Metric/data condition monitoring, not a pipeline trigger</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+  <div class="slide-footer">
+    <span>📌 Save this slide for your DP-700 exam prep</span>
+    <span class="footer-counter">09 / 10</span>
+  </div>
+</div>
+
+<!-- ═══════════════════════════════════════════════
+     SLIDE 10 — CTA
+═══════════════════════════════════════════════ -->
+<div class="slide">
+  <div class="slide-topbar grad"></div>
+  <div class="fabric-header">
+    <div class="fabric-logo"><div class="fabric-logo-icon"><svg xmlns="http://www.w3.org/2000/svg" width="40" height="40" fill="currentColor" viewBox="3.999685764312744 3.999889373779297 39.99939727783203 40.001121520996094"><path fill="url(#fab-a)" fill-rule="evenodd" d="m5.64 31.6-.586 2.144c-.218.685-.524 1.693-.689 2.59a5.63 5.63 0 0 0 4.638 7.588c.792.114 1.688.108 2.692-.04l4.613-.636a2.92 2.92 0 0 0 2.421-2.127l3.175-11.662L5.64 31.599Z" clip-rule="evenodd"/><path fill="url(#fab-b)" d="M10.14 32.152c-4.863.753-5.861 4.423-5.861 4.423l4.656-17.11 24.333-3.292-3.318 12.052a1.71 1.71 0 0 1-1.388 1.244l-.136.022-18.423 2.684z"/><path fill="url(#fab-d)" d="m12.899 21.235 26.938-3.98a1.6 1.6 0 0 0 1.323-1.17l2.78-10.06a1.595 1.595 0 0 0-1.74-2.012L16.498 7.81a7.19 7.19 0 0 0-5.777 5.193L7.013 26.438c.744-2.717 1.202-4.355 5.886-5.203"/><path fill="url(#fab-g)" d="M12.899 21.236c-3.901.706-4.87 1.962-5.514 3.932L4.279 36.577s.992-3.633 5.796-4.41l18.352-2.673.136-.022a1.71 1.71 0 0 0 1.388-1.244l2.73-9.915z"/><defs><linearGradient id="fab-a" x1="12.953" x2="12.953" y1="44.001" y2="29.457" gradientUnits="userSpaceOnUse"><stop offset=".056" stop-color="#2AAC94"/><stop offset="1" stop-color="#085954"/></linearGradient><linearGradient id="fab-b" x1="31.331" x2="17.286" y1="33.448" y2="18.173" gradientUnits="userSpaceOnUse"><stop offset=".042" stop-color="#ABE88E"/><stop offset=".549" stop-color="#2AAA92"/><stop offset=".906" stop-color="#117865"/></linearGradient><linearGradient id="fab-d" x1="7.013" x2="42.589" y1="15.219" y2="15.219" gradientUnits="userSpaceOnUse"><stop offset=".043" stop-color="#25FFD4"/><stop offset=".874" stop-color="#55DDB9"/></linearGradient><linearGradient id="fab-g" x1="15.756" x2="16.168" y1="27.96" y2="15.74" gradientUnits="userSpaceOnUse"><stop offset=".205" stop-color="#063D3B" stop-opacity="0"/><stop offset=".872" stop-color="#063D3B" stop-opacity=".75"/></linearGradient></defs></svg></div><span class="fabric-logo-text">Microsoft Fabric</span></div>
+    <div class="header-badge"><div class="dot"></div>Join the Challenge</div>
+  </div>
+  <div class="cta-body">
+    <div class="cta-icon">🌀</div>
+    <div class="cta-heading">Now you know Airflow.<br/>Most DP-700 candidates don't.</div>
+    <div class="cta-sub">Follow the 30-Day DP-700 challenge to master every exam domain with real-world context, career-ready visuals, and practice questions.</div>
+    <div class="cta-next">🔔 Day 05 Tomorrow: Ingest & Transform Data — Pipelines Deep Dive</div>
+    <div class="cta-author">
+      <strong>Sayan Banerjee</strong> • AI, BI & Analytics Consultant<br/>
+      Microsoft Certified: Fabric Data Engineer Associate (DP-700)
+    </div>
+  </div>
+  <div class="slide-footer">
+    <span>#MicrosoftFabric #DP700 #DataEngineering #ApacheAirflow #30DayChallenge</span>
+    <span class="footer-counter">10 / 10</span>
+  </div>
+</div>
+
+</body>
+</html>

@@ -1,0 +1,729 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Day 3 – DP-700 | Sayan Banerjee | OneLake Settings & Access Control</title>
+  <link href="https://fonts.googleapis.com/css2?family=Segoe+UI:wght@400;500;600;700&family=Inter:wght@400;500;600;700;800;900&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet" />
+  <style>
+    :root {
+      --ms-teal:       #00a2a2;
+      --ms-teal-dark:  #007a7a;
+      --ms-teal-light: #e0f5f5;
+      --ms-blue:       #0078d4;
+      --ms-blue-light: #eff6fc;
+      --ms-gold:       #f4c430;
+      --ms-gold-bg:    #fff8e1;
+      --ms-purple:     #7719aa;
+      --ms-purple-bg:  #f4edfb;
+      --ms-green:      #107c10;
+      --ms-green-bg:   #dff6dd;
+      --bg:            #f3f2f1;
+      --surface:       #ffffff;
+      --border:        #edebe9;
+      --border-med:    #c8c6c4;
+      --text-primary:  #201f1e;
+      --text-secondary:#605e5c;
+      --text-muted:    #a19f9d;
+    }
+
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      background: #e8e6e3;
+      font-family: 'Inter', 'Segoe UI', sans-serif;
+      display: flex; flex-direction: column; align-items: center;
+      gap: 48px; padding: 48px 20px 80px;
+    }
+
+    .page-title { font-size: 15px; color: #605e5c; font-weight: 600; letter-spacing: 0.5px; }
+
+    .slide {
+      width: 1920px; height: 1080px;
+      background: var(--surface); border: 1px solid var(--border);
+      border-radius: 6px; position: relative; overflow: hidden;
+      display: flex; flex-direction: column;
+      box-shadow: 0 4px 16px rgba(0,0,0,.08), 0 20px 50px rgba(0,0,0,.06);
+    }
+
+    .slide-topbar { height: 8px; background: var(--ms-teal); flex-shrink: 0; }
+    .slide-topbar.gold { background: var(--ms-gold); }
+    .slide-topbar.blue { background: var(--ms-blue); }
+    .slide-topbar.purple { background: var(--ms-purple); }
+    .slide-topbar.grad { background: linear-gradient(90deg, var(--ms-teal), var(--ms-blue), var(--ms-purple)); }
+
+    .fabric-header {
+      display: flex; align-items: center; justify-content: space-between;
+      padding: 18px 64px; border-bottom: 1px solid var(--border);
+      background: var(--surface); flex-shrink: 0;
+    }
+
+    .fabric-logo { display: flex; align-items: center; gap: 14px; }
+    .fabric-logo-icon { width: 36px; height: 36px; }
+    .fabric-logo-text { font-size: 22px; font-weight: 700; color: var(--text-primary); }
+    .fabric-logo-sep { color: var(--border-med); font-size: 22px; font-weight: 200; margin: 0 4px; }
+    .fabric-logo-sub { font-size: 16px; font-weight: 500; color: var(--text-secondary); }
+
+    .header-badge {
+      display: inline-flex; align-items: center; gap: 8px;
+      background: var(--ms-teal-light); border: 1px solid var(--ms-teal);
+      border-radius: 4px; padding: 6px 18px;
+      font-size: 13px; font-weight: 600; color: var(--ms-teal-dark);
+    }
+    .header-badge .dot { width: 8px; height: 8px; background: var(--ms-teal); border-radius: 50%; }
+
+    .announce-bar {
+      background: #fff8e1; border-bottom: 1px solid #f4c430;
+      padding: 10px 64px; font-size: 14px; color: #3d2b00; font-weight: 500;
+      display: flex; align-items: center; justify-content: space-between; flex-shrink: 0;
+    }
+    .announce-bar span { color: var(--ms-blue); font-weight: 600; }
+
+    .slide-body {
+      display: flex; flex-direction: column; flex: 1;
+      padding: 36px 64px 0; overflow: hidden;
+    }
+
+    .breadcrumb { display: flex; align-items: center; gap: 8px; font-size: 14px; color: var(--text-secondary); margin-bottom: 18px; }
+    .breadcrumb a { color: var(--ms-blue); text-decoration: none; font-weight: 500; }
+    .breadcrumb .sep { color: var(--border-med); }
+    .breadcrumb .current { color: var(--text-primary); font-weight: 600; }
+
+    .section-tag {
+      display: inline-block; font-size: 12px; font-weight: 700;
+      letter-spacing: 1.5px; text-transform: uppercase;
+      color: var(--ms-teal-dark); padding: 5px 14px;
+      background: var(--ms-teal-light); border-radius: 3px; margin-bottom: 12px; width: fit-content;
+    }
+
+    .page-heading { font-size: 44px; font-weight: 800; color: var(--text-primary); line-height: 1.15; margin-bottom: 8px; }
+    .page-heading span { color: var(--ms-teal); }
+    .page-subheading { font-size: 18px; font-weight: 400; color: var(--text-secondary); line-height: 1.5; margin-bottom: 24px; }
+
+    .grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; }
+    .grid-3 { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 18px; }
+    .grid-4 { display: grid; grid-template-columns: repeat(4, 1fr); gap: 16px; }
+
+    .feature-card {
+      background: var(--surface); border: 1px solid var(--border);
+      border-radius: 4px; padding: 24px; border-left: 4px solid var(--ms-teal);
+    }
+    .feature-card.fc-blue { border-left-color: var(--ms-blue); }
+    .feature-card.fc-gold { border-left-color: var(--ms-gold); }
+    .feature-card.fc-purple { border-left-color: var(--ms-purple); }
+    .feature-card.fc-green { border-left-color: var(--ms-green); }
+
+    .fc-icon { font-size: 28px; margin-bottom: 10px; }
+    .fc-title { font-size: 16px; font-weight: 700; color: var(--text-primary); margin-bottom: 6px; }
+    .fc-desc { font-size: 14px; color: var(--text-secondary); line-height: 1.5; }
+
+    .ms-card { background: var(--surface); border: 1px solid var(--border); border-radius: 4px; box-shadow: 0 1px 4px rgba(0,0,0,.06); }
+    .ms-card-header {
+      padding: 14px 24px; border-bottom: 1px solid var(--border);
+      font-size: 14px; font-weight: 600; color: var(--text-secondary);
+      letter-spacing: 0.5px; text-transform: uppercase; background: #faf9f8;
+      display: flex; align-items: center; gap: 8px;
+    }
+    .ms-card-body { padding: 20px 24px; }
+
+    .info-row { display: flex; align-items: center; gap: 18px; padding: 12px 0; border-bottom: 1px solid var(--border); }
+    .info-row:last-child { border-bottom: none; }
+    .info-icon { width: 42px; height: 42px; border-radius: 4px; display: flex; align-items: center; justify-content: center; font-size: 20px; flex-shrink: 0; }
+    .info-lbl { font-size: 11px; font-weight: 600; color: var(--text-muted); letter-spacing: 1px; text-transform: uppercase; }
+    .info-val { font-size: 16px; font-weight: 600; color: var(--text-primary); margin-top: 2px; }
+
+    .tip-box {
+      background: #e0f5f5; border: 1px solid var(--ms-teal);
+      border-radius: 4px; padding: 18px 24px; display: flex; gap: 16px;
+      align-items: flex-start; margin-top: 20px;
+    }
+    .tip-box-icon { font-size: 24px; flex-shrink: 0; }
+    .tip-box-title { font-size: 15px; font-weight: 700; color: var(--ms-teal-dark); margin-bottom: 4px; }
+    .tip-box-text { font-size: 14px; color: var(--text-secondary); line-height: 1.6; }
+
+    .chip-row { display: flex; gap: 10px; flex-wrap: wrap; margin-top: 20px; }
+    .chip { padding: 8px 18px; border-radius: 20px; font-size: 13px; font-weight: 600; border: 1px solid; }
+    .chip-teal { background: var(--ms-teal-light); color: var(--ms-teal-dark); border-color: var(--ms-teal); }
+    .chip-blue { background: var(--ms-blue-light); color: var(--ms-blue); border-color: var(--ms-blue); }
+    .chip-gold { background: var(--ms-gold-bg); color: #7a5700; border-color: var(--ms-gold); }
+    .chip-purple { background: var(--ms-purple-bg); color: var(--ms-purple); border-color: var(--ms-purple); }
+
+    .slide-footer {
+      display: flex; align-items: center; justify-content: space-between;
+      padding: 16px 64px; border-top: 1px solid var(--border);
+      background: #faf9f8; margin-top: auto; flex-shrink: 0;
+    }
+    .footer-name { font-size: 15px; font-weight: 700; color: var(--text-primary); }
+    .footer-role { font-size: 13px; color: var(--text-secondary); margin-top: 2px; }
+    .footer-right { text-align: right; }
+    .footer-tags { font-size: 13px; color: var(--ms-teal-dark); font-weight: 600; }
+    .footer-page { font-size: 12px; color: var(--text-muted); margin-bottom: 2px; }
+
+    .cover-split {
+      display: grid; grid-template-columns: 1.15fr 0.85fr;
+      gap: 36px; align-items: center; flex: 1; padding-bottom: 12px;
+    }
+
+    .cover-hook-badge {
+      display: inline-flex; align-items: center; gap: 10px;
+      background: #ffebe6; border: 1px solid #ff5630; color: #bf2600;
+      font-size: 13px; font-weight: 700; padding: 6px 16px;
+      border-radius: 4px; text-transform: uppercase; letter-spacing: 1px; margin-bottom: 16px;
+    }
+
+    .cover-main-title {
+      font-size: 56px; font-weight: 900; color: var(--text-primary);
+      line-height: 1.08; letter-spacing: -1px; margin-bottom: 16px;
+    }
+    .cover-main-title span {
+      background: linear-gradient(135deg, var(--ms-teal), var(--ms-purple));
+      -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+    }
+
+    .cover-sub-text { font-size: 21px; color: var(--text-secondary); line-height: 1.5; margin-bottom: 28px; }
+
+    .cover-hero-card {
+      background: linear-gradient(145deg, #ffffff, #fcf7ff);
+      border: 2px solid var(--ms-purple); border-radius: 8px; padding: 32px;
+      box-shadow: 0 12px 32px rgba(119,25,170,0.12);
+      display: flex; flex-direction: column; gap: 20px;
+    }
+
+    .hero-stat-box {
+      display: flex; align-items: center; gap: 16px; padding: 16px;
+      background: var(--surface); border: 1px solid var(--border); border-radius: 6px;
+    }
+    .hero-stat-num {
+      font-size: 32px; font-weight: 900; color: var(--ms-purple);
+      font-family: 'JetBrains Mono', monospace; flex-shrink: 0; width: 80px; text-align: center;
+    }
+  </style>
+</head>
+<body>
+
+<p class="page-title">30 Days of DP-700 &bull; Sayan Banerjee &bull; Day 3 &bull; OneLake Settings &amp; Access Control</p>
+
+<!-- ============================================================
+     SLIDE 1 – HIGH IMPACT COVER HOOK (DAY 3)
+============================================================ -->
+<div class="slide" id="s1">
+  <div class="slide-topbar grad"></div>
+  <div class="fabric-header">
+    <div class="fabric-logo">
+      <svg class="fabric-logo-icon" viewBox="0 0 32 32" fill="none">
+        <rect width="32" height="32" rx="4" fill="#00a2a2"/>
+        <path d="M8 16L16 8L24 16L16 24L8 16Z" fill="white" opacity="0.9"/>
+        <path d="M12 16L16 12L20 16L16 20L12 16Z" fill="#00a2a2"/>
+      </svg>
+      <span class="fabric-logo-text">Microsoft</span><span class="fabric-logo-sep">|</span><span class="fabric-logo-sub">Fabric Community</span>
+    </div>
+    <div class="header-badge"><div class="dot"></div>Day 03 of 30 &bull; DP-700 Series</div>
+  </div>
+  <div class="announce-bar">
+    <div>🔒 <strong>SECURITY MISTAKE THAT FAILS DP-700:</strong> Workspace Roles vs OneLake Data Access Roles</div>
+    <div>by Sayan Banerjee &bull; <span>linkedin.com/in/sayanbanerjee24</span></div>
+  </div>
+  <div class="slide-body">
+    <div class="cover-split">
+      <div>
+        <div class="cover-hook-badge">🔐 Enterprise Data Governance</div>
+        <div class="cover-main-title">
+          Stop Leaking Data.<br/><span>OneLake Security</span> &amp; Access Control.
+        </div>
+        <div class="cover-sub-text">
+          Mastering Workspace Roles vs OneLake Data Access Roles, RLS/OLS, Data Mesh Domains, and Granular Folder Security in Microsoft Fabric.
+        </div>
+
+        <div style="display: flex; gap: 12px; flex-wrap: wrap;">
+          <div class="chip chip-purple" style="font-size: 14px; padding: 10px 20px;">🔒 OneLake Data Access Roles</div>
+          <div class="chip chip-teal" style="font-size: 14px; padding: 10px 20px;">🛡️ RLS &amp; OLS Security</div>
+          <div class="chip chip-gold" style="font-size: 14px; padding: 10px 20px;">🌐 Data Mesh Governance</div>
+        </div>
+      </div>
+
+      <div class="cover-hero-card">
+        <div style="display: flex; align-items: center; justify-content: space-between; border-bottom: 1px solid var(--border); padding-bottom: 12px;">
+          <div style="font-size: 14px; font-weight: 700; text-transform: uppercase; color: var(--ms-purple); letter-spacing: 1px;">🔐 SECURITY MODEL AT A GLANCE</div>
+          <span class="chip chip-blue" style="font-size: 11px; padding: 4px 10px;">Exam Domain 1</span>
+        </div>
+
+        <div class="hero-stat-box" style="border-left: 4px solid var(--ms-purple);">
+          <div class="hero-stat-num">4</div>
+          <div>
+            <div style="font-size: 15px; font-weight: 700; color: var(--text-primary);">Workspace Roles</div>
+            <div style="font-size: 13px; color: var(--text-secondary);">Admin, Member, Contributor, Viewer</div>
+          </div>
+        </div>
+
+        <div class="hero-stat-box" style="border-left: 4px solid var(--ms-teal);">
+          <div class="hero-stat-num">FINE</div>
+          <div>
+            <div style="font-size: 15px; font-weight: 700; color: var(--text-primary);">OneLake Data Access Roles</div>
+            <div style="font-size: 13px; color: var(--text-secondary);">Granular table &amp; folder security for Viewers</div>
+          </div>
+        </div>
+
+        <div class="hero-stat-box" style="border-left: 4px solid var(--ms-gold);">
+          <div class="hero-stat-num">100%</div>
+          <div>
+            <div style="font-size: 15px; font-weight: 700; color: var(--text-primary);">DP-700 Exam Aligned</div>
+            <div style="font-size: 13px; color: var(--text-secondary);">Covers security governance exam scenarios</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+  <div class="slide-footer">
+    <div><div class="footer-name">Sayan Banerjee</div><div class="footer-role">Fabric Data Engineer (DP-700) &bull; Embee Software &bull; Kolkata</div></div>
+    <div class="footer-right"><div class="footer-page">01 / 10</div><div class="footer-tags">linkedin.com/in/sayanbanerjee24</div></div>
+  </div>
+</div>
+
+<!-- ============================================================
+     SLIDE 2 – WORKSPACE ROLES VS ONELAKE SECURITY
+============================================================ -->
+<div class="slide" id="s2">
+  <div class="slide-topbar"></div>
+  <div class="fabric-header">
+    <div class="fabric-logo">
+      <svg class="fabric-logo-icon" viewBox="0 0 32 32" fill="none"><rect width="32" height="32" rx="4" fill="#00a2a2"/><path d="M8 16L16 8L24 16L16 24L8 16Z" fill="white" opacity="0.9"/><path d="M12 16L16 12L20 16L16 20L12 16Z" fill="#00a2a2"/></svg>
+      <span class="fabric-logo-text">Microsoft</span><span class="fabric-logo-sep">|</span><span class="fabric-logo-sub">Security Architecture</span>
+    </div>
+    <div class="header-badge"><div class="dot"></div>Security Boundaries</div>
+  </div>
+  <div class="slide-body">
+    <div class="breadcrumb"><a href="#">Data Engineering</a><span class="sep">&rsaquo;</span><a href="#">DP-700</a><span class="sep">&rsaquo;</span><span class="current">Security Roles</span></div>
+    <div class="section-tag">Security Architecture</div>
+    <div class="page-heading">Workspace Roles vs <span>OneLake Security</span></div>
+    <div class="page-subheading">Understanding management boundaries vs granular data access controls in Microsoft Fabric.</div>
+
+    <div class="grid-2" style="margin-top: 8px;">
+      <div class="ms-card" style="border-top: 4px solid var(--ms-teal);">
+        <div class="ms-card-header">&#128272; Workspace Roles (Item Management)</div>
+        <div class="ms-card-body">
+          <div class="info-row">
+            <div class="info-icon" style="background:var(--ms-teal-light);">&#128081;</div>
+            <div><div class="info-lbl">Admin / Member / Contributor</div><div class="info-val">Full read/write access to ALL items &amp; data in workspace</div></div>
+          </div>
+          <div class="info-row">
+            <div class="info-icon" style="background:var(--ms-teal-light);">&#128065;</div>
+            <div><div class="info-lbl">Viewer Role</div><div class="info-val">Read-only access; governed by OneLake Data Access Roles</div></div>
+          </div>
+          <div class="info-row">
+            <div class="info-icon" style="background:var(--ms-teal-light);">&#128736;</div>
+            <div><div class="info-lbl">Scope</div><div class="info-val">Item creation, pipeline execution, workspace settings</div></div>
+          </div>
+        </div>
+      </div>
+
+      <div class="ms-card" style="border-top: 4px solid var(--ms-purple);">
+        <div class="ms-card-header">&#128275; OneLake Data Access Roles (Granular Security)</div>
+        <div class="ms-card-body">
+          <div class="info-row">
+            <div class="info-icon" style="background:var(--ms-purple-bg);">&#128451;</div>
+            <div><div class="info-lbl">Folder &amp; Table Security</div><div class="info-val">Grant access to specific Lakehouse tables or file folders</div></div>
+          </div>
+          <div class="info-row">
+            <div class="info-icon" style="background:var(--ms-purple-bg);">&#128100;</div>
+            <div><div class="info-lbl">Applies To</div><div class="info-val">Users with <strong>Viewer</strong> workspace role or direct Item Shares</div></div>
+          </div>
+          <div class="info-row">
+            <div class="info-icon" style="background:var(--ms-purple-bg);">&#9888;</div>
+            <div><div class="info-lbl">Bypass Rule</div><div class="info-val">Admin/Member/Contributor roles BYPASS OneLake security</div></div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="tip-box" style="margin-top: 24px;">
+      <div class="tip-box-icon">&#128161;</div>
+      <div>
+        <div class="tip-box-title">Critical Exam Fact</div>
+        <div class="tip-box-text">OneLake Data Access Roles <strong>ONLY apply to users with the Viewer role</strong>. Admin, Member, and Contributor roles have full elevated access and bypass table/folder security restrictions!</div>
+      </div>
+    </div>
+  </div>
+  <div class="slide-footer">
+    <div><div class="footer-name">Sayan Banerjee</div><div class="footer-role">linkedin.com/in/sayanbanerjee24</div></div>
+    <div class="footer-right"><div class="footer-page">02 / 10</div><div class="footer-tags">#OneLakeSecurity #FabricRoles</div></div>
+  </div>
+</div>
+
+<!-- ============================================================
+     SLIDE 3 – ROW & COLUMN LEVEL SECURITY (RLS/OLS)
+============================================================ -->
+<div class="slide" id="s3">
+  <div class="slide-topbar purple"></div>
+  <div class="fabric-header">
+    <div class="fabric-logo">
+      <svg class="fabric-logo-icon" viewBox="0 0 32 32" fill="none"><rect width="32" height="32" rx="4" fill="#00a2a2"/><path d="M8 16L16 8L24 16L16 24L8 16Z" fill="white" opacity="0.9"/><path d="M12 16L16 12L20 16L16 20L12 16Z" fill="#00a2a2"/></svg>
+      <span class="fabric-logo-text">Microsoft</span><span class="fabric-logo-sep">|</span><span class="fabric-logo-sub">SQL Security</span>
+    </div>
+    <div class="header-badge"><div class="dot"></div>RLS &amp; OLS Security</div>
+  </div>
+  <div class="slide-body">
+    <div class="breadcrumb"><a href="#">Data Engineering</a><span class="sep">&rsaquo;</span><a href="#">DP-700</a><span class="sep">&rsaquo;</span><span class="current">RLS / OLS</span></div>
+    <div class="section-tag">Fine-Grained Security</div>
+    <div class="page-heading">Row-Level &amp; <span>Column-Level Security</span></div>
+    <div class="page-subheading">Protecting sensitive rows and columns in Fabric Data Warehouse &amp; SQL Analytics Endpoints.</div>
+
+    <div class="grid-2" style="margin-top: 8px;">
+      <div class="feature-card fc-purple">
+        <div class="fc-icon">&#128065;</div>
+        <div class="fc-title">Row-Level Security (RLS)</div>
+        <div class="fc-desc">Restrict row access based on user Microsoft Entra ID identity using T-SQL Security Policies and Inline Table-Valued Functions.</div>
+      </div>
+      <div class="feature-card fc-blue">
+        <div class="fc-icon">&#128179;</div>
+        <div class="fc-title">Column-Level Security (CLS)</div>
+        <div class="fc-desc">Restrict access to specific sensitive columns (e.g. Salary, PII, SSN) using T-SQL <code>GRANT SELECT ON Table(Column)</code>.</div>
+      </div>
+    </div>
+
+    <div class="ms-card" style="margin-top: 20px;">
+      <div class="ms-card-header">&#128187; T-SQL Example: Row-Level Security Predicate Function</div>
+      <div class="ms-card-body" style="padding: 0;">
+        <div class="code-block" style="margin:0; border:none; border-radius:0 0 4px 4px; font-size: 14px; padding: 20px;">
+<span class="code-keyword">CREATE FUNCTION</span> Security.fn_securitypredicate(<span class="code-keyword">@Region</span> AS sysname)
+<span class="code-keyword">RETURNS TABLE WITH SCHEMABINDING AS RETURN</span>
+<span class="code-keyword">SELECT</span> 1 <span class="code-keyword">AS</span> fn_securitypredicate_result
+<span class="code-keyword">WHERE</span> <span class="code-keyword">@Region</span> = USER_NAME() <span class="code-keyword">OR</span> USER_NAME() = <span class="code-string">'admin@company.com'</span>;
+        </div>
+      </div>
+    </div>
+  </div>
+  <div class="slide-footer">
+    <div><div class="footer-name">Sayan Banerjee</div><div class="footer-role">linkedin.com/in/sayanbanerjee24</div></div>
+    <div class="footer-right"><div class="footer-page">03 / 10</div><div class="footer-tags">#RLS #OLS #SQLSecurity</div></div>
+  </div>
+</div>
+
+<!-- ============================================================
+     SLIDE 4 – DYNAMIC DATA MASKING (DDM)
+============================================================ -->
+<div class="slide" id="s4">
+  <div class="slide-topbar gold"></div>
+  <div class="fabric-header">
+    <div class="fabric-logo">
+      <svg class="fabric-logo-icon" viewBox="0 0 32 32" fill="none"><rect width="32" height="32" rx="4" fill="#00a2a2"/><path d="M8 16L16 8L24 16L16 24L8 16Z" fill="white" opacity="0.9"/><path d="M12 16L16 12L20 16L16 20L12 16Z" fill="#00a2a2"/></svg>
+      <span class="fabric-logo-text">Microsoft</span><span class="fabric-logo-sep">|</span><span class="fabric-logo-sub">Data Masking</span>
+    </div>
+    <div class="header-badge"><div class="dot"></div>Dynamic Data Masking</div>
+  </div>
+  <div class="slide-body">
+    <div class="breadcrumb"><a href="#">Data Engineering</a><span class="sep">&rsaquo;</span><a href="#">DP-700</a><span class="sep">&rsaquo;</span><span class="current">DDM Protection</span></div>
+    <div class="section-tag">PII Protection</div>
+    <div class="page-heading">Dynamic Data <span>Masking (DDM)</span></div>
+    <div class="page-subheading">Obfuscate sensitive PII data on-the-fly without altering actual storage on OneLake Delta tables.</div>
+
+    <div class="grid-4" style="margin-top: 8px;">
+      <div class="feature-card">
+        <div class="fc-icon">&#128274;</div>
+        <div class="fc-title">default()</div>
+        <div class="fc-desc">Replaces data with zero or 'xxxx' depending on column data type.</div>
+      </div>
+      <div class="feature-card fc-blue">
+        <div class="fc-icon">&#128231;</div>
+        <div class="fc-title">email()</div>
+        <div class="fc-desc">Exposes first letter and domain (`aXXX@XXXX.com`).</div>
+      </div>
+      <div class="feature-card fc-gold">
+        <div class="fc-icon">&#128179;</div>
+        <div class="fc-title">partial()</div>
+        <div class="fc-desc">Custom prefix and suffix masking for Credit Cards / SSNs.</div>
+      </div>
+      <div class="feature-card fc-purple">
+        <div class="fc-icon">&#127922;</div>
+        <div class="fc-title">random()</div>
+        <div class="fc-desc">Masks numeric fields with random values within range.</div>
+      </div>
+    </div>
+
+    <div class="ms-card" style="margin-top: 20px;">
+      <div class="ms-card-header">&#128187; T-SQL Statement to Mask Column</div>
+      <div class="ms-card-body" style="padding: 0;">
+        <div class="code-block" style="margin:0; border:none; border-radius:0 0 4px 4px; font-size: 14px; padding: 20px;">
+<span class="code-keyword">ALTER TABLE</span> Sales.Customers 
+<span class="code-keyword">ALTER COLUMN</span> EmailAddress <span class="code-keyword">ADD MASKED WITH</span> (FUNCTION = <span class="code-string">'email()'</span>);
+        </div>
+      </div>
+    </div>
+  </div>
+  <div class="slide-footer">
+    <div><div class="footer-name">Sayan Banerjee</div><div class="footer-role">linkedin.com/in/sayanbanerjee24</div></div>
+    <div class="footer-right"><div class="footer-page">04 / 10</div><div class="footer-tags">#DDM #PIIProtection</div></div>
+  </div>
+</div>
+
+<!-- ============================================================
+     SLIDE 5 – DATA MESH DOMAINS & GOVERNANCE
+============================================================ -->
+<div class="slide" id="s5">
+  <div class="slide-topbar"></div>
+  <div class="fabric-header">
+    <div class="fabric-logo">
+      <svg class="fabric-logo-icon" viewBox="0 0 32 32" fill="none"><rect width="32" height="32" rx="4" fill="#00a2a2"/><path d="M8 16L16 8L24 16L16 24L8 16Z" fill="white" opacity="0.9"/><path d="M12 16L16 12L20 16L16 20L12 16Z" fill="#00a2a2"/></svg>
+      <span class="fabric-logo-text">Microsoft</span><span class="fabric-logo-sep">|</span><span class="fabric-logo-sub">Data Mesh Domains</span>
+    </div>
+    <div class="header-badge"><div class="dot"></div>Domain Governance</div>
+  </div>
+  <div class="slide-body">
+    <div class="breadcrumb"><a href="#">Data Engineering</a><span class="sep">&rsaquo;</span><a href="#">DP-700</a><span class="sep">&rsaquo;</span><span class="current">Data Mesh</span></div>
+    <div class="section-tag">Enterprise Governance</div>
+    <div class="page-heading">Fabric Domains &amp; <span>Data Mesh</span></div>
+    <div class="page-subheading">Grouping workspaces into business domains for decentralized ownership and central oversight.</div>
+
+    <div class="grid-3" style="margin-top: 8px;">
+      <div class="feature-card">
+        <div class="fc-icon">&#127760;</div>
+        <div class="fc-title">Business Domains</div>
+        <div class="fc-desc">Group workspaces by business unit (e.g. Sales Domain, Finance Domain, HR Domain).</div>
+      </div>
+      <div class="feature-card fc-blue">
+        <div class="fc-icon">&#128100;</div>
+        <div class="fc-title">Domain Admins</div>
+        <div class="fc-desc">Delegate domain management without granting full Fabric Tenant Admin rights.</div>
+      </div>
+      <div class="feature-card fc-gold">
+        <div class="fc-icon">&#127919;</div>
+        <div class="fc-title">Subdomains</div>
+        <div class="fc-desc">Create hierarchical subdomains (e.g., Sales &rarr; Europe Sales) for fine-grained governance.</div>
+      </div>
+    </div>
+
+    <div class="tip-box" style="margin-top: 24px;">
+      <div class="tip-box-icon">&#127919;</div>
+      <div>
+        <div class="tip-box-title">DP-700 Scenario Focus</div>
+        <div class="tip-box-text">When a company wants <strong>decentralized data ownership across departments while maintaining central security standards</strong>, mapping workspaces to <strong>Fabric Domains</strong> is the correct architecture choice.</div>
+      </div>
+    </div>
+  </div>
+  <div class="slide-footer">
+    <div><div class="footer-name">Sayan Banerjee</div><div class="footer-role">linkedin.com/in/sayanbanerjee24</div></div>
+    <div class="footer-right"><div class="footer-page">05 / 10</div><div class="footer-tags">#DataMesh #FabricDomains</div></div>
+  </div>
+</div>
+
+<!-- ============================================================
+     SLIDE 6 – SHORTCUT SECURITY & MULTI-CLOUD GOVERNANCE
+============================================================ -->
+<div class="slide" id="s6">
+  <div class="slide-topbar grad"></div>
+  <div class="fabric-header">
+    <div class="fabric-logo">
+      <svg class="fabric-logo-icon" viewBox="0 0 32 32" fill="none"><rect width="32" height="32" rx="4" fill="#00a2a2"/><path d="M8 16L16 8L24 16L16 24L8 16Z" fill="white" opacity="0.9"/><path d="M12 16L16 12L20 16L16 20L12 16Z" fill="#00a2a2"/></svg>
+      <span class="fabric-logo-text">Microsoft</span><span class="fabric-logo-sep">|</span><span class="fabric-logo-sub">Shortcut Security</span>
+    </div>
+    <div class="header-badge"><div class="dot"></div>Multi-Cloud Governance</div>
+  </div>
+  <div class="slide-body">
+    <div class="breadcrumb"><a href="#">Data Engineering</a><span class="sep">&rsaquo;</span><a href="#">DP-700</a><span class="sep">&rsaquo;</span><span class="current">Shortcut Security</span></div>
+    <div class="section-tag">Cross-Cloud Security</div>
+    <div class="page-heading">Shortcut Security &amp; <span>Credentials</span></div>
+    <div class="page-subheading">How OneLake secures virtual shortcuts to external clouds (ADLS, AWS S3, GCS).</div>
+
+    <div class="grid-2" style="margin-top: 8px;">
+      <div class="feature-card">
+        <div class="fc-icon">&#128273;</div>
+        <div class="fc-title">Delegated User Identity</div>
+        <div class="fc-desc">Shortcuts use organizational cloud credentials (e.g. AWS IAM Role, Azure Service Principal) to access source data.</div>
+      </div>
+      <div class="feature-card fc-blue">
+        <div class="fc-icon">&#128737;</div>
+        <div class="fc-title">Double Security Boundary</div>
+        <div class="fc-desc">Users must pass BOTH OneLake security AND source storage permissions (e.g. S3 Bucket policy) to read data.</div>
+      </div>
+    </div>
+
+    <div class="ms-card" style="margin-top: 20px;">
+      <div class="ms-card-header">&#128203; Shortcut Security Matrix</div>
+      <div class="ms-card-body" style="padding:0 24px;">
+        <div class="info-row">
+          <div style="flex:1;"><div class="info-lbl">Target Storage</div><div class="info-val">AWS S3 Bucket</div></div>
+          <div style="width:240px; text-align:right;"><span class="chip chip-purple">AWS IAM Role / Secret Key</span></div>
+        </div>
+        <div class="info-row">
+          <div style="flex:1;"><div class="info-lbl">Target Storage</div><div class="info-val">ADLS Gen2 Storage</div></div>
+          <div style="width:240px; text-align:right;"><span class="chip chip-teal">Organizational Account / SAS</span></div>
+        </div>
+      </div>
+    </div>
+  </div>
+  <div class="slide-footer">
+    <div><div class="footer-name">Sayan Banerjee</div><div class="footer-role">linkedin.com/in/sayanbanerjee24</div></div>
+    <div class="footer-right"><div class="footer-page">06 / 10</div><div class="footer-tags">#ShortcutSecurity #MultiCloud</div></div>
+  </div>
+</div>
+
+<!-- ============================================================
+     SLIDE 7 – PURVIEW & SENSITIVITY LABELS
+============================================================ -->
+<div class="slide" id="s7">
+  <div class="slide-topbar"></div>
+  <div class="fabric-header">
+    <div class="fabric-logo">
+      <svg class="fabric-logo-icon" viewBox="0 0 32 32" fill="none"><rect width="32" height="32" rx="4" fill="#00a2a2"/><path d="M8 16L16 8L24 16L16 24L8 16Z" fill="white" opacity="0.9"/><path d="M12 16L16 12L20 16L16 20L12 16Z" fill="#00a2a2"/></svg>
+      <span class="fabric-logo-text">Microsoft</span><span class="fabric-logo-sep">|</span><span class="fabric-logo-sub">Purview Integration</span>
+    </div>
+    <div class="header-badge"><div class="dot"></div>Sensitivity Labels</div>
+  </div>
+  <div class="slide-body">
+    <div class="breadcrumb"><a href="#">Data Engineering</a><span class="sep">&rsaquo;</span><a href="#">DP-700</a><span class="sep">&rsaquo;</span><span class="current">Purview</span></div>
+    <div class="section-tag">Information Protection</div>
+    <div class="page-heading">Microsoft Purview &amp; <span>Sensitivity Labels</span></div>
+    <div class="page-subheading">Classifying and protecting sensitive data across the entire Fabric estate.</div>
+
+    <div class="grid-3" style="margin-top: 8px;">
+      <div class="feature-card">
+        <div class="fc-icon">&#127991;</div>
+        <div class="fc-title">Sensitivity Labels</div>
+        <div class="fc-desc">Apply MIP labels (e.g. Highly Confidential, Public) directly to Lakehouses, Pipelines, and Semantic Models.</div>
+      </div>
+      <div class="feature-card fc-blue">
+        <div class="fc-icon">&#128260;</div>
+        <div class="fc-title">Downstream Lineage</div>
+        <div class="fc-desc">Sensitivity labels automatically inherit downstream from Lakehouses to semantic models and Power BI reports.</div>
+      </div>
+      <div class="feature-card fc-gold">
+        <div class="fc-icon">&#128065;</div>
+        <div class="fc-title">Data Loss Prevention (DLP)</div>
+        <div class="fc-desc">Detect sensitive PII uploads automatically and block unauthorized external exports.</div>
+      </div>
+    </div>
+  </div>
+  <div class="slide-footer">
+    <div><div class="footer-name">Sayan Banerjee</div><div class="footer-role">linkedin.com/in/sayanbanerjee24</div></div>
+    <div class="footer-right"><div class="footer-page">07 / 10</div><div class="footer-tags">#MicrosoftPurview #SensitivityLabels</div></div>
+  </div>
+</div>
+
+<!-- ============================================================
+     SLIDE 8 – EXAM DECISION MATRIX (DAY 3)
+============================================================ -->
+<div class="slide" id="s8">
+  <div class="slide-topbar blue"></div>
+  <div class="fabric-header">
+    <div class="fabric-logo">
+      <svg class="fabric-logo-icon" viewBox="0 0 32 32" fill="none"><rect width="32" height="32" rx="4" fill="#00a2a2"/><path d="M8 16L16 8L24 16L16 24L8 16Z" fill="white" opacity="0.9"/><path d="M12 16L16 12L20 16L16 20L12 16Z" fill="#00a2a2"/></svg>
+      <span class="fabric-logo-text">Microsoft</span><span class="fabric-logo-sep">|</span><span class="fabric-logo-sub">Security Matrix</span>
+    </div>
+    <div class="header-badge"><div class="dot"></div>Decision Matrix</div>
+  </div>
+  <div class="slide-body">
+    <div class="breadcrumb"><a href="#">Data Engineering</a><span class="sep">&rsaquo;</span><a href="#">DP-700</a><span class="sep">&rsaquo;</span><span class="current">Security Cheat Sheet</span></div>
+    <div class="section-tag">Exam Decision Guide</div>
+    <div class="page-heading">Fabric Security <span>Selection Matrix</span></div>
+    <div class="page-subheading">Quick reference guide to select the right security mechanism for DP-700 scenarios.</div>
+
+    <div class="ms-card" style="margin-top: 4px;">
+      <div class="ms-card-header">&#128203; Security Scenario Selection Cheat Sheet</div>
+      <div class="ms-card-body" style="padding: 0 24px;">
+        <div class="info-row">
+          <div style="flex:1;"><div class="info-lbl">Scenario Requirement</div><div class="info-val">Restrict access to specific folders in Lakehouse Files section for external users</div></div>
+          <div style="width:240px; text-align:right;"><span class="chip chip-purple">OneLake Data Access Roles</span></div>
+        </div>
+        <div class="info-row">
+          <div style="flex:1;"><div class="info-lbl">Scenario Requirement</div><div class="info-val">Filter SQL query rows based on user department identity</div></div>
+          <div style="width:240px; text-align:right;"><span class="chip chip-teal">Row-Level Security (RLS)</span></div>
+        </div>
+        <div class="info-row">
+          <div style="flex:1;"><div class="info-lbl">Scenario Requirement</div><div class="info-val">Hide Employee Salary column from HR Analysts in SQL Endpoint</div></div>
+          <div style="width:240px; text-align:right;"><span class="chip chip-blue">Column-Level Security (OLS)</span></div>
+        </div>
+        <div class="info-row">
+          <div style="flex:1;"><div class="info-lbl">Scenario Requirement</div><div class="info-val">Mask Email addresses as `aXXX@XXXX.com` without changing data files</div></div>
+          <div style="width:240px; text-align:right;"><span class="chip chip-gold">Dynamic Data Masking (DDM)</span></div>
+        </div>
+      </div>
+    </div>
+  </div>
+  <div class="slide-footer">
+    <div><div class="footer-name">Sayan Banerjee</div><div class="footer-role">linkedin.com/in/sayanbanerjee24</div></div>
+    <div class="footer-right"><div class="footer-page">08 / 10</div><div class="footer-tags">#DP700CheatSheet #SecurityMatrix</div></div>
+  </div>
+</div>
+
+<!-- ============================================================
+     SLIDE 9 – PRO TIP OF THE DAY (DAY 3)
+============================================================ -->
+<div class="slide" id="s9">
+  <div class="slide-topbar"></div>
+  <div class="fabric-header">
+    <div class="fabric-logo">
+      <svg class="fabric-logo-icon" viewBox="0 0 32 32" fill="none"><rect width="32" height="32" rx="4" fill="#00a2a2"/><path d="M8 16L16 8L24 16L16 24L8 16Z" fill="white" opacity="0.9"/><path d="M12 16L16 12L20 16L16 20L12 16Z" fill="#00a2a2"/></svg>
+      <span class="fabric-logo-text">Microsoft</span><span class="fabric-logo-sep">|</span><span class="fabric-logo-sub">Pro Tip of the Day</span>
+    </div>
+    <div class="header-badge"><div class="dot"></div>Exam Insight</div>
+  </div>
+  <div class="slide-body" style="justify-content: center; align-items: center; text-align: center; padding: 48px 120px;">
+    <div style="font-size: 80px; margin-bottom: 16px;">🔒</div>
+    <div class="section-tag" style="margin: 0 auto 16px;">Tip #3 of 30</div>
+    <div style="font-size: 44px; font-weight: 900; color: var(--text-primary); line-height: 1.2; margin-bottom: 20px;">
+      Remember: <span style="color: var(--ms-purple);">Contributors &amp; Members</span> Bypass OneLake Security
+    </div>
+    <div style="font-size: 21px; color: var(--text-secondary); line-height: 1.7; margin-bottom: 32px; max-width: 1100px;">
+      If a user has <strong style="color: var(--text-primary);">Contributor, Member, or Admin</strong> workspace roles, they have full elevated data access and will <strong style="color: var(--ms-teal-dark);">bypass OneLake Data Access Roles</strong>! To enforce folder security, assign users the <strong>Viewer</strong> role!
+    </div>
+
+    <div class="chip-row" style="justify-content: center;">
+      <div class="chip chip-purple" style="font-size: 15px; padding: 10px 22px;">Viewer Role Required</div>
+      <div class="chip chip-teal" style="font-size: 15px; padding: 10px 22px;">Folder &amp; Table Level Security</div>
+      <div class="chip chip-gold" style="font-size: 15px; padding: 10px 22px;">Top Exam Trap</div>
+    </div>
+  </div>
+  <div class="slide-footer">
+    <div><div class="footer-name">Sayan Banerjee</div><div class="footer-role">linkedin.com/in/sayanbanerjee24</div></div>
+    <div class="footer-right"><div class="footer-page">09 / 10</div><div class="footer-tags">#ProTip #OneLakeSecurity</div></div>
+  </div>
+</div>
+
+<!-- ============================================================
+     SLIDE 10 – CTA (DAY 3)
+============================================================ -->
+<div class="slide" id="s10">
+  <div class="slide-topbar grad"></div>
+  <div class="fabric-header">
+    <div class="fabric-logo">
+      <svg class="fabric-logo-icon" viewBox="0 0 32 32" fill="none"><rect width="32" height="32" rx="4" fill="#00a2a2"/><path d="M8 16L16 8L24 16L16 24L8 16Z" fill="white" opacity="0.9"/><path d="M12 16L16 12L20 16L16 20L12 16Z" fill="#00a2a2"/></svg>
+      <span class="fabric-logo-text">Microsoft</span><span class="fabric-logo-sep">|</span><span class="fabric-logo-sub">Fabric Community</span>
+    </div>
+    <div class="header-badge"><div class="dot"></div>Follow the Journey</div>
+  </div>
+  <div class="slide-body" style="justify-content: center; align-items: center; text-align: center; padding: 48px 120px;">
+    <div class="section-tag" style="margin: 0 auto 20px;">Day 3 Complete</div>
+    <div style="font-size: 58px; font-weight: 900; color: var(--text-primary); line-height: 1.1; margin-bottom: 16px;">
+      Day 3 &mdash; <span style="color: var(--ms-teal);">Done!</span>
+    </div>
+    <div style="font-size: 20px; color: var(--text-secondary); max-width: 800px; line-height: 1.6; margin-bottom: 32px;">
+      You now master <strong style="color: var(--text-primary);">OneLake Data Access Roles</strong>, RLS/OLS, Dynamic Data Masking, and Fabric Domains for DP-700.
+    </div>
+
+    <div style="display:inline-block; padding:14px 40px; background:var(--ms-teal); color:white; font-size:16px; font-weight:600; border-radius:4px; margin-bottom:24px;">
+      Follow on LinkedIn for Day 4 &rarr;
+    </div>
+
+    <div style="font-size: 15px; color: var(--text-secondary); margin-bottom: 28px;">
+      <strong style="color: var(--text-primary);">Tomorrow:</strong> Apache Airflow in Microsoft Fabric &mdash; Workflow Orchestration &amp; DAG Management
+    </div>
+
+    <div class="ms-card" style="text-align: left; width: 100%; max-width: 900px;">
+      <div class="ms-card-header">&#128100; About the Author</div>
+      <div class="ms-card-body" style="display: flex; gap: 24px; align-items: center;">
+        <div style="width: 56px; height: 56px; background: var(--ms-teal); border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 24px; color: white; font-weight: 700; flex-shrink: 0;">SB</div>
+        <div>
+          <div style="font-size: 18px; font-weight: 700; color: var(--text-primary);">Sayan Banerjee</div>
+          <div style="font-size: 13px; color: var(--text-secondary); margin-top: 2px;">Databricks Certified Data Engineer &bull; Microsoft Fabric Data Engineer (DP-700) &bull; Power BI Analyst (PL-300)</div>
+          <div style="font-size: 13px; color: var(--ms-teal-dark); font-weight: 600; margin-top: 4px;">AI, BI &amp; Analytics Consultant &bull; Embee Software &bull; Kolkata</div>
+        </div>
+      </div>
+    </div>
+  </div>
+  <div class="slide-footer">
+    <div><div class="footer-name">Sayan Banerjee</div><div class="footer-role">linkedin.com/in/sayanbanerjee24 &bull; work.sayanbanerjee@gmail.com</div></div>
+    <div class="footer-right"><div class="footer-page">10 / 10</div><div class="footer-tags">#MicrosoftFabric #DP700 #30DaysOfFabric</div></div>
+  </div>
+</div>
+
+</body>
+</html>

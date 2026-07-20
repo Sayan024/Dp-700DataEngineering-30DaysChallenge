@@ -51,7 +51,7 @@ The curriculum is structured across 5 distinct blocks, fully covering all exam a
 | :---: | :---: | :--- |
 | **[Day 01](Day-01/)** | ✅ Live | [OneLake Architecture & Exam Blueprint](Day-01/) |
 | **[Day 02](Day-02/)** | ✅ Live | [Spark Workspace Settings & Custom Pools](Day-02/) |
-| **Day 03** | ⏳ Pending | OneLake Settings & Access Control |
+| **[Day 03](Day-03/)** | ✅ Live | [OneLake Settings & Access Control](Day-03/) |
 | **Day 04** | ⏳ Pending | Apache Airflow in Microsoft Fabric |
 | **Day 05** | ⏳ Pending | Lakehouse — Files vs. Managed Delta Tables |
 | **Day 06** | ⏳ Pending | Delta Lake Deep Dive: V-Order, Time Travel, Schema Evolution |
