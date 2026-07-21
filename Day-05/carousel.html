@@ -1,0 +1,632 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<title>Day 05 — Ingest & Transform Data: Loading Patterns & Pipelines | DP-700</title>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet"/>
+<style>
+  *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+  :root{
+    --teal:#0E7C7B;--teal-d:#085954;--teal-l:#E6F4F3;
+    --blue:#0078D4;--blue-l:#EFF6FC;
+    --gold:#C47F17;--gold-l:#FDF6E3;
+    --purple:#7719AA;--purple-l:#F3E8FC;
+    --orange:#CA5010;--orange-l:#FFF2EC;
+    --red:#C50F1F;--red-l:#FDE7E9;
+    --green:#107C10;--green-l:#DFF6DD;
+    --surf:#FFFFFF;--bg:#F8F9FA;
+    --bdr:#E5E7EB;--bdr-m:#D0D5DD;
+    --tx1:#111827;--tx2:#4B5563;--txm:#9CA3AF;
+  }
+  body{font-family:'Inter','Segoe UI',sans-serif;background:#f0f2f5}
+
+  /* ── SLIDE SHELL ── */
+  .slide{width:1920px;height:1080px;background:var(--surf);display:flex;flex-direction:column;overflow:hidden;position:relative;border:1px solid var(--bdr);margin-bottom:32px}
+  .topbar{height:8px;flex-shrink:0}
+  .tb-teal{background:var(--teal)} .tb-blue{background:var(--blue)} .tb-gold{background:var(--gold)}
+  .tb-purple{background:var(--purple)} .tb-orange{background:var(--orange)}
+  .tb-grad{background:linear-gradient(90deg,var(--teal),var(--blue),var(--gold))}
+
+  /* ── HEADER ── */
+  .hdr{display:flex;align-items:center;justify-content:space-between;padding:18px 64px;border-bottom:1px solid var(--bdr);flex-shrink:0}
+  .logo{display:flex;align-items:center;gap:12px}
+  .logo-icon{width:40px;height:40px;flex-shrink:0}
+  .logo-text{font-size:22px;font-weight:700;color:var(--tx1)}
+  .badge{display:inline-flex;align-items:center;gap:8px;border-radius:4px;padding:6px 18px;font-size:13px;font-weight:600}
+  .bdg-teal{background:var(--teal-l);border:1px solid var(--teal);color:var(--teal-d)}
+  .bdg-blue{background:var(--blue-l);border:1px solid var(--blue);color:var(--blue)}
+  .bdg-gold{background:var(--gold-l);border:1px solid var(--gold);color:var(--gold)}
+  .bdg-orange{background:var(--orange-l);border:1px solid var(--orange);color:var(--orange)}
+  .dot{width:8px;height:8px;border-radius:50%}
+  .dot-teal{background:var(--teal)} .dot-blue{background:var(--blue)} .dot-gold{background:var(--gold)} .dot-orange{background:var(--orange)}
+
+  /* ── BODY ── */
+  .body{display:flex;flex-direction:column;flex:1;padding:36px 64px 0;overflow:hidden}
+  .crumb{display:flex;align-items:center;gap:8px;font-size:14px;color:var(--tx2);margin-bottom:18px}
+  .tag{padding:3px 10px;border-radius:3px;font-size:12px;font-weight:700}
+  .tag-teal{background:var(--teal-l);color:var(--teal-d)} .tag-blue{background:var(--blue-l);color:var(--blue)}
+  .tag-gold{background:var(--gold-l);color:var(--gold)} .tag-orange{background:var(--orange-l);color:var(--orange)}
+  .h1{font-size:42px;font-weight:800;color:var(--tx1);letter-spacing:-.5px;line-height:1.15;margin-bottom:12px}
+  .sub{font-size:20px;color:var(--tx2);font-weight:400;line-height:1.4;margin-bottom:28px}
+  .area{flex:1;display:flex;gap:28px;overflow:hidden}
+  .g2{display:grid;grid-template-columns:1fr 1fr;gap:28px;width:100%}
+  .g3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:24px;width:100%}
+  .g4{display:grid;grid-template-columns:1fr 1fr 1fr 1fr;gap:20px;width:100%}
+
+  /* ── CARDS ── */
+  .card{background:var(--surf);border:1px solid var(--bdr);border-radius:6px;padding:26px;display:flex;flex-direction:column;gap:14px;box-shadow:0 2px 6px rgba(0,0,0,.03)}
+  .bl-teal{border-left:5px solid var(--teal)} .bl-blue{border-left:5px solid var(--blue)}
+  .bl-gold{border-left:5px solid var(--gold)} .bl-purple{border-left:5px solid var(--purple)}
+  .bl-orange{border-left:5px solid var(--orange)} .bl-red{border-left:5px solid var(--red)}
+  .bl-green{border-left:5px solid var(--green)}
+  .ct{font-size:19px;font-weight:700;color:var(--tx1);display:flex;align-items:center;gap:10px}
+  .cs{font-size:12px;font-weight:700;color:var(--tx2);text-transform:uppercase;letter-spacing:.5px}
+  .cx{font-size:15px;color:var(--tx2);line-height:1.6}
+
+  /* ── TABLE ── */
+  .tw{width:100%;overflow:hidden;border-radius:6px;border:1px solid var(--bdr)}
+  table{width:100%;border-collapse:collapse;font-size:14px}
+  thead{color:#fff}
+  .th-teal thead{background:var(--teal)} .th-blue thead{background:var(--blue)}
+  .th-gold thead{background:#B8690F} .th-orange thead{background:var(--orange)}
+  th{padding:13px 18px;font-weight:700;text-align:left;font-size:13px}
+  td{padding:12px 18px;border-bottom:1px solid var(--bdr);color:var(--tx1);font-size:13px}
+  tr:last-child td{border-bottom:none} tr:nth-child(even) td{background:var(--bg)}
+  .c-teal{color:var(--teal);font-weight:600} .c-blue{color:var(--blue);font-weight:600}
+  .c-gold{color:var(--gold);font-weight:600} .c-orange{color:var(--orange);font-weight:600}
+  .c-green{color:var(--green);font-weight:700} .c-red{color:var(--red);font-weight:700}
+
+  /* ── LIST ── */
+  .bl{list-style:none;display:flex;flex-direction:column;gap:9px}
+  .bl li{display:flex;align-items:flex-start;gap:10px;font-size:15px;color:var(--tx2);line-height:1.5}
+  .bl li::before{content:'▸';font-weight:700;flex-shrink:0;margin-top:1px}
+  .bl-t li::before{color:var(--teal)} .bl-b li::before{color:var(--blue)}
+  .bl-g li::before{color:var(--gold)} .bl-o li::before{color:var(--orange)}
+  .bl-gr li::before{color:var(--green)} .bl-r li::before{color:var(--red)}
+
+  /* ── HIGHLIGHT BOX ── */
+  .hb{border-radius:6px;padding:18px 22px;display:flex;gap:14px;align-items:flex-start}
+  .hb-teal{background:var(--teal-l);border-left:5px solid var(--teal)}
+  .hb-blue{background:var(--blue-l);border-left:5px solid var(--blue)}
+  .hb-gold{background:var(--gold-l);border-left:5px solid var(--gold)}
+  .hb-orange{background:var(--orange-l);border-left:5px solid var(--orange)}
+  .hb-red{background:var(--red-l);border-left:5px solid var(--red)}
+  .hb-green{background:var(--green-l);border-left:5px solid var(--green)}
+  .hb-icon{font-size:22px;line-height:1;flex-shrink:0}
+  .hb-text{font-size:14px;color:var(--tx1);line-height:1.6}
+  .hb-text strong{display:block;margin-bottom:3px;font-size:15px}
+
+  /* ── CODE ── */
+  .code{background:#1E1E1E;border-radius:6px;padding:18px 22px;font-family:'Consolas','Monaco',monospace;font-size:12px;color:#D4D4D4;line-height:1.65;overflow:hidden}
+  .cc{color:#6A9955} .ck{color:#569CD6} .cs2{color:#CE9178} .cf{color:#DCDCAA} .cv{color:#9CDCFE}
+
+  /* ── PILL ── */
+  .pill{display:inline-block;padding:4px 12px;border-radius:20px;font-size:11px;font-weight:700}
+  .p-teal{background:var(--teal-l);color:var(--teal-d)} .p-blue{background:var(--blue-l);color:var(--blue)}
+  .p-gold{background:var(--gold-l);color:var(--gold)} .p-green{background:var(--green-l);color:var(--green)}
+  .p-red{background:var(--red-l);color:var(--red)} .p-orange{background:var(--orange-l);color:var(--orange)}
+
+  /* ── FOOTER ── */
+  .ftr{padding:13px 64px;border-top:1px solid var(--bdr);display:flex;align-items:center;justify-content:space-between;font-size:13px;color:var(--txm);flex-shrink:0}
+  .ftr-num{font-size:14px;font-weight:700;color:var(--tx2)}
+
+  /* ── COVER ── */
+  .cover-body{flex:1;display:flex;flex-direction:column;justify-content:center;padding:64px 120px;background:linear-gradient(135deg,#F0FAF9 0%,#EFF6FC 50%,#FFFBF0 100%);position:relative}
+  .day-tag{display:inline-flex;align-items:center;gap:8px;background:#fff;border:2px solid var(--teal);border-radius:24px;padding:8px 20px;font-size:14px;font-weight:700;color:var(--teal-d);margin-bottom:28px;width:fit-content}
+  .cover-h{font-size:66px;font-weight:800;color:var(--tx1);letter-spacing:-2px;line-height:1.05;margin-bottom:22px}
+  .cover-h span{color:var(--teal)}
+  .cover-s{font-size:22px;color:var(--tx2);font-weight:400;line-height:1.5;margin-bottom:36px;max-width:900px}
+  .topics{display:flex;flex-wrap:wrap;gap:12px}
+  .topic{background:#fff;border:1px solid var(--bdr);border-radius:6px;padding:10px 18px;font-size:14px;font-weight:600;color:var(--tx2)}
+
+  /* ── CTA ── */
+  .cta-body{flex:1;display:flex;flex-direction:column;justify-content:center;align-items:center;padding:64px;background:linear-gradient(135deg,#F0FAF9 0%,#EFF6FC 50%,#FFFBF0 100%);text-align:center;gap:26px}
+  .cta-icon{font-size:60px}
+  .cta-h{font-size:48px;font-weight:800;color:var(--tx1);letter-spacing:-1px}
+  .cta-s{font-size:20px;color:var(--tx2);max-width:900px;line-height:1.5}
+  .cta-next{background:var(--teal);color:#fff;border-radius:8px;padding:16px 36px;font-size:17px;font-weight:700;display:inline-block}
+  .cta-author{font-size:15px;color:var(--tx2)}
+  .cta-author strong{color:var(--tx1);font-weight:700}
+</style>
+</head>
+<body>
+
+<!-- Shared Fabric SVG Logo macro (inline in each header) -->
+
+<!-- ══════════════════════════════════════
+     SLIDE 01 — COVER
+══════════════════════════════════════ -->
+<div class="slide">
+  <div class="topbar tb-grad"></div>
+  <div class="hdr">
+    <div class="logo">
+      <div class="logo-icon"><svg xmlns="http://www.w3.org/2000/svg" width="40" height="40" viewBox="3.9997 3.9999 39.9994 40.0011"><path fill="url(#fa)" fill-rule="evenodd" d="m5.64 31.6-.586 2.144c-.218.685-.524 1.693-.689 2.59a5.63 5.63 0 0 0 4.638 7.588c.792.114 1.688.108 2.692-.04l4.613-.636a2.92 2.92 0 0 0 2.421-2.127l3.175-11.662L5.64 31.599Z" clip-rule="evenodd"/><path fill="url(#fb)" d="M10.14 32.152c-4.863.753-5.861 4.423-5.861 4.423l4.656-17.11 24.333-3.292-3.318 12.052a1.71 1.71 0 0 1-1.388 1.244l-.136.022-18.423 2.684z"/><path fill="url(#fd)" d="m12.899 21.235 26.938-3.98a1.6 1.6 0 0 0 1.323-1.17l2.78-10.06a1.595 1.595 0 0 0-1.74-2.012L16.498 7.81a7.19 7.19 0 0 0-5.777 5.193L7.013 26.438c.744-2.717 1.202-4.355 5.886-5.203"/><path fill="url(#fg)" d="M12.899 21.236c-3.901.706-4.87 1.962-5.514 3.932L4.279 36.577s.992-3.633 5.796-4.41l18.352-2.673.136-.022a1.71 1.71 0 0 0 1.388-1.244l2.73-9.915z"/><defs><linearGradient id="fa" x1="12.953" x2="12.953" y1="44.001" y2="29.457" gradientUnits="userSpaceOnUse"><stop offset=".056" stop-color="#2AAC94"/><stop offset="1" stop-color="#085954"/></linearGradient><linearGradient id="fb" x1="31.331" x2="17.286" y1="33.448" y2="18.173" gradientUnits="userSpaceOnUse"><stop offset=".042" stop-color="#ABE88E"/><stop offset=".549" stop-color="#2AAA92"/><stop offset=".906" stop-color="#117865"/></linearGradient><linearGradient id="fd" x1="7.013" x2="42.589" y1="15.219" y2="15.219" gradientUnits="userSpaceOnUse"><stop offset=".043" stop-color="#25FFD4"/><stop offset=".874" stop-color="#55DDB9"/></linearGradient><linearGradient id="fg" x1="15.756" x2="16.168" y1="27.96" y2="15.74" gradientUnits="userSpaceOnUse"><stop offset=".205" stop-color="#063D3B" stop-opacity="0"/><stop offset=".872" stop-color="#063D3B" stop-opacity=".75"/></linearGradient></defs></svg></div>
+      <span class="logo-text">Microsoft Fabric</span>
+    </div>
+    <div class="badge bdg-teal"><div class="dot dot-teal"></div>DP-700 Certification Challenge</div>
+  </div>
+  <div class="cover-body">
+    <div class="day-tag">🗓️ DAY 05 OF 30</div>
+    <div class="cover-h">Ingest &amp; Transform Data<br/><span>Loading Patterns &amp; Pipelines</span></div>
+    <div class="cover-s">Master full vs incremental loads, Copy Activity, OneLake Shortcuts, Mirroring, and bad data handling for the DP-700 exam</div>
+    <div class="topics">
+      <div class="topic">📥 Full vs Incremental Load</div>
+      <div class="topic">🔁 Copy Activity Deep Dive</div>
+      <div class="topic">🔗 Shortcuts vs Mirroring</div>
+      <div class="topic">🗄️ Choose the Right Data Store</div>
+      <div class="topic">🧹 Duplicate &amp; Null Handling</div>
+      <div class="topic">🎯 3 Practice Questions</div>
+    </div>
+  </div>
+  <div class="ftr"><span>Authored by Sayan Banerjee • Microsoft Certified: Fabric Data Engineer Associate</span><span class="ftr-num">01 / 10</span></div>
+</div>
+
+<!-- ══════════════════════════════════════
+     SLIDE 02 — FULL vs INCREMENTAL LOAD
+══════════════════════════════════════ -->
+<div class="slide">
+  <div class="topbar tb-blue"></div>
+  <div class="hdr">
+    <div class="logo"><div class="logo-icon"><svg xmlns="http://www.w3.org/2000/svg" width="40" height="40" viewBox="3.9997 3.9999 39.9994 40.0011"><path fill="url(#fa)" fill-rule="evenodd" d="m5.64 31.6-.586 2.144c-.218.685-.524 1.693-.689 2.59a5.63 5.63 0 0 0 4.638 7.588c.792.114 1.688.108 2.692-.04l4.613-.636a2.92 2.92 0 0 0 2.421-2.127l3.175-11.662L5.64 31.599Z" clip-rule="evenodd"/><path fill="url(#fb)" d="M10.14 32.152c-4.863.753-5.861 4.423-5.861 4.423l4.656-17.11 24.333-3.292-3.318 12.052a1.71 1.71 0 0 1-1.388 1.244l-.136.022-18.423 2.684z"/><path fill="url(#fd)" d="m12.899 21.235 26.938-3.98a1.6 1.6 0 0 0 1.323-1.17l2.78-10.06a1.595 1.595 0 0 0-1.74-2.012L16.498 7.81a7.19 7.19 0 0 0-5.777 5.193L7.013 26.438c.744-2.717 1.202-4.355 5.886-5.203"/><path fill="url(#fg)" d="M12.899 21.236c-3.901.706-4.87 1.962-5.514 3.932L4.279 36.577s.992-3.633 5.796-4.41l18.352-2.673.136-.022a1.71 1.71 0 0 0 1.388-1.244l2.73-9.915z"/><defs><linearGradient id="fa" x1="12.953" x2="12.953" y1="44.001" y2="29.457" gradientUnits="userSpaceOnUse"><stop offset=".056" stop-color="#2AAC94"/><stop offset="1" stop-color="#085954"/></linearGradient><linearGradient id="fb" x1="31.331" x2="17.286" y1="33.448" y2="18.173" gradientUnits="userSpaceOnUse"><stop offset=".042" stop-color="#ABE88E"/><stop offset=".549" stop-color="#2AAA92"/><stop offset=".906" stop-color="#117865"/></linearGradient><linearGradient id="fd" x1="7.013" x2="42.589" y1="15.219" y2="15.219" gradientUnits="userSpaceOnUse"><stop offset=".043" stop-color="#25FFD4"/><stop offset=".874" stop-color="#55DDB9"/></linearGradient><linearGradient id="fg" x1="15.756" x2="16.168" y1="27.96" y2="15.74" gradientUnits="userSpaceOnUse"><stop offset=".205" stop-color="#063D3B" stop-opacity="0"/><stop offset=".872" stop-color="#063D3B" stop-opacity=".75"/></linearGradient></defs></svg></div><span class="logo-text">Microsoft Fabric</span></div>
+    <div class="badge bdg-blue"><div class="dot dot-blue"></div>Loading Patterns</div>
+  </div>
+  <div class="body">
+    <div class="crumb"><span class="tag tag-blue">INGEST &amp; TRANSFORM</span><span>→</span><span>Design and implement full and incremental data loads</span></div>
+    <div class="h1">Full Load vs Incremental Load</div>
+    <div class="area">
+      <div class="g2">
+        <div style="display:flex;flex-direction:column;gap:16px;">
+          <div class="card bl-blue">
+            <div class="ct">📦 Full Load</div>
+            <div class="cs">Truncate &amp; Reload All Data Every Run</div>
+            <ul class="bl bl-b" style="margin-top:4px;">
+              <li>Simple — no watermark tracking needed</li>
+              <li>Always 100% consistent with source</li>
+              <li>Expensive for large tables</li>
+              <li>Long run time, high compute cost</li>
+            </ul>
+            <div class="pill p-blue" style="margin-top:4px;">Best for: Small reference/dimension tables, initial loads</div>
+          </div>
+          <div class="hb hb-blue">
+            <div class="hb-icon">💡</div>
+            <div class="hb-text"><strong>Exam signal word: "truncate"</strong> If the question says truncate-and-reload or mentions small lookup tables → Full Load is the answer.</div>
+          </div>
+        </div>
+        <div style="display:flex;flex-direction:column;gap:16px;">
+          <div class="card bl-teal">
+            <div class="ct">⚡ Incremental Load</div>
+            <div class="cs">Load Only New/Changed Records via Watermark</div>
+            <ul class="bl bl-t" style="margin-top:4px;">
+              <li>Uses <strong>watermark column</strong> (last_modified_date, id)</li>
+              <li>Only processes changed rows — fast &amp; efficient</li>
+              <li>Scales to hundreds of millions of rows</li>
+              <li>Doesn't catch deletes by default ⚠️</li>
+            </ul>
+            <div class="pill p-teal" style="margin-top:4px;">Best for: Large transactional tables, daily pipelines</div>
+          </div>
+          <div class="card bl-gold">
+            <div class="ct">🔄 CDC / Mirroring</div>
+            <div class="cs">Captures Inserts + Updates + Deletes</div>
+            <ul class="bl bl-g" style="margin-top:4px;">
+              <li>Database log-level change capture</li>
+              <li>Fabric Mirroring: near-real-time replication</li>
+              <li>No pipeline required for CDC</li>
+            </ul>
+            <div class="pill p-gold" style="margin-top:4px;">Best for: Real-time replication from Azure SQL / Cosmos / Snowflake</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+  <div class="ftr"><span>Authored by Sayan Banerjee • Microsoft Certified: Fabric Data Engineer Associate</span><span class="ftr-num">02 / 10</span></div>
+</div>
+
+<!-- ══════════════════════════════════════
+     SLIDE 03 — DIMENSIONAL MODEL LOADING
+══════════════════════════════════════ -->
+<div class="slide">
+  <div class="topbar tb-teal"></div>
+  <div class="hdr">
+    <div class="logo"><div class="logo-icon"><svg xmlns="http://www.w3.org/2000/svg" width="40" height="40" viewBox="3.9997 3.9999 39.9994 40.0011"><path fill="url(#fa)" fill-rule="evenodd" d="m5.64 31.6-.586 2.144c-.218.685-.524 1.693-.689 2.59a5.63 5.63 0 0 0 4.638 7.588c.792.114 1.688.108 2.692-.04l4.613-.636a2.92 2.92 0 0 0 2.421-2.127l3.175-11.662L5.64 31.599Z" clip-rule="evenodd"/><path fill="url(#fb)" d="M10.14 32.152c-4.863.753-5.861 4.423-5.861 4.423l4.656-17.11 24.333-3.292-3.318 12.052a1.71 1.71 0 0 1-1.388 1.244l-.136.022-18.423 2.684z"/><path fill="url(#fd)" d="m12.899 21.235 26.938-3.98a1.6 1.6 0 0 0 1.323-1.17l2.78-10.06a1.595 1.595 0 0 0-1.74-2.012L16.498 7.81a7.19 7.19 0 0 0-5.777 5.193L7.013 26.438c.744-2.717 1.202-4.355 5.886-5.203"/><path fill="url(#fg)" d="M12.899 21.236c-3.901.706-4.87 1.962-5.514 3.932L4.279 36.577s.992-3.633 5.796-4.41l18.352-2.673.136-.022a1.71 1.71 0 0 0 1.388-1.244l2.73-9.915z"/><defs><linearGradient id="fa" x1="12.953" x2="12.953" y1="44.001" y2="29.457" gradientUnits="userSpaceOnUse"><stop offset=".056" stop-color="#2AAC94"/><stop offset="1" stop-color="#085954"/></linearGradient><linearGradient id="fb" x1="31.331" x2="17.286" y1="33.448" y2="18.173" gradientUnits="userSpaceOnUse"><stop offset=".042" stop-color="#ABE88E"/><stop offset=".549" stop-color="#2AAA92"/><stop offset=".906" stop-color="#117865"/></linearGradient><linearGradient id="fd" x1="7.013" x2="42.589" y1="15.219" y2="15.219" gradientUnits="userSpaceOnUse"><stop offset=".043" stop-color="#25FFD4"/><stop offset=".874" stop-color="#55DDB9"/></linearGradient><linearGradient id="fg" x1="15.756" x2="16.168" y1="27.96" y2="15.74" gradientUnits="userSpaceOnUse"><stop offset=".205" stop-color="#063D3B" stop-opacity="0"/><stop offset=".872" stop-color="#063D3B" stop-opacity=".75"/></linearGradient></defs></svg></div><span class="logo-text">Microsoft Fabric</span></div>
+    <div class="badge bdg-teal"><div class="dot dot-teal"></div>Dimensional Model</div>
+  </div>
+  <div class="body">
+    <div class="crumb"><span class="tag tag-teal">LOADING PATTERNS</span><span>→</span><span>Prepare data for loading into a dimensional model</span></div>
+    <div class="h1">Loading Into a Star Schema</div>
+    <div class="sub">6 steps the DP-700 expects you to know in order</div>
+    <div class="area">
+      <div class="g3">
+        <div style="display:flex;flex-direction:column;gap:14px;">
+          <div class="card bl-blue" style="padding:20px;gap:10px;">
+            <div class="ct" style="font-size:16px;">1️⃣ Denormalize</div>
+            <div class="cx" style="font-size:13px;">Flatten normalized source tables using JOINs. PySpark JOIN or T-SQL JOIN across Bronze tables into Silver.</div>
+          </div>
+          <div class="card bl-teal" style="padding:20px;gap:10px;">
+            <div class="ct" style="font-size:16px;">2️⃣ Deduplicate</div>
+            <div class="cx" style="font-size:13px;"><code style="background:#f0f8f7;padding:2px 6px;border-radius:3px;font-size:12px;">dropDuplicates()</code> for exact. <code style="background:#f0f8f7;padding:2px 6px;border-radius:3px;font-size:12px;">ROW_NUMBER() OVER (PARTITION BY key ORDER BY date DESC)</code> for soft dupes.</div>
+          </div>
+          <div class="card bl-gold" style="padding:20px;gap:10px;">
+            <div class="ct" style="font-size:16px;">3️⃣ Surrogate Keys</div>
+            <div class="cx" style="font-size:13px;">Generate integer PKs for dimension tables. Use <code style="background:#fffbf0;padding:2px 6px;border-radius:3px;font-size:12px;">monotonically_increasing_id()</code> in PySpark or <code style="background:#fffbf0;padding:2px 6px;border-radius:3px;font-size:12px;">IDENTITY</code> in T-SQL.</div>
+          </div>
+        </div>
+        <div style="display:flex;flex-direction:column;gap:14px;">
+          <div class="card bl-orange" style="padding:20px;gap:10px;">
+            <div class="ct" style="font-size:16px;">4️⃣ Handle Nulls</div>
+            <div class="cx" style="font-size:13px;">Fill with defaults: <code style="background:#fff2ec;padding:2px 6px;border-radius:3px;font-size:12px;">fillna({"revenue": 0})</code> or drop rows where key columns are null: <code style="background:#fff2ec;padding:2px 6px;border-radius:3px;font-size:12px;">dropna(subset=["id"])</code></div>
+          </div>
+          <div class="card bl-purple" style="padding:20px;gap:10px;">
+            <div class="ct" style="font-size:16px;">5️⃣ SCD Type 2</div>
+            <div class="cx" style="font-size:13px;">Track historical dimension changes. Add <strong>valid_from</strong>, <strong>valid_to</strong>, <strong>is_current</strong> columns. Use Delta MERGE to expire old rows and insert new ones.</div>
+          </div>
+          <div class="card bl-green" style="padding:20px;gap:10px;">
+            <div class="ct" style="font-size:16px;">6️⃣ Load Fact Table</div>
+            <div class="cx" style="font-size:13px;">Look up surrogate keys from dimension tables, aggregate measures, write to Gold fact table. Append mode for incremental.</div>
+          </div>
+        </div>
+        <div style="display:flex;flex-direction:column;gap:14px;">
+          <div class="hb hb-teal">
+            <div class="hb-icon">🧠</div>
+            <div class="hb-text"><strong>SCD Type 1 vs Type 2</strong><br/>Type 1 = overwrite (lose history)<br/>Type 2 = add new row + expire old (keep history)<br/>DP-700 favourite question: "preserve history" → always SCD Type 2</div>
+          </div>
+          <div class="code" style="flex:1;font-size:11px;">
+<span class="cc">-- SCD Type 2 check pattern</span><br/>
+<span class="ck">SELECT</span> customer_id, email,<br/>
+&nbsp;&nbsp;<span class="cc">-- Expire old row</span><br/>
+&nbsp;&nbsp;<span class="cf">CASE WHEN</span> src.email != tgt.email<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="cf">THEN</span> <span class="cs2">'false'</span> <span class="cf">ELSE</span> tgt.is_current<br/>
+&nbsp;&nbsp;<span class="cf">END</span> <span class="ck">AS</span> is_current,<br/>
+&nbsp;&nbsp;<span class="cf">CURRENT_DATE</span>() <span class="ck">AS</span> valid_to<br/>
+<span class="ck">FROM</span> gold.dim_customer tgt<br/>
+<span class="ck">JOIN</span> source src <span class="ck">ON</span><br/>
+&nbsp;&nbsp;tgt.customer_id = src.customer_id<br/>
+&nbsp;&nbsp;<span class="ck">AND</span> tgt.is_current = <span class="cs2">true</span>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+  <div class="ftr"><span>Authored by Sayan Banerjee • Microsoft Certified: Fabric Data Engineer Associate</span><span class="ftr-num">03 / 10</span></div>
+</div>
+
+<!-- ══════════════════════════════════════
+     SLIDE 04 — COPY ACTIVITY DEEP DIVE
+══════════════════════════════════════ -->
+<div class="slide">
+  <div class="topbar tb-blue"></div>
+  <div class="hdr">
+    <div class="logo"><div class="logo-icon"><svg xmlns="http://www.w3.org/2000/svg" width="40" height="40" viewBox="3.9997 3.9999 39.9994 40.0011"><path fill="url(#fa)" fill-rule="evenodd" d="m5.64 31.6-.586 2.144c-.218.685-.524 1.693-.689 2.59a5.63 5.63 0 0 0 4.638 7.588c.792.114 1.688.108 2.692-.04l4.613-.636a2.92 2.92 0 0 0 2.421-2.127l3.175-11.662L5.64 31.599Z" clip-rule="evenodd"/><path fill="url(#fb)" d="M10.14 32.152c-4.863.753-5.861 4.423-5.861 4.423l4.656-17.11 24.333-3.292-3.318 12.052a1.71 1.71 0 0 1-1.388 1.244l-.136.022-18.423 2.684z"/><path fill="url(#fd)" d="m12.899 21.235 26.938-3.98a1.6 1.6 0 0 0 1.323-1.17l2.78-10.06a1.595 1.595 0 0 0-1.74-2.012L16.498 7.81a7.19 7.19 0 0 0-5.777 5.193L7.013 26.438c.744-2.717 1.202-4.355 5.886-5.203"/><path fill="url(#fg)" d="M12.899 21.236c-3.901.706-4.87 1.962-5.514 3.932L4.279 36.577s.992-3.633 5.796-4.41l18.352-2.673.136-.022a1.71 1.71 0 0 0 1.388-1.244l2.73-9.915z"/><defs><linearGradient id="fa" x1="12.953" x2="12.953" y1="44.001" y2="29.457" gradientUnits="userSpaceOnUse"><stop offset=".056" stop-color="#2AAC94"/><stop offset="1" stop-color="#085954"/></linearGradient><linearGradient id="fb" x1="31.331" x2="17.286" y1="33.448" y2="18.173" gradientUnits="userSpaceOnUse"><stop offset=".042" stop-color="#ABE88E"/><stop offset=".549" stop-color="#2AAA92"/><stop offset=".906" stop-color="#117865"/></linearGradient><linearGradient id="fd" x1="7.013" x2="42.589" y1="15.219" y2="15.219" gradientUnits="userSpaceOnUse"><stop offset=".043" stop-color="#25FFD4"/><stop offset=".874" stop-color="#55DDB9"/></linearGradient><linearGradient id="fg" x1="15.756" x2="16.168" y1="27.96" y2="15.74" gradientUnits="userSpaceOnUse"><stop offset=".205" stop-color="#063D3B" stop-opacity="0"/><stop offset=".872" stop-color="#063D3B" stop-opacity=".75"/></linearGradient></defs></svg></div><span class="logo-text">Microsoft Fabric</span></div>
+    <div class="badge bdg-blue"><div class="dot dot-blue"></div>Copy Activity</div>
+  </div>
+  <div class="body">
+    <div class="crumb"><span class="tag tag-blue">PIPELINES</span><span>→</span><span>Ingest data by using pipelines — Copy Activity configuration</span></div>
+    <div class="h1">Copy Activity: Source → Sink</div>
+    <div class="sub">The primary ingestion mechanism in Fabric Data Pipelines</div>
+    <div class="area">
+      <div class="g2">
+        <div style="display:flex;flex-direction:column;gap:18px;">
+          <div class="g2" style="gap:16px;">
+            <div class="card bl-teal" style="padding:18px;gap:8px;">
+              <div class="ct" style="font-size:15px;">📡 Source</div>
+              <ul class="bl bl-t" style="margin-top:4px;font-size:13px;gap:6px;">
+                <li>Connection &amp; linked service</li>
+                <li>Table / query / file path</li>
+                <li>File format (CSV, Parquet, JSON)</li>
+                <li>Partition options (parallelism)</li>
+              </ul>
+            </div>
+            <div class="card bl-blue" style="padding:18px;gap:8px;">
+              <div class="ct" style="font-size:15px;">🎯 Sink</div>
+              <ul class="bl bl-b" style="margin-top:4px;font-size:13px;gap:6px;">
+                <li>Destination store</li>
+                <li>Write behaviour</li>
+                <li>Pre-copy script (truncate)</li>
+                <li>File naming pattern</li>
+              </ul>
+            </div>
+          </div>
+          <div class="card bl-gold" style="padding:18px;gap:8px;">
+            <div class="ct" style="font-size:15px;">🗂️ Mapping Tab</div>
+            <div class="cx" style="font-size:13px;">Column-to-column schema mapping and data type conversions. Auto-detect or manual. Handles source/sink column name mismatches.</div>
+          </div>
+        </div>
+        <div style="display:flex;flex-direction:column;gap:14px;">
+          <div class="ct" style="font-size:18px;margin-bottom:4px;">Sink Write Behaviours</div>
+          <div class="tw th-blue">
+            <table>
+              <thead><tr><th>Mode</th><th>Behaviour</th><th>Use When</th></tr></thead>
+              <tbody>
+                <tr><td><strong>Append</strong></td><td>Add rows, keep existing</td><td class="c-teal">Incremental → Lakehouse</td></tr>
+                <tr><td><strong>Overwrite</strong></td><td>Truncate then write</td><td class="c-blue">Full load → Lakehouse table</td></tr>
+                <tr><td><strong>Upsert</strong></td><td>Insert new, update existing</td><td class="c-gold">SCD Type 1, merge pattern</td></tr>
+                <tr><td><strong>Insert</strong></td><td>Insert only, fail on duplicate key</td><td class="c-teal">Warehouse fact table</td></tr>
+              </tbody>
+            </table>
+          </div>
+          <div class="hb hb-blue">
+            <div class="hb-icon">⚠️</div>
+            <div class="hb-text"><strong>Exam Trap: Pre-copy Script</strong> The "Pre-copy script" in the Sink runs BEFORE the copy. Use it to TRUNCATE the target table for full loads — not a separate pipeline activity.</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+  <div class="ftr"><span>Authored by Sayan Banerjee • Microsoft Certified: Fabric Data Engineer Associate</span><span class="ftr-num">04 / 10</span></div>
+</div>
+
+<!-- ══════════════════════════════════════
+     SLIDE 05 — CHOOSE THE RIGHT DATA STORE
+══════════════════════════════════════ -->
+<div class="slide">
+  <div class="topbar tb-gold"></div>
+  <div class="hdr">
+    <div class="logo"><div class="logo-icon"><svg xmlns="http://www.w3.org/2000/svg" width="40" height="40" viewBox="3.9997 3.9999 39.9994 40.0011"><path fill="url(#fa)" fill-rule="evenodd" d="m5.64 31.6-.586 2.144c-.218.685-.524 1.693-.689 2.59a5.63 5.63 0 0 0 4.638 7.588c.792.114 1.688.108 2.692-.04l4.613-.636a2.92 2.92 0 0 0 2.421-2.127l3.175-11.662L5.64 31.599Z" clip-rule="evenodd"/><path fill="url(#fb)" d="M10.14 32.152c-4.863.753-5.861 4.423-5.861 4.423l4.656-17.11 24.333-3.292-3.318 12.052a1.71 1.71 0 0 1-1.388 1.244l-.136.022-18.423 2.684z"/><path fill="url(#fd)" d="m12.899 21.235 26.938-3.98a1.6 1.6 0 0 0 1.323-1.17l2.78-10.06a1.595 1.595 0 0 0-1.74-2.012L16.498 7.81a7.19 7.19 0 0 0-5.777 5.193L7.013 26.438c.744-2.717 1.202-4.355 5.886-5.203"/><path fill="url(#fg)" d="M12.899 21.236c-3.901.706-4.87 1.962-5.514 3.932L4.279 36.577s.992-3.633 5.796-4.41l18.352-2.673.136-.022a1.71 1.71 0 0 0 1.388-1.244l2.73-9.915z"/><defs><linearGradient id="fa" x1="12.953" x2="12.953" y1="44.001" y2="29.457" gradientUnits="userSpaceOnUse"><stop offset=".056" stop-color="#2AAC94"/><stop offset="1" stop-color="#085954"/></linearGradient><linearGradient id="fb" x1="31.331" x2="17.286" y1="33.448" y2="18.173" gradientUnits="userSpaceOnUse"><stop offset=".042" stop-color="#ABE88E"/><stop offset=".549" stop-color="#2AAA92"/><stop offset=".906" stop-color="#117865"/></linearGradient><linearGradient id="fd" x1="7.013" x2="42.589" y1="15.219" y2="15.219" gradientUnits="userSpaceOnUse"><stop offset=".043" stop-color="#25FFD4"/><stop offset=".874" stop-color="#55DDB9"/></linearGradient><linearGradient id="fg" x1="15.756" x2="16.168" y1="27.96" y2="15.74" gradientUnits="userSpaceOnUse"><stop offset=".205" stop-color="#063D3B" stop-opacity="0"/><stop offset=".872" stop-color="#063D3B" stop-opacity=".75"/></linearGradient></defs></svg></div><span class="logo-text">Microsoft Fabric</span></div>
+    <div class="badge bdg-gold"><div class="dot dot-gold"></div>Data Store Selection</div>
+  </div>
+  <div class="body">
+    <div class="crumb"><span class="tag tag-gold">INGEST &amp; TRANSFORM</span><span>→</span><span>Choose an appropriate data store</span></div>
+    <div class="h1">Lakehouse vs Warehouse vs Eventhouse</div>
+    <div class="area">
+      <div style="display:flex;flex-direction:column;gap:20px;width:100%;">
+        <div class="g4">
+          <div class="card bl-teal" style="padding:20px;gap:10px;">
+            <div class="ct" style="font-size:17px;">🏠 Lakehouse</div>
+            <ul class="bl bl-t" style="font-size:13px;gap:6px;">
+              <li>Delta Lake on OneLake</li>
+              <li>PySpark + SQL endpoint</li>
+              <li>Schema-on-read</li>
+              <li>Best for: Bronze/Silver/Gold ELT</li>
+              <li>DirectLake for Power BI</li>
+            </ul>
+          </div>
+          <div class="card bl-blue" style="padding:20px;gap:10px;">
+            <div class="ct" style="font-size:17px;">🏦 Warehouse</div>
+            <ul class="bl bl-b" style="font-size:13px;gap:6px;">
+              <li>SQL engine, T-SQL only</li>
+              <li>ACID transactions</li>
+              <li>Schema-on-write</li>
+              <li>Best for: Star schema, reporting</li>
+              <li>Views, procedures, functions</li>
+            </ul>
+          </div>
+          <div class="card bl-orange" style="padding:20px;gap:10px;">
+            <div class="ct" style="font-size:17px;">⚡ Eventhouse</div>
+            <ul class="bl bl-o" style="font-size:13px;gap:6px;">
+              <li>KQL Database inside</li>
+              <li>Sub-second on billions of rows</li>
+              <li>Time-series &amp; telemetry</li>
+              <li>Best for: IoT, logs, streaming</li>
+              <li>Kusto Query Language (KQL)</li>
+            </ul>
+          </div>
+          <div class="card bl-purple" style="padding:20px;gap:10px;">
+            <div class="ct" style="font-size:17px;">🔄 Mirrored DB</div>
+            <ul class="bl" style="font-size:13px;gap:6px;--bl-color:var(--purple);">
+              <li style="color:var(--tx2);">Replicated via CDC</li>
+              <li style="color:var(--tx2);">Azure SQL, Cosmos, Snowflake</li>
+              <li style="color:var(--tx2);">Near-real-time in OneLake</li>
+              <li style="color:var(--tx2);">Best for: Operational analytics</li>
+              <li style="color:var(--tx2);">No pipeline ingestion needed</li>
+            </ul>
+          </div>
+        </div>
+        <div class="hb hb-gold">
+          <div class="hb-icon">⚠️</div>
+          <div class="hb-text"><strong>Exam Trap: Lakehouse SQL Endpoint is READ-ONLY T-SQL.</strong> You cannot INSERT/UPDATE/DELETE via the SQL Analytics Endpoint of a Lakehouse. For full T-SQL write support, use a Warehouse. For PySpark writes, use the Lakehouse Spark interface.</div>
+        </div>
+      </div>
+    </div>
+  </div>
+  <div class="ftr"><span>Authored by Sayan Banerjee • Microsoft Certified: Fabric Data Engineer Associate</span><span class="ftr-num">05 / 10</span></div>
+</div>
+
+<!-- ══════════════════════════════════════
+     SLIDE 06 — SHORTCUTS vs MIRRORING
+══════════════════════════════════════ -->
+<div class="slide">
+  <div class="topbar tb-teal"></div>
+  <div class="hdr">
+    <div class="logo"><div class="logo-icon"><svg xmlns="http://www.w3.org/2000/svg" width="40" height="40" viewBox="3.9997 3.9999 39.9994 40.0011"><path fill="url(#fa)" fill-rule="evenodd" d="m5.64 31.6-.586 2.144c-.218.685-.524 1.693-.689 2.59a5.63 5.63 0 0 0 4.638 7.588c.792.114 1.688.108 2.692-.04l4.613-.636a2.92 2.92 0 0 0 2.421-2.127l3.175-11.662L5.64 31.599Z" clip-rule="evenodd"/><path fill="url(#fb)" d="M10.14 32.152c-4.863.753-5.861 4.423-5.861 4.423l4.656-17.11 24.333-3.292-3.318 12.052a1.71 1.71 0 0 1-1.388 1.244l-.136.022-18.423 2.684z"/><path fill="url(#fd)" d="m12.899 21.235 26.938-3.98a1.6 1.6 0 0 0 1.323-1.17l2.78-10.06a1.595 1.595 0 0 0-1.74-2.012L16.498 7.81a7.19 7.19 0 0 0-5.777 5.193L7.013 26.438c.744-2.717 1.202-4.355 5.886-5.203"/><path fill="url(#fg)" d="M12.899 21.236c-3.901.706-4.87 1.962-5.514 3.932L4.279 36.577s.992-3.633 5.796-4.41l18.352-2.673.136-.022a1.71 1.71 0 0 0 1.388-1.244l2.73-9.915z"/><defs><linearGradient id="fa" x1="12.953" x2="12.953" y1="44.001" y2="29.457" gradientUnits="userSpaceOnUse"><stop offset=".056" stop-color="#2AAC94"/><stop offset="1" stop-color="#085954"/></linearGradient><linearGradient id="fb" x1="31.331" x2="17.286" y1="33.448" y2="18.173" gradientUnits="userSpaceOnUse"><stop offset=".042" stop-color="#ABE88E"/><stop offset=".549" stop-color="#2AAA92"/><stop offset=".906" stop-color="#117865"/></linearGradient><linearGradient id="fd" x1="7.013" x2="42.589" y1="15.219" y2="15.219" gradientUnits="userSpaceOnUse"><stop offset=".043" stop-color="#25FFD4"/><stop offset=".874" stop-color="#55DDB9"/></linearGradient><linearGradient id="fg" x1="15.756" x2="16.168" y1="27.96" y2="15.74" gradientUnits="userSpaceOnUse"><stop offset=".205" stop-color="#063D3B" stop-opacity="0"/><stop offset=".872" stop-color="#063D3B" stop-opacity=".75"/></linearGradient></defs></svg></div><span class="logo-text">Microsoft Fabric</span></div>
+    <div class="badge bdg-teal"><div class="dot dot-teal"></div>Shortcuts vs Mirroring</div>
+  </div>
+  <div class="body">
+    <div class="crumb"><span class="tag tag-teal">INGEST DATA</span><span>→</span><span>Create and manage OneLake shortcuts • Implement mirroring</span></div>
+    <div class="h1">OneLake Shortcuts vs Mirroring</div>
+    <div class="sub">Two ways to access external data in Fabric — without a full pipeline copy</div>
+    <div class="area">
+      <div class="g2">
+        <div style="display:flex;flex-direction:column;gap:16px;">
+          <div class="card bl-blue" style="padding:22px;gap:12px;">
+            <div class="ct">🔗 OneLake Shortcuts</div>
+            <div class="cs">Virtual Pointer — Data Stays External</div>
+            <ul class="bl bl-b" style="margin-top:4px;">
+              <li>No physical data copy — pointer only</li>
+              <li>Data lives in ADLS Gen2, S3, GCS, or other Lakehouse</li>
+              <li>Read-only access in Fabric</li>
+              <li>Auth: User identity OR service principal (delegated)</li>
+              <li>Supports Delta, Parquet, CSV formats</li>
+            </ul>
+            <div class="pill p-blue" style="margin-top:4px;">Supported: ADLS Gen2 • Amazon S3 • GCS • OneLake</div>
+          </div>
+        </div>
+        <div style="display:flex;flex-direction:column;gap:16px;">
+          <div class="card bl-teal" style="padding:22px;gap:12px;">
+            <div class="ct">🔄 Fabric Mirroring</div>
+            <div class="cs">Continuous CDC Replica Into OneLake</div>
+            <ul class="bl bl-t" style="margin-top:4px;">
+              <li>Data IS replicated into OneLake in Delta format</li>
+              <li>Near real-time via Change Data Capture (CDC)</li>
+              <li>No pipeline required — automatic sync</li>
+              <li>Enables full Spark, SQL endpoint, Power BI analytics</li>
+              <li>Read-only in Fabric (source remains writable)</li>
+            </ul>
+            <div class="pill p-teal" style="margin-top:4px;">Supported: Azure SQL DB • Cosmos DB • Snowflake • Azure SQL MI</div>
+          </div>
+        </div>
+      </div>
+      <div style="margin-top:16px;">
+        <div class="tw th-teal">
+          <table>
+            <thead><tr><th></th><th>Shortcut</th><th>Mirroring</th></tr></thead>
+            <tbody>
+              <tr><td><strong>Data location</strong></td><td class="c-blue">External (pointer only)</td><td class="c-teal">Replicated into OneLake</td></tr>
+              <tr><td><strong>Latency</strong></td><td>Depends on external source</td><td class="c-green">Near real-time (CDC)</td></tr>
+              <tr><td><strong>Azure SQL / Cosmos DB</strong></td><td class="c-red">❌ Not supported</td><td class="c-green">✅ Yes</td></tr>
+              <tr><td><strong>ADLS Gen2 / S3 / GCS</strong></td><td class="c-green">✅ Yes</td><td class="c-red">❌ Not supported</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+  </div>
+  <div class="ftr"><span>Authored by Sayan Banerjee • Microsoft Certified: Fabric Data Engineer Associate</span><span class="ftr-num">06 / 10</span></div>
+</div>
+
+<!-- ══════════════════════════════════════
+     SLIDE 07 — TRANSFORMATION TOOLS
+══════════════════════════════════════ -->
+<div class="slide">
+  <div class="topbar tb-blue"></div>
+  <div class="hdr">
+    <div class="logo"><div class="logo-icon"><svg xmlns="http://www.w3.org/2000/svg" width="40" height="40" viewBox="3.9997 3.9999 39.9994 40.0011"><path fill="url(#fa)" fill-rule="evenodd" d="m5.64 31.6-.586 2.144c-.218.685-.524 1.693-.689 2.59a5.63 5.63 0 0 0 4.638 7.588c.792.114 1.688.108 2.692-.04l4.613-.636a2.92 2.92 0 0 0 2.421-2.127l3.175-11.662L5.64 31.599Z" clip-rule="evenodd"/><path fill="url(#fb)" d="M10.14 32.152c-4.863.753-5.861 4.423-5.861 4.423l4.656-17.11 24.333-3.292-3.318 12.052a1.71 1.71 0 0 1-1.388 1.244l-.136.022-18.423 2.684z"/><path fill="url(#fd)" d="m12.899 21.235 26.938-3.98a1.6 1.6 0 0 0 1.323-1.17l2.78-10.06a1.595 1.595 0 0 0-1.74-2.012L16.498 7.81a7.19 7.19 0 0 0-5.777 5.193L7.013 26.438c.744-2.717 1.202-4.355 5.886-5.203"/><path fill="url(#fg)" d="M12.899 21.236c-3.901.706-4.87 1.962-5.514 3.932L4.279 36.577s.992-3.633 5.796-4.41l18.352-2.673.136-.022a1.71 1.71 0 0 0 1.388-1.244l2.73-9.915z"/><defs><linearGradient id="fa" x1="12.953" x2="12.953" y1="44.001" y2="29.457" gradientUnits="userSpaceOnUse"><stop offset=".056" stop-color="#2AAC94"/><stop offset="1" stop-color="#085954"/></linearGradient><linearGradient id="fb" x1="31.331" x2="17.286" y1="33.448" y2="18.173" gradientUnits="userSpaceOnUse"><stop offset=".042" stop-color="#ABE88E"/><stop offset=".549" stop-color="#2AAA92"/><stop offset=".906" stop-color="#117865"/></linearGradient><linearGradient id="fd" x1="7.013" x2="42.589" y1="15.219" y2="15.219" gradientUnits="userSpaceOnUse"><stop offset=".043" stop-color="#25FFD4"/><stop offset=".874" stop-color="#55DDB9"/></linearGradient><linearGradient id="fg" x1="15.756" x2="16.168" y1="27.96" y2="15.74" gradientUnits="userSpaceOnUse"><stop offset=".205" stop-color="#063D3B" stop-opacity="0"/><stop offset=".872" stop-color="#063D3B" stop-opacity=".75"/></linearGradient></defs></svg></div><span class="logo-text">Microsoft Fabric</span></div>
+    <div class="badge bdg-blue"><div class="dot dot-blue"></div>Transformation Tools</div>
+  </div>
+  <div class="body">
+    <div class="crumb"><span class="tag tag-blue">TRANSFORM DATA</span><span>→</span><span>Choose between PySpark, SQL, KQL and Dataflow Gen2</span></div>
+    <div class="h1">Which Transformation Tool When?</div>
+    <div class="area">
+      <div class="tw th-blue" style="height:fit-content;">
+        <table>
+          <thead><tr><th>Tool</th><th>Language</th><th>Best For</th><th>Runs On</th><th>Schedulable</th></tr></thead>
+          <tbody>
+            <tr><td><strong>PySpark (Notebook)</strong></td><td>Python / Spark SQL</td><td>Large-scale ELT, complex logic, ML feature engineering</td><td class="c-teal">Spark cluster</td><td>Via Pipeline only</td></tr>
+            <tr><td><strong>T-SQL (Warehouse)</strong></td><td>T-SQL</td><td>Relational transforms, star schema loads, stored procedures</td><td class="c-blue">SQL engine</td><td>Via Pipeline only</td></tr>
+            <tr><td><strong>KQL (Eventhouse)</strong></td><td>Kusto Query Language</td><td>Time-series, telemetry, streaming analytics</td><td class="c-orange">KQL engine</td><td>Via Pipeline only</td></tr>
+            <tr><td><strong>Dataflow Gen2</strong></td><td>Power Query M</td><td>No-code transforms, citizen data prep, small-medium datasets</td><td class="c-gold">M engine</td><td class="c-green">✅ Self-schedule</td></tr>
+          </tbody>
+        </table>
+      </div>
+      <div style="display:flex;gap:20px;margin-top:16px;">
+        <div class="hb hb-blue" style="flex:1;">
+          <div class="hb-icon">💡</div>
+          <div class="hb-text"><strong>Key rule: Only Dataflow Gen2 can self-schedule</strong> PySpark notebooks, T-SQL scripts, and KQL queries all require a Pipeline wrapper to schedule them. This is a top DP-700 exam question.</div>
+        </div>
+        <div class="hb hb-gold" style="flex:1;">
+          <div class="hb-icon">📊</div>
+          <div class="hb-text"><strong>Group &amp; Aggregate in each tool</strong> PySpark: <code style="font-size:12px;background:#fffbf0;padding:1px 5px;border-radius:2px;">.groupBy().agg()</code> | T-SQL: <code style="font-size:12px;background:#fffbf0;padding:1px 5px;border-radius:2px;">GROUP BY + SUM/COUNT</code> | KQL: <code style="font-size:12px;background:#fffbf0;padding:1px 5px;border-radius:2px;">summarize</code> | M: Group By step</div>
+        </div>
+      </div>
+    </div>
+  </div>
+  <div class="ftr"><span>Authored by Sayan Banerjee • Microsoft Certified: Fabric Data Engineer Associate</span><span class="ftr-num">07 / 10</span></div>
+</div>
+
+<!-- ══════════════════════════════════════
+     SLIDE 08 — BAD DATA HANDLING
+══════════════════════════════════════ -->
+<div class="slide">
+  <div class="topbar tb-orange"></div>
+  <div class="hdr">
+    <div class="logo"><div class="logo-icon"><svg xmlns="http://www.w3.org/2000/svg" width="40" height="40" viewBox="3.9997 3.9999 39.9994 40.0011"><path fill="url(#fa)" fill-rule="evenodd" d="m5.64 31.6-.586 2.144c-.218.685-.524 1.693-.689 2.59a5.63 5.63 0 0 0 4.638 7.588c.792.114 1.688.108 2.692-.04l4.613-.636a2.92 2.92 0 0 0 2.421-2.127l3.175-11.662L5.64 31.599Z" clip-rule="evenodd"/><path fill="url(#fb)" d="M10.14 32.152c-4.863.753-5.861 4.423-5.861 4.423l4.656-17.11 24.333-3.292-3.318 12.052a1.71 1.71 0 0 1-1.388 1.244l-.136.022-18.423 2.684z"/><path fill="url(#fd)" d="m12.899 21.235 26.938-3.98a1.6 1.6 0 0 0 1.323-1.17l2.78-10.06a1.595 1.595 0 0 0-1.74-2.012L16.498 7.81a7.19 7.19 0 0 0-5.777 5.193L7.013 26.438c.744-2.717 1.202-4.355 5.886-5.203"/><path fill="url(#fg)" d="M12.899 21.236c-3.901.706-4.87 1.962-5.514 3.932L4.279 36.577s.992-3.633 5.796-4.41l18.352-2.673.136-.022a1.71 1.71 0 0 0 1.388-1.244l2.73-9.915z"/><defs><linearGradient id="fa" x1="12.953" x2="12.953" y1="44.001" y2="29.457" gradientUnits="userSpaceOnUse"><stop offset=".056" stop-color="#2AAC94"/><stop offset="1" stop-color="#085954"/></linearGradient><linearGradient id="fb" x1="31.331" x2="17.286" y1="33.448" y2="18.173" gradientUnits="userSpaceOnUse"><stop offset=".042" stop-color="#ABE88E"/><stop offset=".549" stop-color="#2AAA92"/><stop offset=".906" stop-color="#117865"/></linearGradient><linearGradient id="fd" x1="7.013" x2="42.589" y1="15.219" y2="15.219" gradientUnits="userSpaceOnUse"><stop offset=".043" stop-color="#25FFD4"/><stop offset=".874" stop-color="#55DDB9"/></linearGradient><linearGradient id="fg" x1="15.756" x2="16.168" y1="27.96" y2="15.74" gradientUnits="userSpaceOnUse"><stop offset=".205" stop-color="#063D3B" stop-opacity="0"/><stop offset=".872" stop-color="#063D3B" stop-opacity=".75"/></linearGradient></defs></svg></div><span class="logo-text">Microsoft Fabric</span></div>
+    <div class="badge bdg-orange"><div class="dot dot-orange"></div>Data Quality</div>
+  </div>
+  <div class="body">
+    <div class="crumb"><span class="tag tag-orange">TRANSFORM DATA</span><span>→</span><span>Handle duplicate, missing, and late-arriving data</span></div>
+    <div class="h1">Duplicate, Missing &amp; Late-Arriving Data</div>
+    <div class="area">
+      <div class="g3">
+        <div style="display:flex;flex-direction:column;gap:14px;">
+          <div class="card bl-red" style="padding:20px;gap:10px;">
+            <div class="ct" style="font-size:17px;">🗂️ Duplicates</div>
+            <div class="cx" style="font-size:13px;"><strong>Exact:</strong> <code style="background:#fde7e9;padding:2px 5px;border-radius:3px;font-size:12px;">df.dropDuplicates()</code></div>
+            <div class="cx" style="font-size:13px;margin-top:6px;"><strong>Soft (keep latest):</strong><br/>ROW_NUMBER() OVER<br/>(PARTITION BY key<br/>ORDER BY modified_date DESC)<br/>Filter WHERE rn = 1</div>
+          </div>
+        </div>
+        <div style="display:flex;flex-direction:column;gap:14px;">
+          <div class="card bl-orange" style="padding:20px;gap:10px;">
+            <div class="ct" style="font-size:17px;">🔲 Missing / Nulls</div>
+            <div class="cx" style="font-size:13px;"><strong>Fill:</strong> <code style="background:#fff2ec;padding:2px 5px;border-radius:3px;font-size:12px;">fillna({"rev":0,"region":"Unknown"})</code></div>
+            <div class="cx" style="font-size:13px;margin-top:6px;"><strong>Drop nulls on key cols:</strong><br/><code style="background:#fff2ec;padding:2px 5px;border-radius:3px;font-size:12px;">dropna(subset=["customer_id"])</code></div>
+            <div class="cx" style="font-size:13px;margin-top:6px;"><strong>T-SQL:</strong><br/><code style="background:#fff2ec;padding:2px 5px;border-radius:3px;font-size:12px;">COALESCE(revenue, 0)</code><br/><code style="background:#fff2ec;padding:2px 5px;border-radius:3px;font-size:12px;">ISNULL(region, 'Unknown')</code></div>
+          </div>
+        </div>
+        <div style="display:flex;flex-direction:column;gap:14px;">
+          <div class="card bl-gold" style="padding:20px;gap:10px;">
+            <div class="ct" style="font-size:17px;">⏰ Late-Arriving Data</div>
+            <div class="cx" style="font-size:13px;">Data arrives AFTER its event time window was processed.</div>
+            <div style="margin-top:8px;display:flex;flex-direction:column;gap:8px;">
+              <div class="hb hb-teal" style="padding:12px 14px;">
+                <div class="hb-text" style="font-size:12px;"><strong>Spark Streaming Watermark</strong><br/><code style="font-size:11px;">.withWatermark("event_time", "2 hours")</code><br/>Accept late records up to 2h late</div>
+              </div>
+              <div class="hb hb-blue" style="padding:12px 14px;">
+                <div class="hb-text" style="font-size:12px;"><strong>Reprocessing</strong> Re-run the affected pipeline window when late data arrives</div>
+              </div>
+              <div class="hb hb-gold" style="padding:12px 14px;">
+                <div class="hb-text" style="font-size:12px;"><strong>SCD Type 2</strong> Late dimension changes tracked with valid_from / valid_to</div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+  <div class="ftr"><span>Authored by Sayan Banerjee • Microsoft Certified: Fabric Data Engineer Associate</span><span class="ftr-num">08 / 10</span></div>
+</div>
+
+<!-- ══════════════════════════════════════
+     SLIDE 09 — DECISION MATRIX
+══════════════════════════════════════ -->
+<div class="slide">
+  <div class="topbar tb-teal"></div>
+  <div class="hdr">
+    <div class="logo"><div class="logo-icon"><svg xmlns="http://www.w3.org/2000/svg" width="40" height="40" viewBox="3.9997 3.9999 39.9994 40.0011"><path fill="url(#fa)" fill-rule="evenodd" d="m5.64 31.6-.586 2.144c-.218.685-.524 1.693-.689 2.59a5.63 5.63 0 0 0 4.638 7.588c.792.114 1.688.108 2.692-.04l4.613-.636a2.92 2.92 0 0 0 2.421-2.127l3.175-11.662L5.64 31.599Z" clip-rule="evenodd"/><path fill="url(#fb)" d="M10.14 32.152c-4.863.753-5.861 4.423-5.861 4.423l4.656-17.11 24.333-3.292-3.318 12.052a1.71 1.71 0 0 1-1.388 1.244l-.136.022-18.423 2.684z"/><path fill="url(#fd)" d="m12.899 21.235 26.938-3.98a1.6 1.6 0 0 0 1.323-1.17l2.78-10.06a1.595 1.595 0 0 0-1.74-2.012L16.498 7.81a7.19 7.19 0 0 0-5.777 5.193L7.013 26.438c.744-2.717 1.202-4.355 5.886-5.203"/><path fill="url(#fg)" d="M12.899 21.236c-3.901.706-4.87 1.962-5.514 3.932L4.279 36.577s.992-3.633 5.796-4.41l18.352-2.673.136-.022a1.71 1.71 0 0 0 1.388-1.244l2.73-9.915z"/><defs><linearGradient id="fa" x1="12.953" x2="12.953" y1="44.001" y2="29.457" gradientUnits="userSpaceOnUse"><stop offset=".056" stop-color="#2AAC94"/><stop offset="1" stop-color="#085954"/></linearGradient><linearGradient id="fb" x1="31.331" x2="17.286" y1="33.448" y2="18.173" gradientUnits="userSpaceOnUse"><stop offset=".042" stop-color="#ABE88E"/><stop offset=".549" stop-color="#2AAA92"/><stop offset=".906" stop-color="#117865"/></linearGradient><linearGradient id="fd" x1="7.013" x2="42.589" y1="15.219" y2="15.219" gradientUnits="userSpaceOnUse"><stop offset=".043" stop-color="#25FFD4"/><stop offset=".874" stop-color="#55DDB9"/></linearGradient><linearGradient id="fg" x1="15.756" x2="16.168" y1="27.96" y2="15.74" gradientUnits="userSpaceOnUse"><stop offset=".205" stop-color="#063D3B" stop-opacity="0"/><stop offset=".872" stop-color="#063D3B" stop-opacity=".75"/></linearGradient></defs></svg></div><span class="logo-text">Microsoft Fabric</span></div>
+    <div class="badge bdg-teal"><div class="dot dot-teal"></div>Decision Matrix</div>
+  </div>
+  <div class="body">
+    <div class="crumb"><span class="tag tag-teal">QUICK REFERENCE</span><span>→</span><span>Day 05 cheat sheet — save this slide</span></div>
+    <div class="h1">Ingestion Decision Cheat Sheet</div>
+    <div class="area">
+      <div class="tw th-teal">
+        <table>
+          <thead><tr><th>Exam Scenario</th><th>Answer</th><th>Why</th></tr></thead>
+          <tbody>
+            <tr><td>Load 5M rows daily, source has <code style="background:#e6f4f3;padding:1px 5px;border-radius:2px;font-size:12px;">last_modified</code> column</td><td><span class="c-teal">Incremental Load + Watermark</span></td><td>Only process changed rows — efficient &amp; scalable</td></tr>
+            <tr><td>Small 10K-row country lookup table, needs daily refresh</td><td><span class="c-blue">Full Load</span></td><td>Simple, always consistent, small table = low cost</td></tr>
+            <tr><td>Bring Azure SQL DB data into Fabric with near-real-time freshness</td><td><span class="c-teal">Fabric Mirroring</span></td><td>CDC replication — no pipeline, near-real-time</td></tr>
+            <tr><td>Access ADLS Gen2 data from Fabric without copying it</td><td><span class="c-blue">OneLake Shortcut</span></td><td>Virtual pointer — data stays in ADLS</td></tr>
+            <tr><td>Customer email changed — must preserve historical value</td><td><span class="c-gold">SCD Type 2</span></td><td>Add new row, expire old with valid_to + is_current=false</td></tr>
+            <tr><td>Remove exact duplicate rows before loading to Silver</td><td><span class="c-teal">dropDuplicates()</span></td><td>PySpark native dedup on all columns</td></tr>
+            <tr><td>Streaming events arrive up to 90 mins late — how to handle?</td><td><span class="c-orange">Watermark tolerance</span></td><td>.withWatermark("event_time", "90 minutes")</td></tr>
+            <tr><td>Full T-SQL write support needed (INSERT/UPDATE/DELETE)</td><td><span class="c-blue">Data Warehouse</span></td><td>Lakehouse SQL endpoint is READ-ONLY</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+  <div class="ftr"><span>📌 Save this slide for your DP-700 exam prep</span><span class="ftr-num">09 / 10</span></div>
+</div>
+
+<!-- ══════════════════════════════════════
+     SLIDE 10 — CTA
+══════════════════════════════════════ -->
+<div class="slide">
+  <div class="topbar tb-grad"></div>
+  <div class="hdr">
+    <div class="logo"><div class="logo-icon"><svg xmlns="http://www.w3.org/2000/svg" width="40" height="40" viewBox="3.9997 3.9999 39.9994 40.0011"><path fill="url(#fa)" fill-rule="evenodd" d="m5.64 31.6-.586 2.144c-.218.685-.524 1.693-.689 2.59a5.63 5.63 0 0 0 4.638 7.588c.792.114 1.688.108 2.692-.04l4.613-.636a2.92 2.92 0 0 0 2.421-2.127l3.175-11.662L5.64 31.599Z" clip-rule="evenodd"/><path fill="url(#fb)" d="M10.14 32.152c-4.863.753-5.861 4.423-5.861 4.423l4.656-17.11 24.333-3.292-3.318 12.052a1.71 1.71 0 0 1-1.388 1.244l-.136.022-18.423 2.684z"/><path fill="url(#fd)" d="m12.899 21.235 26.938-3.98a1.6 1.6 0 0 0 1.323-1.17l2.78-10.06a1.595 1.595 0 0 0-1.74-2.012L16.498 7.81a7.19 7.19 0 0 0-5.777 5.193L7.013 26.438c.744-2.717 1.202-4.355 5.886-5.203"/><path fill="url(#fg)" d="M12.899 21.236c-3.901.706-4.87 1.962-5.514 3.932L4.279 36.577s.992-3.633 5.796-4.41l18.352-2.673.136-.022a1.71 1.71 0 0 0 1.388-1.244l2.73-9.915z"/><defs><linearGradient id="fa" x1="12.953" x2="12.953" y1="44.001" y2="29.457" gradientUnits="userSpaceOnUse"><stop offset=".056" stop-color="#2AAC94"/><stop offset="1" stop-color="#085954"/></linearGradient><linearGradient id="fb" x1="31.331" x2="17.286" y1="33.448" y2="18.173" gradientUnits="userSpaceOnUse"><stop offset=".042" stop-color="#ABE88E"/><stop offset=".549" stop-color="#2AAA92"/><stop offset=".906" stop-color="#117865"/></linearGradient><linearGradient id="fd" x1="7.013" x2="42.589" y1="15.219" y2="15.219" gradientUnits="userSpaceOnUse"><stop offset=".043" stop-color="#25FFD4"/><stop offset=".874" stop-color="#55DDB9"/></linearGradient><linearGradient id="fg" x1="15.756" x2="16.168" y1="27.96" y2="15.74" gradientUnits="userSpaceOnUse"><stop offset=".205" stop-color="#063D3B" stop-opacity="0"/><stop offset=".872" stop-color="#063D3B" stop-opacity=".75"/></linearGradient></defs></svg></div><span class="logo-text">Microsoft Fabric</span></div>
+    <div class="badge bdg-teal"><div class="dot dot-teal"></div>Join the Challenge</div>
+  </div>
+  <div class="cta-body">
+    <div class="cta-icon">📥</div>
+    <div class="cta-h">Ingestion mastered.<br/>30–35% of DP-700 covered.</div>
+    <div class="cta-s">Full load · Incremental · CDC · Copy Activity · Shortcuts · Mirroring · Dedup · Late data — you now know all of it.</div>
+    <div class="cta-next">🔔 Day 06 Tomorrow: Ingest Streaming Data — Eventstreams, KQL &amp; Spark Structured Streaming</div>
+    <div class="cta-author">
+      <strong>Sayan Banerjee</strong> • AI, BI &amp; Analytics Consultant<br/>
+      Microsoft Certified: Fabric Data Engineer Associate (DP-700)
+    </div>
+  </div>
+  <div class="ftr"><span>#MicrosoftFabric #DP700 #DataEngineering #DataPipelines #30DayChallenge</span><span class="ftr-num">10 / 10</span></div>
+</div>
+
+</body>
+</html>
