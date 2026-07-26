@@ -1,0 +1,498 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<title>Day 08 — Monitor & Optimize Fabric Solutions | DP-700</title>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet"/>
+<style>
+  *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+  :root{
+    --teal:#0E7C7B;--teal-d:#085954;--teal-l:#E6F4F3;
+    --blue:#0078D4;--blue-l:#EFF6FC;
+    --gold:#C47F17;--gold-l:#FDF6E3;
+    --purple:#7719AA;--purple-l:#F3E8FC;
+    --orange:#CA5010;--orange-l:#FFF2EC;
+    --red:#C50F1F;--red-l:#FDE7E9;
+    --green:#107C10;--green-l:#DFF6DD;
+    --surf:#FFFFFF;--bg:#F8F9FA;
+    --bdr:#E5E7EB;--bdr-m:#D0D5DD;
+    --tx1:#111827;--tx2:#4B5563;--txm:#9CA3AF;
+  }
+  body{font-family:'Inter','Segoe UI',sans-serif;background:#f0f2f5}
+
+  .slide{width:1920px;height:1080px;background:var(--surf);display:flex;flex-direction:column;overflow:hidden;position:relative;border:1px solid var(--bdr);margin-bottom:32px}
+  .topbar{height:8px;flex-shrink:0}
+  .tb-teal{background:var(--teal)} .tb-blue{background:var(--blue)} .tb-gold{background:var(--gold)}
+  .tb-purple{background:var(--purple)} .tb-orange{background:var(--orange)}
+  .tb-grad{background:linear-gradient(90deg,var(--purple),var(--teal),var(--red))}
+
+  .hdr{display:flex;align-items:center;justify-content:space-between;padding:18px 64px;border-bottom:1px solid var(--bdr);flex-shrink:0}
+  .logo{display:flex;align-items:center;gap:12px}
+  .logo-icon{width:40px;height:40px;flex-shrink:0}
+  .logo-text{font-size:22px;font-weight:700;color:var(--tx1)}
+  .badge{display:inline-flex;align-items:center;gap:8px;border-radius:4px;padding:6px 18px;font-size:13px;font-weight:600}
+  .bdg-teal{background:var(--teal-l);border:1px solid var(--teal);color:var(--teal-d)}
+  .bdg-blue{background:var(--blue-l);border:1px solid var(--blue);color:var(--blue)}
+  .bdg-gold{background:var(--gold-l);border:1px solid var(--gold);color:var(--gold)}
+  .bdg-orange{background:var(--orange-l);border:1px solid var(--orange);color:var(--orange)}
+  .bdg-red{background:var(--red-l);border:1px solid var(--red);color:var(--red)}
+  .dot{width:8px;height:8px;border-radius:50%}
+  .dot-teal{background:var(--teal)} .dot-blue{background:var(--blue)} .dot-gold{background:var(--gold)} .dot-orange{background:var(--orange)} .dot-red{background:var(--red)}
+
+  .body{display:flex;flex-direction:column;flex:1;padding:36px 64px 0;overflow:hidden}
+  .crumb{display:flex;align-items:center;gap:8px;font-size:14px;color:var(--tx2);margin-bottom:18px}
+  .tag{padding:3px 10px;border-radius:3px;font-size:12px;font-weight:700}
+  .tag-teal{background:var(--teal-l);color:var(--teal-d)} .tag-blue{background:var(--blue-l);color:var(--blue)}
+  .tag-gold{background:var(--gold-l);color:var(--gold)} .tag-orange{background:var(--orange-l);color:var(--orange)} .tag-red{background:var(--red-l);color:var(--red)}
+  .h1{font-size:42px;font-weight:800;color:var(--tx1);letter-spacing:-.5px;line-height:1.15;margin-bottom:12px}
+  .sub{font-size:20px;color:var(--tx2);font-weight:400;line-height:1.4;margin-bottom:28px}
+  .area{flex:1;display:flex;gap:28px;overflow:hidden}
+  .g2{display:grid;grid-template-columns:1fr 1fr;gap:28px;width:100%}
+  .g3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:24px;width:100%}
+  .g4{display:grid;grid-template-columns:1fr 1fr 1fr 1fr;gap:20px;width:100%}
+
+  .card{background:var(--surf);border:1px solid var(--bdr);border-radius:6px;padding:26px;display:flex;flex-direction:column;gap:14px;box-shadow:0 2px 6px rgba(0,0,0,.03)}
+  .bl-teal{border-left:5px solid var(--teal)} .bl-blue{border-left:5px solid var(--blue)}
+  .bl-gold{border-left:5px solid var(--gold)} .bl-purple{border-left:5px solid var(--purple)}
+  .bl-orange{border-left:5px solid var(--orange)} .bl-red{border-left:5px solid var(--red)}
+  .bl-green{border-left:5px solid var(--green)}
+  .ct{font-size:19px;font-weight:700;color:var(--tx1);display:flex;align-items:center;gap:10px}
+  .cs{font-size:12px;font-weight:700;color:var(--tx2);text-transform:uppercase;letter-spacing:.5px}
+  .cx{font-size:15px;color:var(--tx2);line-height:1.6}
+
+  .tw{width:100%;overflow:hidden;border-radius:6px;border:1px solid var(--bdr)}
+  table{width:100%;border-collapse:collapse;font-size:14px}
+  thead{color:#fff}
+  .th-teal thead{background:var(--teal)} .th-blue thead{background:var(--blue)}
+  .th-gold thead{background:#B8690F} .th-orange thead{background:var(--orange)} .th-red thead{background:var(--red)}
+  th{padding:13px 18px;font-weight:700;text-align:left;font-size:13px}
+  td{padding:12px 18px;border-bottom:1px solid var(--bdr);color:var(--tx1);font-size:13px}
+  tr:last-child td{border-bottom:none} tr:nth-child(even) td{background:var(--bg)}
+  .c-teal{color:var(--teal);font-weight:600} .c-blue{color:var(--blue);font-weight:600}
+  .c-gold{color:var(--gold);font-weight:600} .c-orange{color:var(--orange);font-weight:600} .c-red{color:var(--red);font-weight:600}
+  .c-green{color:var(--green);font-weight:700}
+
+  .bl{list-style:none;display:flex;flex-direction:column;gap:9px}
+  .bl li{display:flex;align-items:flex-start;gap:10px;font-size:15px;color:var(--tx2);line-height:1.5}
+  .bl li::before{content:'▸';font-weight:700;flex-shrink:0;margin-top:1px}
+  .bl-t li::before{color:var(--teal)} .bl-b li::before{color:var(--blue)}
+  .bl-g li::before{color:var(--gold)} .bl-o li::before{color:var(--orange)} .bl-r li::before{color:var(--red)}
+
+  .hb{border-radius:6px;padding:18px 22px;display:flex;gap:14px;align-items:flex-start}
+  .hb-teal{background:var(--teal-l);border-left:5px solid var(--teal)}
+  .hb-blue{background:var(--blue-l);border-left:5px solid var(--blue)}
+  .hb-gold{background:var(--gold-l);border-left:5px solid var(--gold)}
+  .hb-orange{background:var(--orange-l);border-left:5px solid var(--orange)}
+  .hb-red{background:var(--red-l);border-left:5px solid var(--red)}
+  .hb-icon{font-size:22px;line-height:1;flex-shrink:0}
+  .hb-text{font-size:14px;color:var(--tx1);line-height:1.6}
+  .hb-text strong{display:block;margin-bottom:3px;font-size:15px}
+
+  .code{background:#1E1E1E;border-radius:6px;padding:18px 22px;font-family:'Consolas','Monaco',monospace;font-size:12px;color:#D4D4D4;line-height:1.65;overflow:hidden}
+  .cc{color:#6A9955} .ck{color:#569CD6} .cs2{color:#CE9178} .cf{color:#DCDCAA} .cv{color:#9CDCFE}
+
+  .pill{display:inline-block;padding:4px 12px;border-radius:20px;font-size:11px;font-weight:700}
+  .p-teal{background:var(--teal-l);color:var(--teal-d)} .p-blue{background:var(--blue-l);color:var(--blue)}
+  .p-gold{background:var(--gold-l);color:var(--gold)} .p-green{background:var(--green-l);color:var(--green)}
+  .p-orange{background:var(--orange-l);color:var(--orange)}
+
+  .ftr{padding:13px 64px;border-top:1px solid var(--bdr);display:flex;align-items:center;justify-content:space-between;font-size:13px;color:var(--txm);flex-shrink:0}
+  .ftr-num{font-size:14px;font-weight:700;color:var(--tx2)}
+
+  .cover-body{flex:1;display:flex;flex-direction:column;justify-content:center;padding:64px 120px;background:linear-gradient(135deg,#F3E8FC 0%,#F0FAF9 50%,#FFFBF0 100%);position:relative}
+  .day-tag{display:inline-flex;align-items:center;gap:8px;background:#fff;border:2px solid var(--purple);border-radius:24px;padding:8px 20px;font-size:14px;font-weight:700;color:var(--purple);margin-bottom:28px;width:fit-content}
+  .cover-h{font-size:66px;font-weight:800;color:var(--tx1);letter-spacing:-2px;line-height:1.05;margin-bottom:22px}
+  .cover-h span{color:var(--purple)}
+  .cover-s{font-size:22px;color:var(--tx2);font-weight:400;line-height:1.5;margin-bottom:36px;max-width:900px}
+  .topics{display:flex;flex-wrap:wrap;gap:12px}
+  .topic{background:#fff;border:1px solid var(--bdr);border-radius:6px;padding:10px 18px;font-size:14px;font-weight:600;color:var(--tx2)}
+
+  .cta-body{flex:1;display:flex;flex-direction:column;justify-content:center;align-items:center;padding:64px;background:linear-gradient(135deg,#F3E8FC 0%,#F0FAF9 50%,#FFFBF0 100%);text-align:center;gap:26px}
+  .cta-icon{font-size:60px}
+  .cta-h{font-size:48px;font-weight:800;color:var(--tx1);letter-spacing:-1px}
+  .cta-s{font-size:20px;color:var(--tx2);max-width:900px;line-height:1.5}
+  .cta-next{background:var(--purple);color:#fff;border-radius:8px;padding:16px 36px;font-size:17px;font-weight:700;display:inline-block}
+  .cta-author{font-size:15px;color:var(--tx2)}
+  .cta-author strong{color:var(--tx1);font-weight:700}
+</style>
+</head>
+<body>
+
+<!-- SLIDE 01 — COVER -->
+<div class="slide">
+  <div class="topbar tb-grad"></div>
+  <div class="hdr">
+    <div class="logo">
+      <div class="logo-icon"><svg xmlns="http://www.w3.org/2000/svg" width="40" height="40" viewBox="3.9997 3.9999 39.9994 40.0011"><path fill="url(#fa)" fill-rule="evenodd" d="m5.64 31.6-.586 2.144c-.218.685-.524 1.693-.689 2.59a5.63 5.63 0 0 0 4.638 7.588c.792.114 1.688.108 2.692-.04l4.613-.636a2.92 2.92 0 0 0 2.421-2.127l3.175-11.662L5.64 31.599Z" clip-rule="evenodd"/><path fill="url(#fb)" d="M10.14 32.152c-4.863.753-5.861 4.423-5.861 4.423l4.656-17.11 24.333-3.292-3.318 12.052a1.71 1.71 0 0 1-1.388 1.244l-.136.022-18.423 2.684z"/><path fill="url(#fd)" d="m12.899 21.235 26.938-3.98a1.6 1.6 0 0 0 1.323-1.17l2.78-10.06a1.595 1.595 0 0 0-1.74-2.012L16.498 7.81a7.19 7.19 0 0 0-5.777 5.193L7.013 26.438c.744-2.717 1.202-4.355 5.886-5.203"/><path fill="url(#fg)" d="M12.899 21.236c-3.901.706-4.87 1.962-5.514 3.932L4.279 36.577s.992-3.633 5.796-4.41l18.352-2.673.136-.022a1.71 1.71 0 0 0 1.388-1.244l2.73-9.915z"/><defs><linearGradient id="fa" x1="12.953" x2="12.953" y1="44.001" y2="29.457" gradientUnits="userSpaceOnUse"><stop offset=".056" stop-color="#2AAC94"/><stop offset="1" stop-color="#085954"/></linearGradient><linearGradient id="fb" x1="31.331" x2="17.286" y1="33.448" y2="18.173" gradientUnits="userSpaceOnUse"><stop offset=".042" stop-color="#ABE88E"/><stop offset=".549" stop-color="#2AAA92"/><stop offset=".906" stop-color="#117865"/></linearGradient><linearGradient id="fd" x1="7.013" x2="42.589" y1="15.219" y2="15.219" gradientUnits="userSpaceOnUse"><stop offset=".043" stop-color="#25FFD4"/><stop offset=".874" stop-color="#55DDB9"/></linearGradient><linearGradient id="fg" x1="15.756" x2="16.168" y1="27.96" y2="15.74" gradientUnits="userSpaceOnUse"><stop offset=".205" stop-color="#063D3B" stop-opacity="0"/><stop offset=".872" stop-color="#063D3B" stop-opacity=".75"/></linearGradient></defs></svg></div>
+      <span class="logo-text">Microsoft Fabric</span>
+    </div>
+    <div class="badge bdg-red"><div class="dot dot-red"></div>DP-700 Certification Challenge</div>
+  </div>
+  <div class="cover-body">
+    <div class="day-tag">🗓️ DAY 08 OF 30</div>
+    <div class="cover-h">Monitor &amp; Optimize<br/><span>Fabric Analytics Solutions</span></div>
+    <div class="cover-s">Master Fabric Capacity Metrics, Spark configuration parameters, error isolation, and operational troubleshooting for the DP-700 exam</div>
+    <div class="topics">
+      <div class="topic">📈 Capacity Metrics App</div>
+      <div class="topic">⏳ Interactive vs Background Runs</div>
+      <div class="topic">🏊 Starter Pools vs Custom Pools</div>
+      <div class="topic">🛠️ Spark Driver &amp; Executor Tuning</div>
+      <div class="topic">🔍 Monitoring Hub Diagnostics</div>
+      <div class="topic">🎯 3 Practice Questions</div>
+    </div>
+  </div>
+  <div class="ftr"><span>Authored by Sayan Banerjee • Microsoft Certified: Fabric Data Engineer Associate</span><span class="ftr-num">01 / 10</span></div>
+</div>
+
+<!-- SLIDE 02 — MONITORING OVERVIEW -->
+<div class="slide">
+  <div class="topbar tb-purple"></div>
+  <div class="hdr">
+    <div class="logo"><div class="logo-icon"><svg xmlns="http://www.w3.org/2000/svg" width="40" height="40" viewBox="3.9997 3.9999 39.9994 40.0011"><path fill="url(#fa)" fill-rule="evenodd" d="m5.64 31.6-.586 2.144c-.218.685-.524 1.693-.689 2.59a5.63 5.63 0 0 0 4.638 7.588c.792.114 1.688.108 2.692-.04l4.613-.636a2.92 2.92 0 0 0 2.421-2.127l3.175-11.662L5.64 31.599Z" clip-rule="evenodd"/><path fill="url(#fb)" d="M10.14 32.152c-4.863.753-5.861 4.423-5.861 4.423l4.656-17.11 24.333-3.292-3.318 12.052a1.71 1.71 0 0 1-1.388 1.244l-.136.022-18.423 2.684z"/><path fill="url(#fd)" d="m12.899 21.235 26.938-3.98a1.6 1.6 0 0 0 1.323-1.17l2.78-10.06a1.595 1.595 0 0 0-1.74-2.012L16.498 7.81a7.19 7.19 0 0 0-5.777 5.193L7.013 26.438c.744-2.717 1.202-4.355 5.886-5.203"/><path fill="url(#fg)" d="M12.899 21.236c-3.901.706-4.87 1.962-5.514 3.932L4.279 36.577s.992-3.633 5.796-4.41l18.352-2.673.136-.022a1.71 1.71 0 0 0 1.388-1.244l2.73-9.915z"/><defs><linearGradient id="fa" x1="12.953" x2="12.953" y1="44.001" y2="29.457" gradientUnits="userSpaceOnUse"><stop offset=".056" stop-color="#2AAC94"/><stop offset="1" stop-color="#085954"/></linearGradient><linearGradient id="fb" x1="31.331" x2="17.286" y1="33.448" y2="18.173" gradientUnits="userSpaceOnUse"><stop offset=".042" stop-color="#ABE88E"/><stop offset=".549" stop-color="#2AAA92"/><stop offset=".906" stop-color="#117865"/></linearGradient><linearGradient id="fd" x1="7.013" x2="42.589" y1="15.219" y2="15.219" gradientUnits="userSpaceOnUse"><stop offset=".043" stop-color="#25FFD4"/><stop offset=".874" stop-color="#55DDB9"/></linearGradient><linearGradient id="fg" x1="15.756" x2="16.168" y1="27.96" y2="15.74" gradientUnits="userSpaceOnUse"><stop offset=".205" stop-color="#063D3B" stop-opacity="0"/><stop offset=".872" stop-color="#063D3B" stop-opacity=".75"/></linearGradient></defs></svg></div><span class="logo-text">Microsoft Fabric</span></div>
+    <div class="badge bdg-teal"><div class="dot dot-teal"></div>Monitoring landscape</div>
+  </div>
+  <div class="body">
+    <div class="crumb"><span class="tag tag-teal">MONITOR &amp; OPTIMIZE</span><span>→</span><span>Fabric monitoring tools and architecture</span></div>
+    <div class="h1">The Fabric Monitoring Ecosystem</div>
+    <div class="area">
+      <div class="g2">
+        <div style="display:flex;flex-direction:column;gap:16px;">
+          <div class="card bl-purple" style="padding:22px;gap:12px;">
+            <div class="ct">📈 Capacity Metrics App</div>
+            <div class="cs">Billing &amp; Compute Allocation</div>
+            <ul class="bl bl-r" style="font-size:13px;gap:8px;margin-top:4px;">
+              <li>Tracks **Capacity Unit (CU)** consumption</li>
+              <li>Identifies top consuming items in the workspace</li>
+              <li>Highlights throttling, carry-forward, and peaks</li>
+            </ul>
+          </div>
+          <div class="card bl-teal" style="padding:22px;gap:12px;">
+            <div class="ct">🗂️ Monitoring Hub</div>
+            <div class="cs">Workspace Run History</div>
+            <ul class="bl bl-t" style="font-size:13px;gap:8px;margin-top:4px;">
+              <li>Cross-item status dashboard (Pipelines, Dataflows)</li>
+              <li>Displays duration, trigger type, and start times</li>
+              <li>Drill down directly into item failure logs</li>
+            </ul>
+          </div>
+        </div>
+        <div style="display:flex;flex-direction:column;gap:16px;">
+          <div class="card bl-blue" style="padding:22px;gap:12px;">
+            <div class="ct">📓 Spark UI / History Server</div>
+            <div class="cs">Spark Diagnostics</div>
+            <ul class="bl bl-b" style="font-size:13px;gap:8px;margin-top:4px;">
+              <li>Executor status and memory consumption logs</li>
+              <li>DAG execution visualization</li>
+              <li>Log4j system diagnostic outputs</li>
+            </ul>
+          </div>
+          <div class="hb hb-purple">
+            <div class="hb-icon">💡</div>
+            <div class="hb-text"><strong>Exam Rule:</strong> Use the **Monitoring Hub** for general workflow runs, **Capacity Metrics App** for compute cost issues, and the **Spark UI** for deep-dive notebook failures.</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+  <div class="ftr"><span>Authored by Sayan Banerjee • Microsoft Certified: Fabric Data Engineer Associate</span><span class="ftr-num">02 / 10</span></div>
+</div>
+
+<!-- SLIDE 03 — INTERACTIVE vs BACKGROUND RUNS -->
+<div class="slide">
+  <div class="topbar tb-teal"></div>
+  <div class="hdr">
+    <div class="logo"><div class="logo-icon"><svg xmlns="http://www.w3.org/2000/svg" width="40" height="40" viewBox="3.9997 3.9999 39.9994 40.0011"><path fill="url(#fa)" fill-rule="evenodd" d="m5.64 31.6-.586 2.144c-.218.685-.524 1.693-.689 2.59a5.63 5.63 0 0 0 4.638 7.588c.792.114 1.688.108 2.692-.04l4.613-.636a2.92 2.92 0 0 0 2.421-2.127l3.175-11.662L5.64 31.599Z" clip-rule="evenodd"/><path fill="url(#fb)" d="M10.14 32.152c-4.863.753-5.861 4.423-5.861 4.423l4.656-17.11 24.333-3.292-3.318 12.052a1.71 1.71 0 0 1-1.388 1.244l-.136.022-18.423 2.684z"/><path fill="url(#fd)" d="m12.899 21.235 26.938-3.98a1.6 1.6 0 0 0 1.323-1.17l2.78-10.06a1.595 1.595 0 0 0-1.74-2.012L16.498 7.81a7.19 7.19 0 0 0-5.777 5.193L7.013 26.438c.744-2.717 1.202-4.355 5.886-5.203"/><path fill="url(#fg)" d="M12.899 21.236c-3.901.706-4.87 1.962-5.514 3.932L4.279 36.577s.992-3.633 5.796-4.41l18.352-2.673.136-.022a1.71 1.71 0 0 0 1.388-1.244l2.73-9.915z"/><defs><linearGradient id="fa" x1="12.953" x2="12.953" y1="44.001" y2="29.457" gradientUnits="userSpaceOnUse"><stop offset=".056" stop-color="#2AAC94"/><stop offset="1" stop-color="#085954"/></linearGradient><linearGradient id="fb" x1="31.331" x2="17.286" y1="33.448" y2="18.173" gradientUnits="userSpaceOnUse"><stop offset=".042" stop-color="#ABE88E"/><stop offset=".549" stop-color="#2AAA92"/><stop offset=".906" stop-color="#117865"/></linearGradient><linearGradient id="fd" x1="7.013" x2="42.589" y1="15.219" y2="15.219" gradientUnits="userSpaceOnUse"><stop offset=".043" stop-color="#25FFD4"/><stop offset=".874" stop-color="#55DDB9"/></linearGradient><linearGradient id="fg" x1="15.756" x2="16.168" y1="27.96" y2="15.74" gradientUnits="userSpaceOnUse"><stop offset=".205" stop-color="#063D3B" stop-opacity="0"/><stop offset=".872" stop-color="#063D3B" stop-opacity=".75"/></linearGradient></defs></svg></div><span class="logo-text">Microsoft Fabric</span></div>
+    <div class="badge bdg-teal"><div class="dot dot-teal"></div>Operations</div>
+  </div>
+  <div class="body">
+    <div class="crumb"><span class="tag tag-teal">CU CONSUMPTION</span><span>→</span><span>How operations are smoothed to prevent capacity peaks</span></div>
+    <div class="h1">Interactive vs Background Runs</div>
+    <div class="sub">How Fabric calculates capacity utilization to manage heavy workloads</div>
+    <div class="area">
+      <div class="g2">
+        <div style="display:flex;flex-direction:column;gap:16px;">
+          <div class="card bl-blue" style="padding:22px;gap:12px;">
+            <div class="ct">🖱️ Interactive Operations</div>
+            <div class="cs">Short-duration, user-driven events</div>
+            <ul class="bl bl-b" style="font-size:13px;gap:6px;">
+              <li><strong>Workloads:</strong> Power BI reports, SQL queries, ad-hoc Notebook executions</li>
+              <li><strong>CU Smoothing Window:</strong> **10 minutes**</li>
+              <li>Allows immediate spikes but requires rapid drop-off</li>
+            </ul>
+          </div>
+        </div>
+        <div style="display:flex;flex-direction:column;gap:16px;">
+          <div class="card bl-purple" style="padding:22px;gap:12px;">
+            <div class="ct">⚙️ Background Operations</div>
+            <div class="cs">Long-duration, automated pipelines</div>
+            <ul class="bl bl-r" style="font-size:13px;gap:6px;--bl-color:var(--purple)">
+              <li style="color:var(--tx2);"><strong>Workloads:</strong> Data Pipelines, Dataflow Gen2 refreshes, scheduled Spark Jobs</li>
+              <li style="color:var(--tx2);"><strong>CU Smoothing Window:</strong> **24 hours**</li>
+              <li style="color:var(--tx2);">Spreads the compute cost evenly over 24 hours to prevent capacity throttling</li>
+            </ul>
+          </div>
+        </div>
+      </div>
+      <div class="highlight-box teal" style="margin-top:20px;">
+        <div class="hb-icon">⚠️</div>
+        <div class="hb-text"><strong>Exam Trap:</strong> If capacity limit is exceeded, Fabric first delays interactive queries, then rejects them (HTTP 430), and finally pauses background jobs. Rescheduling background jobs to off-peak hours distributes the 24-hour window load!</div>
+      </div>
+    </div>
+  </div>
+  <div class="ftr"><span>Authored by Sayan Banerjee • Microsoft Certified: Fabric Data Engineer Associate</span><span class="ftr-num">03 / 10</span></div>
+</div>
+
+<!-- SLIDE 04 — SPARK POOLS -->
+<div class="slide">
+  <div class="topbar tb-blue"></div>
+  <div class="hdr">
+    <div class="logo"><div class="logo-icon"><svg xmlns="http://www.w3.org/2000/svg" width="40" height="40" viewBox="3.9997 3.9999 39.9994 40.0011"><path fill="url(#fa)" fill-rule="evenodd" d="m5.64 31.6-.586 2.144c-.218.685-.524 1.693-.689 2.59a5.63 5.63 0 0 0 4.638 7.588c.792.114 1.688.108 2.692-.04l4.613-.636a2.92 2.92 0 0 0 2.421-2.127l3.175-11.662L5.64 31.599Z" clip-rule="evenodd"/><path fill="url(#fb)" d="M10.14 32.152c-4.863.753-5.861 4.423-5.861 4.423l4.656-17.11 24.333-3.292-3.318 12.052a1.71 1.71 0 0 1-1.388 1.244l-.136.022-18.423 2.684z"/><path fill="url(#fd)" d="m12.899 21.235 26.938-3.98a1.6 1.6 0 0 0 1.323-1.17l2.78-10.06a1.595 1.595 0 0 0-1.74-2.012L16.498 7.81a7.19 7.19 0 0 0-5.777 5.193L7.013 26.438c.744-2.717 1.202-4.355 5.886-5.203"/><path fill="url(#fg)" d="M12.899 21.236c-3.901.706-4.87 1.962-5.514 3.932L4.279 36.577s.992-3.633 5.796-4.41l18.352-2.673.136-.022a1.71 1.71 0 0 0 1.388-1.244l2.73-9.915z"/><defs><linearGradient id="fa" x1="12.953" x2="12.953" y1="44.001" y2="29.457" gradientUnits="userSpaceOnUse"><stop offset=".056" stop-color="#2AAC94"/><stop offset="1" stop-color="#085954"/></linearGradient><linearGradient id="fb" x1="31.331" x2="17.286" y1="33.448" y2="18.173" gradientUnits="userSpaceOnUse"><stop offset=".042" stop-color="#ABE88E"/><stop offset=".549" stop-color="#2AAA92"/><stop offset=".906" stop-color="#117865"/></linearGradient><linearGradient id="fd" x1="7.013" x2="42.589" y1="15.219" y2="15.219" gradientUnits="userSpaceOnUse"><stop offset=".043" stop-color="#25FFD4"/><stop offset=".874" stop-color="#55DDB9"/></linearGradient><linearGradient id="fg" x1="15.756" x2="16.168" y1="27.96" y2="15.74" gradientUnits="userSpaceOnUse"><stop offset=".205" stop-color="#063D3B" stop-opacity="0"/><stop offset=".872" stop-color="#063D3B" stop-opacity=".75"/></linearGradient></defs></svg></div><span class="logo-text">Microsoft Fabric</span></div>
+    <div class="badge bdg-blue"><div class="dot dot-blue"></div>Spark settings</div>
+  </div>
+  <div class="body">
+    <div class="crumb"><span class="tag tag-blue">WORKSPACE PROPERTIES</span><span>→</span><span>Configure Spark pools &amp; node allocation</span></div>
+    <div class="h1">Starter Pools vs Custom Pools</div>
+    <div class="sub">Choosing the correct Spark compute configuration is a key exam theme</div>
+    <div class="area">
+      <div class="g2">
+        <div style="display:flex;flex-direction:column;gap:16px;">
+          <div class="card bl-teal" style="padding:22px;gap:12px;">
+            <div class="ct">⚡ Starter Pools (Default)</div>
+            <div class="cs">Serverless Pre-warmed Compute</div>
+            <ul class="bl bl-t" style="font-size:13px;gap:8px;margin-top:4px;">
+              <li>**Warm start:** Sub-second session activation</li>
+              <li>Auto-scales based on the capacity SKU size</li>
+              <li>Managed entirely by Microsoft Fabric</li>
+              <li>Preloaded with standard data science runtimes</li>
+            </ul>
+            <div class="pill p-teal" style="margin-top:4px;width:fit-content;">Best for: Quick execution, standard workloads</div>
+          </div>
+        </div>
+        <div style="display:flex;flex-direction:column;gap:16px;">
+          <div class="card bl-blue" style="padding:22px;gap:12px;">
+            <div class="ct">🛠️ Custom Pools</div>
+            <div class="cs">User-defined Virtual Machines</div>
+            <ul class="bl bl-b" style="font-size:13px;gap:8px;margin-top:4px;">
+              <li>**Cold start:** Session startup takes **1-3 minutes**</li>
+              <li>Configure exact Node Size (Medium, Large, X-Large)</li>
+              <li>Set exact min/max executor count limit boundaries</li>
+              <li>Pre-install custom dependencies and libraries</li>
+            </ul>
+            <div class="pill p-blue" style="margin-top:4px;width:fit-content;">Best for: Heavy ETL, isolated memory needs</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+  <div class="ftr"><span>Authored by Sayan Banerjee • Microsoft Certified: Fabric Data Engineer Associate</span><span class="ftr-num">04 / 10</span></div>
+</div>
+
+<!-- SLIDE 05 — SPARK PERFORMANCE OPTIMIZATION -->
+<div class="slide">
+  <div class="topbar tb-teal"></div>
+  <div class="hdr">
+    <div class="logo"><div class="logo-icon"><svg xmlns="http://www.w3.org/2000/svg" width="40" height="40" viewBox="3.9997 3.9999 39.9994 40.0011"><path fill="url(#fa)" fill-rule="evenodd" d="m5.64 31.6-.586 2.144c-.218.685-.524 1.693-.689 2.59a5.63 5.63 0 0 0 4.638 7.588c.792.114 1.688.108 2.692-.04l4.613-.636a2.92 2.92 0 0 0 2.421-2.127l3.175-11.662L5.64 31.599Z" clip-rule="evenodd"/><path fill="url(#fb)" d="M10.14 32.152c-4.863.753-5.861 4.423-5.861 4.423l4.656-17.11 24.333-3.292-3.318 12.052a1.71 1.71 0 0 1-1.388 1.244l-.136.022-18.423 2.684z"/><path fill="url(#fd)" d="m12.899 21.235 26.938-3.98a1.6 1.6 0 0 0 1.323-1.17l2.78-10.06a1.595 1.595 0 0 0-1.74-2.012L16.498 7.81a7.19 7.19 0 0 0-5.777 5.193L7.013 26.438c.744-2.717 1.202-4.355 5.886-5.203"/><path fill="url(#fg)" d="M12.899 21.236c-3.901.706-4.87 1.962-5.514 3.932L4.279 36.577s.992-3.633 5.796-4.41l18.352-2.673.136-.022a1.71 1.71 0 0 0 1.388-1.244l2.73-9.915z"/><defs><linearGradient id="fa" x1="12.953" x2="12.953" y1="44.001" y2="29.457" gradientUnits="userSpaceOnUse"><stop offset=".056" stop-color="#2AAC94"/><stop offset="1" stop-color="#085954"/></linearGradient><linearGradient id="fb" x1="31.331" x2="17.286" y1="33.448" y2="18.173" gradientUnits="userSpaceOnUse"><stop offset=".042" stop-color="#ABE88E"/><stop offset=".549" stop-color="#2AAA92"/><stop offset=".906" stop-color="#117865"/></linearGradient><linearGradient id="fd" x1="7.013" x2="42.589" y1="15.219" y2="15.219" gradientUnits="userSpaceOnUse"><stop offset=".043" stop-color="#25FFD4"/><stop offset=".874" stop-color="#55DDB9"/></linearGradient><linearGradient id="fg" x1="15.756" x2="16.168" y1="27.96" y2="15.74" gradientUnits="userSpaceOnUse"><stop offset=".205" stop-color="#063D3B" stop-opacity="0"/><stop offset=".872" stop-color="#063D3B" stop-opacity=".75"/></linearGradient></defs></svg></div><span class="logo-text">Microsoft Fabric</span></div>
+    <div class="badge bdg-teal"><div class="dot dot-teal"></div>Spark Performance</div>
+  </div>
+  <div class="body">
+    <div class="crumb"><span class="tag tag-teal">OPTIMIZE SPARK</span><span>→</span><span>Fine-tune Spark settings to resolve resource failures</span></div>
+    <div class="h1">Optimizing Spark Execution Settings</div>
+    <div class="area">
+      <div class="g2">
+        <div style="display:flex;flex-direction:column;gap:16px;">
+          <div class="card bl-teal" style="padding:22px;gap:12px;">
+            <div class="ct">🔄 Dynamic Allocation</div>
+            <div class="cx" style="font-size:14px;line-height:1.6;">
+              Automatically scales executor count up or down depending on task volume.
+            </div>
+            <ul class="bl bl-t" style="font-size:13px;gap:6px;margin-top:4px;">
+              <li>Prevents idle executors from locking CUs</li>
+              <li>Enabled by default in Microsoft Fabric workspaces</li>
+            </ul>
+          </div>
+          <div class="card bl-gold" style="padding:22px;gap:12px;">
+            <div class="ct"> Sizing Limits</div>
+            <div class="cx" style="font-size:13px;line-height:1.6;">
+              Set **Max Executors** inside the pool boundaries to prevent a runaway job from consuming the entire capacity budget.
+            </div>
+          </div>
+        </div>
+        <div style="display:flex;flex-direction:column;gap:16px;">
+          <div class="card bl-orange" style="padding:22px;gap:12px;">
+            <div class="ct">🚨 Resolving Spark Out Of Memory (OOM) Errors</div>
+            <div class="cx" style="font-size:14px;line-height:1.6;">
+              If your jobs fail with memory limits, apply these tuning steps:
+            </div>
+            <ul class="bl bl-o" style="font-size:13px;gap:8px;margin-top:4px;">
+              <li><strong>Driver OOM:</strong> Increase **Driver Node Size** (occurs during <code style="font-size:12px;">collect()</code>).</li>
+              <li><strong>Executor OOM:</strong> Increase **Executor Node Size** or decrease cores per executor to lower parallel task memory stress.</li>
+            </ul>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+  <div class="ftr"><span>Authored by Sayan Banerjee • Microsoft Certified: Fabric Data Engineer Associate</span><span class="ftr-num">05 / 10</span></div>
+</div>
+
+<!-- SLIDE 06 — DIAGNOSTICS & LOG LOCATIONS -->
+<div class="slide">
+  <div class="topbar tb-purple"></div>
+  <div class="hdr">
+    <div class="logo"><div class="logo-icon"><svg xmlns="http://www.w3.org/2000/svg" width="40" height="40" viewBox="3.9997 3.9999 39.9994 40.0011"><path fill="url(#fa)" fill-rule="evenodd" d="m5.64 31.6-.586 2.144c-.218.685-.524 1.693-.689 2.59a5.63 5.63 0 0 0 4.638 7.588c.792.114 1.688.108 2.692-.04l4.613-.636a2.92 2.92 0 0 0 2.421-2.127l3.175-11.662L5.64 31.599Z" clip-rule="evenodd"/><path fill="url(#fb)" d="M10.14 32.152c-4.863.753-5.861 4.423-5.861 4.423l4.656-17.11 24.333-3.292-3.318 12.052a1.71 1.71 0 0 1-1.388 1.244l-.136.022-18.423 2.684z"/><path fill="url(#fd)" d="m12.899 21.235 26.938-3.98a1.6 1.6 0 0 0 1.323-1.17l2.78-10.06a1.595 1.595 0 0 0-1.74-2.012L16.498 7.81a7.19 7.19 0 0 0-5.777 5.193L7.013 26.438c.744-2.717 1.202-4.355 5.886-5.203"/><path fill="url(#fg)" d="M12.899 21.236c-3.901.706-4.87 1.962-5.514 3.932L4.279 36.577s.992-3.633 5.796-4.41l18.352-2.673.136-.022a1.71 1.71 0 0 0 1.388-1.244l2.73-9.915z"/><defs><linearGradient id="fa" x1="12.953" x2="12.953" y1="44.001" y2="29.457" gradientUnits="userSpaceOnUse"><stop offset=".056" stop-color="#2AAC94"/><stop offset="1" stop-color="#085954"/></linearGradient><linearGradient id="fb" x1="31.331" x2="17.286" y1="33.448" y2="18.173" gradientUnits="userSpaceOnUse"><stop offset=".042" stop-color="#ABE88E"/><stop offset=".549" stop-color="#2AAA92"/><stop offset=".906" stop-color="#117865"/></linearGradient><linearGradient id="fd" x1="7.013" x2="42.589" y1="15.219" y2="15.219" gradientUnits="userSpaceOnUse"><stop offset=".043" stop-color="#25FFD4"/><stop offset=".874" stop-color="#55DDB9"/></linearGradient><linearGradient id="fg" x1="15.756" x2="16.168" y1="27.96" y2="15.74" gradientUnits="userSpaceOnUse"><stop offset=".205" stop-color="#063D3B" stop-opacity="0"/><stop offset=".872" stop-color="#063D3B" stop-opacity=".75"/></linearGradient></defs></svg></div><span class="logo-text">Microsoft Fabric</span></div>
+    <div class="badge bdg-teal"><div class="dot dot-teal"></div>Logs &amp; Alerts</div>
+  </div>
+  <div class="body">
+    <div class="crumb"><span class="tag tag-teal">IDENTIFY ERRORS</span><span>→</span><span>Where to search when workloads fail</span></div>
+    <div class="h1">Diagnostic Logging Guide</div>
+    <div class="sub">How to isolate error logs quickly in Fabric</div>
+    <div class="area">
+      <div class="tw th-teal">
+        <table>
+          <thead><tr><th>Item Type</th><th>Failure Symptom</th><th>Diagnostic Location</th><th>Key Diagnostic Indicator</th></tr></thead>
+          <tbody>
+            <tr><td><strong>Data Pipeline</strong></td><td>Activity fails to run</td><td class="c-blue">Pipeline Monitor View</td><td>Activity run ID output JSON</td></tr>
+            <tr><td><strong>Notebook</strong></td><td>Spark cell crashes, timeouts</td><td class="c-teal">Spark UI / History Server</td><td>Log4j output logs, stdout executor logs</td></tr>
+            <tr><td><strong>Data Warehouse</strong></td><td>Queries hang, performance drops</td><td class="c-blue">System DMVs</td><td><code style="font-size:12px;">sys.dm_pdw_exec_requests</code></td></tr>
+            <tr><td><strong>Dataflow Gen2</strong></td><td>Refresh failure</td><td class="c-gold">Refresh History</td><td>Power Query mashup step details</td></tr>
+            <tr><td><strong>OneLake Shortcut</strong></td><td>Access Denied</td><td class="c-teal">Monitoring Hub</td><td>Storage endpoint response, credentials config</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+  <div class="ftr"><span>Authored by Sayan Banerjee • Microsoft Certified: Fabric Data Engineer Associate</span><span class="ftr-num">06 / 10</span></div>
+</div>
+
+<!-- SLIDE 07 — REFLEX ALERTS -->
+<div class="slide">
+  <div class="topbar tb-teal"></div>
+  <div class="hdr">
+    <div class="logo"><div class="logo-icon"><svg xmlns="http://www.w3.org/2000/svg" width="40" height="40" viewBox="3.9997 3.9999 39.9994 40.0011"><path fill="url(#fa)" fill-rule="evenodd" d="m5.64 31.6-.586 2.144c-.218.685-.524 1.693-.689 2.59a5.63 5.63 0 0 0 4.638 7.588c.792.114 1.688.108 2.692-.04l4.613-.636a2.92 2.92 0 0 0 2.421-2.127l3.175-11.662L5.64 31.599Z" clip-rule="evenodd"/><path fill="url(#fb)" d="M10.14 32.152c-4.863.753-5.861 4.423-5.861 4.423l4.656-17.11 24.333-3.292-3.318 12.052a1.71 1.71 0 0 1-1.388 1.244l-.136.022-18.423 2.684z"/><path fill="url(#fd)" d="m12.899 21.235 26.938-3.98a1.6 1.6 0 0 0 1.323-1.17l2.78-10.06a1.595 1.595 0 0 0-1.74-2.012L16.498 7.81a7.19 7.19 0 0 0-5.777 5.193L7.013 26.438c.744-2.717 1.202-4.355 5.886-5.203"/><path fill="url(#fg)" d="M12.899 21.236c-3.901.706-4.87 1.962-5.514 3.932L4.279 36.577s.992-3.633 5.796-4.41l18.352-2.673.136-.022a1.71 1.71 0 0 0 1.388-1.244l2.73-9.915z"/><defs><linearGradient id="fa" x1="12.953" x2="12.953" y1="44.001" y2="29.457" gradientUnits="userSpaceOnUse"><stop offset=".056" stop-color="#2AAC94"/><stop offset="1" stop-color="#085954"/></linearGradient><linearGradient id="fb" x1="31.331" x2="17.286" y1="33.448" y2="18.173" gradientUnits="userSpaceOnUse"><stop offset=".042" stop-color="#ABE88E"/><stop offset=".549" stop-color="#2AAA92"/><stop offset=".906" stop-color="#117865"/></linearGradient><linearGradient id="fd" x1="7.013" x2="42.589" y1="15.219" y2="15.219" gradientUnits="userSpaceOnUse"><stop offset=".043" stop-color="#25FFD4"/><stop offset=".874" stop-color="#55DDB9"/></linearGradient><linearGradient id="fg" x1="15.756" x2="16.168" y1="27.96" y2="15.74" gradientUnits="userSpaceOnUse"><stop offset=".205" stop-color="#063D3B" stop-opacity="0"/><stop offset=".872" stop-color="#063D3B" stop-opacity=".75"/></linearGradient></defs></svg></div><span class="logo-text">Microsoft Fabric</span></div>
+    <div class="badge bdg-teal"><div class="dot dot-teal"></div>Configure Alerts</div>
+  </div>
+  <div class="body">
+    <div class="crumb"><span class="tag tag-teal">MONITOR FABRIC</span><span>→</span><span>Set up proactive monitoring with alerts</span></div>
+    <div class="h1">Configuring Real-Time Alerts</div>
+    <div class="area">
+      <div class="g2">
+        <div style="display:flex;flex-direction:column;gap:16px;">
+          <div class="card bl-teal" style="padding:22px;gap:12px;">
+            <div class="ct">🔔 Fabric Activator (Reflex)</div>
+            <div class="cx" style="font-size:14px;line-height:1.6;">
+              A dedicated item used to monitor data metrics and trigger actions when conditions are met.
+            </div>
+            <ul class="bl bl-t" style="font-size:13px;gap:8px;margin-top:4px;">
+              <li>Monitor Power BI visual data changes</li>
+              <li>Act on Eventstream threshold breaches</li>
+              <li>Trigger Teams messages, emails, or pipelines</li>
+            </ul>
+          </div>
+        </div>
+        <div style="display:flex;flex-direction:column;gap:16px;">
+          <div class="card bl-blue" style="padding:22px;gap:12px;">
+            <div class="ct">⚙️ Pipeline Failure Alerts</div>
+            <div class="cx" style="font-size:14px;line-height:1.6;">
+              Set up alerts for pipeline activity failures using control flow logic inside the pipeline editor.
+            </div>
+            <ul class="bl bl-b" style="font-size:13px;gap:8px;margin-top:4px;">
+              <li>Link target activity's **On Failure** path to an email or Teams notification task</li>
+              <li>Prevents silent failures in batch processing runs</li>
+            </ul>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+  <div class="ftr"><span>Authored by Sayan Banerjee • Microsoft Certified: Fabric Data Engineer Associate</span><span class="ftr-num">07 / 10</span></div>
+</div>
+
+<!-- SLIDE 08 — EXAM TRAPS -->
+<div class="slide">
+  <div class="topbar tb-gold"></div>
+  <div class="hdr">
+    <div class="logo"><div class="logo-icon"><svg xmlns="http://www.w3.org/2000/svg" width="40" height="40" viewBox="3.9997 3.9999 39.9994 40.0011"><path fill="url(#fa)" fill-rule="evenodd" d="m5.64 31.6-.586 2.144c-.218.685-.524 1.693-.689 2.59a5.63 5.63 0 0 0 4.638 7.588c.792.114 1.688.108 2.692-.04l4.613-.636a2.92 2.92 0 0 0 2.421-2.127l3.175-11.662L5.64 31.599Z" clip-rule="evenodd"/><path fill="url(#fb)" d="M10.14 32.152c-4.863.753-5.861 4.423-5.861 4.423l4.656-17.11 24.333-3.292-3.318 12.052a1.71 1.71 0 0 1-1.388 1.244l-.136.022-18.423 2.684z"/><path fill="url(#fd)" d="m12.899 21.235 26.938-3.98a1.6 1.6 0 0 0 1.323-1.17l2.78-10.06a1.595 1.595 0 0 0-1.74-2.012L16.498 7.81a7.19 7.19 0 0 0-5.777 5.193L7.013 26.438c.744-2.717 1.202-4.355 5.886-5.203"/><path fill="url(#fg)" d="M12.899 21.236c-3.901.706-4.87 1.962-5.514 3.932L4.279 36.577s.992-3.633 5.796-4.41l18.352-2.673.136-.022a1.71 1.71 0 0 0 1.388-1.244l2.73-9.915z"/><defs><linearGradient id="fa" x1="12.953" x2="12.953" y1="44.001" y2="29.457" gradientUnits="userSpaceOnUse"><stop offset=".056" stop-color="#2AAC94"/><stop offset="1" stop-color="#085954"/></linearGradient><linearGradient id="fb" x1="31.331" x2="17.286" y1="33.448" y2="18.173" gradientUnits="userSpaceOnUse"><stop offset=".042" stop-color="#ABE88E"/><stop offset=".549" stop-color="#2AAA92"/><stop offset=".906" stop-color="#117865"/></linearGradient><linearGradient id="fd" x1="7.013" x2="42.589" y1="15.219" y2="15.219" gradientUnits="userSpaceOnUse"><stop offset=".043" stop-color="#25FFD4"/><stop offset=".874" stop-color="#55DDB9"/></linearGradient><linearGradient id="fg" x1="15.756" x2="16.168" y1="27.96" y2="15.74" gradientUnits="userSpaceOnUse"><stop offset=".205" stop-color="#063D3B" stop-opacity="0"/><stop offset=".872" stop-color="#063D3B" stop-opacity=".75"/></linearGradient></defs></svg></div><span class="logo-text">Microsoft Fabric</span></div>
+    <div class="badge bdg-gold"><div class="dot dot-gold"></div>Exam Traps</div>
+  </div>
+  <div class="body">
+    <div class="crumb"><span class="tag tag-gold">DP-700 CAUTION</span><span>→</span><span>Monitoring &amp; troubleshooting traps</span></div>
+    <div class="h1">Top 4 Optimization Exam Traps ⚠️</div>
+    <div class="area">
+      <div class="g2">
+        <div style="display:flex;flex-direction:column;gap:16px;">
+          <div class="hb hb-red">
+            <div class="hb-icon">🚫</div>
+            <div class="hb-text"><strong>Trap 1: "Dataflow Gen2 consumption is interactive"</strong><br/>❌ WRONG. Dataflows are background operations smoothed over 24 hours. Power BI report rendering is interactive (10-minute smoothing).</div>
+          </div>
+          <div class="hb hb-red">
+            <div class="hb-icon">🚫</div>
+            <div class="hb-text"><strong>Trap 2: "Starter pools have longer spin-up times than custom pools"</strong><br/>❌ WRONG. Starter pools have pre-warmed nodes with sub-second activation. Custom pools require cold boot (1-3 minutes).</div>
+          </div>
+        </div>
+        <div style="display:flex;flex-direction:column;gap:16px;">
+          <div class="hb hb-red">
+            <div class="hb-icon">🚫</div>
+            <div class="hb-text"><strong>Trap 3: "Check Capacity app to debug notebook code errors"</strong><br/>❌ WRONG. The Metrics app monitors resource cost/throttling. Find notebook syntax and execution errors in the Spark UI logs.</div>
+          </div>
+          <div class="hb hb-red">
+            <div class="hb-icon">🚫</div>
+            <div class="hb-text"><strong>Trap 4: "Executor OOM requires scaling Driver"</strong><br/>❌ WRONG. Executor OOM requires scaling executor node memory or reducing tasks. Driver OOM requires scaling driver node memory. They are independent.</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+  <div class="ftr"><span>Authored by Sayan Banerjee • Microsoft Certified: Fabric Data Engineer Associate</span><span class="ftr-num">08 / 10</span></div>
+</div>
+
+<!-- SLIDE 09 — MONITORING CHEAT SHEET -->
+<div class="slide">
+  <div class="topbar tb-teal"></div>
+  <div class="hdr">
+    <div class="logo"><div class="logo-icon"><svg xmlns="http://www.w3.org/2000/svg" width="40" height="40" viewBox="3.9997 3.9999 39.9994 40.0011"><path fill="url(#fa)" fill-rule="evenodd" d="m5.64 31.6-.586 2.144c-.218.685-.524 1.693-.689 2.59a5.63 5.63 0 0 0 4.638 7.588c.792.114 1.688.108 2.692-.04l4.613-.636a2.92 2.92 0 0 0 2.421-2.127l3.175-11.662L5.64 31.599Z" clip-rule="evenodd"/><path fill="url(#fb)" d="M10.14 32.152c-4.863.753-5.861 4.423-5.861 4.423l4.656-17.11 24.333-3.292-3.318 12.052a1.71 1.71 0 0 1-1.388 1.244l-.136.022-18.423 2.684z"/><path fill="url(#fd)" d="m12.899 21.235 26.938-3.98a1.6 1.6 0 0 0 1.323-1.17l2.78-10.06a1.595 1.595 0 0 0-1.74-2.012L16.498 7.81a7.19 7.19 0 0 0-5.777 5.193L7.013 26.438c.744-2.717 1.202-4.355 5.886-5.203"/><path fill="url(#fg)" d="M12.899 21.236c-3.901.706-4.87 1.962-5.514 3.932L4.279 36.577s.992-3.633 5.796-4.41l18.352-2.673.136-.022a1.71 1.71 0 0 0 1.388-1.244l2.73-9.915z"/><defs><linearGradient id="fa" x1="12.953" x2="12.953" y1="44.001" y2="29.457" gradientUnits="userSpaceOnUse"><stop offset=".056" stop-color="#2AAC94"/><stop offset="1" stop-color="#085954"/></linearGradient><linearGradient id="fb" x1="31.331" x2="17.286" y1="33.448" y2="18.173" gradientUnits="userSpaceOnUse"><stop offset=".042" stop-color="#ABE88E"/><stop offset=".549" stop-color="#2AAA92"/><stop offset=".906" stop-color="#117865"/></linearGradient><linearGradient id="fd" x1="7.013" x2="42.589" y1="15.219" y2="15.219" gradientUnits="userSpaceOnUse"><stop offset=".043" stop-color="#25FFD4"/><stop offset=".874" stop-color="#55DDB9"/></linearGradient><linearGradient id="fg" x1="15.756" x2="16.168" y1="27.96" y2="15.74" gradientUnits="userSpaceOnUse"><stop offset=".205" stop-color="#063D3B" stop-opacity="0"/><stop offset=".872" stop-color="#063D3B" stop-opacity=".75"/></linearGradient></defs></svg></div><span class="logo-text">Microsoft Fabric</span></div>
+    <div class="badge bdg-teal"><div class="dot dot-teal"></div>Decision Matrix</div>
+  </div>
+  <div class="body">
+    <div class="crumb"><span class="tag tag-teal">QUICK REFERENCE</span><span>→</span><span>Monitoring decision matrix — save this slide</span></div>
+    <div class="h1">Monitoring &amp; Sizing Decision Matrix</div>
+    <div class="area">
+      <div class="tw th-teal">
+        <table>
+          <thead><tr><th>Exam Scenario</th><th>Correct Tool / Setting</th><th>Why</th></tr></thead>
+          <tbody>
+            <tr><td>Spark session fails due to memory limits in driver node</td><td><span class="c-blue">Increase Driver Size</span></td><td>Driver is OOM (frequent during <code style="font-size:12px;">.collect()</code> actions)</td></tr>
+            <tr><td>Sub-second session startup needed for ad-hoc queries</td><td><span class="c-teal">Starter Pool</span></td><td>Starter pool nodes are pre-warmed &amp; serverless</td></tr>
+            <tr><td>Specific libraries need to be preloaded for isolated runs</td><td><span class="c-blue">Custom Spark Pool</span></td><td>Custom pools allow isolation, scaling limits, &amp; setup controls</td></tr>
+            <tr><td>Pipeline run fails; need activity run ID</td><td><span class="c-teal">Monitoring Hub / Pipeline Monitor</span></td><td>Runs history provides JSON logging parameters</td></tr>
+            <tr><td>Monitor capacity usage spikes to detect billing bottlenecks</td><td><span class="c-blue">Fabric Capacity Metrics App</span></td><td>Visualizes CU allocations and carried forward smoothing</td></tr>
+            <tr><td>Automatically trigger action when Eventstream detects error</td><td><span class="c-teal">Fabric Activator (Reflex)</span></td><td>Metric-driven alert and pipeline orchestration launcher</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+  <div class="ftr"><span>📌 Save this slide for your DP-700 exam prep</span><span class="ftr-num">09 / 10</span></div>
+</div>
+
+<!-- SLIDE 10 — CTA -->
+<div class="slide">
+  <div class="topbar tb-grad"></div>
+  <div class="hdr">
+    <div class="logo"><div class="logo-icon"><svg xmlns="http://www.w3.org/2000/svg" width="40" height="40" viewBox="3.9997 3.9999 39.9994 40.0011"><path fill="url(#fa)" fill-rule="evenodd" d="m5.64 31.6-.586 2.144c-.218.685-.524 1.693-.689 2.59a5.63 5.63 0 0 0 4.638 7.588c.792.114 1.688.108 2.692-.04l4.613-.636a2.92 2.92 0 0 0 2.421-2.127l3.175-11.662L5.64 31.599Z" clip-rule="evenodd"/><path fill="url(#fb)" d="M10.14 32.152c-4.863.753-5.861 4.423-5.861 4.423l4.656-17.11 24.333-3.292-3.318 12.052a1.71 1.71 0 0 1-1.388 1.244l-.136.022-18.423 2.684z"/><path fill="url(#fd)" d="m12.899 21.235 26.938-3.98a1.6 1.6 0 0 0 1.323-1.17l2.78-10.06a1.595 1.595 0 0 0-1.74-2.012L16.498 7.81a7.19 7.19 0 0 0-5.777 5.193L7.013 26.438c.744-2.717 1.202-4.355 5.886-5.203"/><path fill="url(#fg)" d="M12.899 21.236c-3.901.706-4.87 1.962-5.514 3.932L4.279 36.577s.992-3.633 5.796-4.41l18.352-2.673.136-.022a1.71 1.71 0 0 0 1.388-1.244l2.73-9.915z"/><defs><linearGradient id="fa" x1="12.953" x2="12.953" y1="44.001" y2="29.457" gradientUnits="userSpaceOnUse"><stop offset=".056" stop-color="#2AAC94"/><stop offset="1" stop-color="#085954"/></linearGradient><linearGradient id="fb" x1="31.331" x2="17.286" y1="33.448" y2="18.173" gradientUnits="userSpaceOnUse"><stop offset=".042" stop-color="#ABE88E"/><stop offset=".549" stop-color="#2AAA92"/><stop offset=".906" stop-color="#117865"/></linearGradient><linearGradient id="fd" x1="7.013" x2="42.589" y1="15.219" y2="15.219" gradientUnits="userSpaceOnUse"><stop offset=".043" stop-color="#25FFD4"/><stop offset=".874" stop-color="#55DDB9"/></linearGradient><linearGradient id="fg" x1="15.756" x2="16.168" y1="27.96" y2="15.74" gradientUnits="userSpaceOnUse"><stop offset=".205" stop-color="#063D3B" stop-opacity="0"/><stop offset=".872" stop-color="#063D3B" stop-opacity=".75"/></linearGradient></defs></svg></div><span class="logo-text">Microsoft Fabric</span></div>
+    <div class="badge bdg-purple"><div class="dot dot-teal"></div>Join the Challenge</div>
+  </div>
+  <div class="cta-body">
+    <div class="cta-icon">📈</div>
+    <div class="cta-h">Monitoring &amp; Optimization Mastered.<br/>Week 2 is underway! 🚀</div>
+    <div class="cta-s">Capacity Metrics · Interactive vs Background · Starter vs Custom Pools · Spark Sizing · Diagnostics Hub done.</div>
+    <div class="cta-next">🔔 Day 09 Tomorrow: Configure Security &amp; Governance — Row, Column, Object &amp; Folder Level Access Controls</div>
+    <div class="cta-author">
+      <strong>Sayan Banerjee</strong> • AI, BI &amp; Analytics Consultant<br/>
+      Microsoft Certified: Fabric Data Engineer Associate (DP-700)
+    </div>
+  </div>
+  <div class="ftr"><span>#MicrosoftFabric #DP700 #CapacityMetrics #SparkPools #PerformanceTuning #DataEngineering</span><span class="ftr-num">10 / 10</span></div>
+</div>
+
+</body>
+</html>

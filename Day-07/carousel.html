@@ -1,0 +1,513 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<title>Day 07 — PySpark & Delta Lake Deep Dive | DP-700</title>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet"/>
+<style>
+  *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+  :root{
+    --teal:#0E7C7B;--teal-d:#085954;--teal-l:#E6F4F3;
+    --blue:#0078D4;--blue-l:#EFF6FC;
+    --gold:#C47F17;--gold-l:#FDF6E3;
+    --purple:#7719AA;--purple-l:#F3E8FC;
+    --orange:#CA5010;--orange-l:#FFF2EC;
+    --red:#C50F1F;--red-l:#FDE7E9;
+    --green:#107C10;--green-l:#DFF6DD;
+    --surf:#FFFFFF;--bg:#F8F9FA;
+    --bdr:#E5E7EB;--bdr-m:#D0D5DD;
+    --tx1:#111827;--tx2:#4B5563;--txm:#9CA3AF;
+  }
+  body{font-family:'Inter','Segoe UI',sans-serif;background:#f0f2f5}
+
+  .slide{width:1920px;height:1080px;background:var(--surf);display:flex;flex-direction:column;overflow:hidden;position:relative;border:1px solid var(--bdr);margin-bottom:32px}
+  .topbar{height:8px;flex-shrink:0}
+  .tb-teal{background:var(--teal)} .tb-blue{background:var(--blue)} .tb-gold{background:var(--gold)}
+  .tb-purple{background:var(--purple)} .tb-orange{background:var(--orange)}
+  .tb-grad{background:linear-gradient(90deg,var(--blue),var(--teal),var(--gold))}
+
+  .hdr{display:flex;align-items:center;justify-content:space-between;padding:18px 64px;border-bottom:1px solid var(--bdr);flex-shrink:0}
+  .logo{display:flex;align-items:center;gap:12px}
+  .logo-icon{width:40px;height:40px;flex-shrink:0}
+  .logo-text{font-size:22px;font-weight:700;color:var(--tx1)}
+  .badge{display:inline-flex;align-items:center;gap:8px;border-radius:4px;padding:6px 18px;font-size:13px;font-weight:600}
+  .bdg-teal{background:var(--teal-l);border:1px solid var(--teal);color:var(--teal-d)}
+  .bdg-blue{background:var(--blue-l);border:1px solid var(--blue);color:var(--blue)}
+  .bdg-gold{background:var(--gold-l);border:1px solid var(--gold);color:var(--gold)}
+  .bdg-orange{background:var(--orange-l);border:1px solid var(--orange);color:var(--orange)}
+  .dot{width:8px;height:8px;border-radius:50%}
+  .dot-teal{background:var(--teal)} .dot-blue{background:var(--blue)} .dot-gold{background:var(--gold)} .dot-orange{background:var(--orange)}
+
+  .body{display:flex;flex-direction:column;flex:1;padding:36px 64px 0;overflow:hidden}
+  .crumb{display:flex;align-items:center;gap:8px;font-size:14px;color:var(--tx2);margin-bottom:18px}
+  .tag{padding:3px 10px;border-radius:3px;font-size:12px;font-weight:700}
+  .tag-teal{background:var(--teal-l);color:var(--teal-d)} .tag-blue{background:var(--blue-l);color:var(--blue)}
+  .tag-gold{background:var(--gold-l);color:var(--gold)} .tag-orange{background:var(--orange-l);color:var(--orange)}
+  .h1{font-size:42px;font-weight:800;color:var(--tx1);letter-spacing:-.5px;line-height:1.15;margin-bottom:12px}
+  .sub{font-size:20px;color:var(--tx2);font-weight:400;line-height:1.4;margin-bottom:28px}
+  .area{flex:1;display:flex;gap:28px;overflow:hidden}
+  .g2{display:grid;grid-template-columns:1fr 1fr;gap:28px;width:100%}
+  .g3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:24px;width:100%}
+  .g4{display:grid;grid-template-columns:1fr 1fr 1fr 1fr;gap:20px;width:100%}
+
+  .card{background:var(--surf);border:1px solid var(--bdr);border-radius:6px;padding:26px;display:flex;flex-direction:column;gap:14px;box-shadow:0 2px 6px rgba(0,0,0,.03)}
+  .bl-teal{border-left:5px solid var(--teal)} .bl-blue{border-left:5px solid var(--blue)}
+  .bl-gold{border-left:5px solid var(--gold)} .bl-purple{border-left:5px solid var(--purple)}
+  .bl-orange{border-left:5px solid var(--orange)} .bl-red{border-left:5px solid var(--red)}
+  .bl-green{border-left:5px solid var(--green)}
+  .ct{font-size:19px;font-weight:700;color:var(--tx1);display:flex;align-items:center;gap:10px}
+  .cs{font-size:12px;font-weight:700;color:var(--tx2);text-transform:uppercase;letter-spacing:.5px}
+  .cx{font-size:15px;color:var(--tx2);line-height:1.6}
+
+  .tw{width:100%;overflow:hidden;border-radius:6px;border:1px solid var(--bdr)}
+  table{width:100%;border-collapse:collapse;font-size:14px}
+  thead{color:#fff}
+  .th-teal thead{background:var(--teal)} .th-blue thead{background:var(--blue)}
+  .th-gold thead{background:#B8690F} .th-orange thead{background:var(--orange)}
+  th{padding:13px 18px;font-weight:700;text-align:left;font-size:13px}
+  td{padding:12px 18px;border-bottom:1px solid var(--bdr);color:var(--tx1);font-size:13px}
+  tr:last-child td{border-bottom:none} tr:nth-child(even) td{background:var(--bg)}
+  .c-teal{color:var(--teal);font-weight:600} .c-blue{color:var(--blue);font-weight:600}
+  .c-gold{color:var(--gold);font-weight:600} .c-orange{color:var(--orange);font-weight:600}
+  .c-green{color:var(--green);font-weight:700} .c-red{color:var(--red);font-weight:700}
+
+  .bl{list-style:none;display:flex;flex-direction:column;gap:9px}
+  .bl li{display:flex;align-items:flex-start;gap:10px;font-size:15px;color:var(--tx2);line-height:1.5}
+  .bl li::before{content:'▸';font-weight:700;flex-shrink:0;margin-top:1px}
+  .bl-t li::before{color:var(--teal)} .bl-b li::before{color:var(--blue)}
+  .bl-g li::before{color:var(--gold)} .bl-o li::before{color:var(--orange)}
+
+  .hb{border-radius:6px;padding:18px 22px;display:flex;gap:14px;align-items:flex-start}
+  .hb-teal{background:var(--teal-l);border-left:5px solid var(--teal)}
+  .hb-blue{background:var(--blue-l);border-left:5px solid var(--blue)}
+  .hb-gold{background:var(--gold-l);border-left:5px solid var(--gold)}
+  .hb-orange{background:var(--orange-l);border-left:5px solid var(--orange)}
+  .hb-red{background:var(--red-l);border-left:5px solid var(--red)}
+  .hb-icon{font-size:22px;line-height:1;flex-shrink:0}
+  .hb-text{font-size:14px;color:var(--tx1);line-height:1.6}
+  .hb-text strong{display:block;margin-bottom:3px;font-size:15px}
+
+  .code{background:#1E1E1E;border-radius:6px;padding:18px 22px;font-family:'Consolas','Monaco',monospace;font-size:12px;color:#D4D4D4;line-height:1.65;overflow:hidden}
+  .cc{color:#6A9955} .ck{color:#569CD6} .cs2{color:#CE9178} .cf{color:#DCDCAA} .cv{color:#9CDCFE}
+
+  .pill{display:inline-block;padding:4px 12px;border-radius:20px;font-size:11px;font-weight:700}
+  .p-teal{background:var(--teal-l);color:var(--teal-d)} .p-blue{background:var(--blue-l);color:var(--blue)}
+  .p-gold{background:var(--gold-l);color:var(--gold)} .p-green{background:var(--green-l);color:var(--green)}
+  .p-orange{background:var(--orange-l);color:var(--orange)}
+
+  .ftr{padding:13px 64px;border-top:1px solid var(--bdr);display:flex;align-items:center;justify-content:space-between;font-size:13px;color:var(--txm);flex-shrink:0}
+  .ftr-num{font-size:14px;font-weight:700;color:var(--tx2)}
+
+  .cover-body{flex:1;display:flex;flex-direction:column;justify-content:center;padding:64px 120px;background:linear-gradient(135deg,#F0FAF9 0%,#EFF6FC 50%,#FFFBF0 100%);position:relative}
+  .day-tag{display:inline-flex;align-items:center;gap:8px;background:#fff;border:2px solid var(--blue);border-radius:24px;padding:8px 20px;font-size:14px;font-weight:700;color:var(--blue);margin-bottom:28px;width:fit-content}
+  .cover-h{font-size:66px;font-weight:800;color:var(--tx1);letter-spacing:-2px;line-height:1.05;margin-bottom:22px}
+  .cover-h span{color:var(--blue)}
+  .cover-s{font-size:22px;color:var(--tx2);font-weight:400;line-height:1.5;margin-bottom:36px;max-width:900px}
+  .topics{display:flex;flex-wrap:wrap;gap:12px}
+  .topic{background:#fff;border:1px solid var(--bdr);border-radius:6px;padding:10px 18px;font-size:14px;font-weight:600;color:var(--tx2)}
+
+  .cta-body{flex:1;display:flex;flex-direction:column;justify-content:center;align-items:center;padding:64px;background:linear-gradient(135deg,#F0FAF9 0%,#EFF6FC 50%,#FFFBF0 100%);text-align:center;gap:26px}
+  .cta-icon{font-size:60px}
+  .cta-h{font-size:48px;font-weight:800;color:var(--tx1);letter-spacing:-1px}
+  .cta-s{font-size:20px;color:var(--tx2);max-width:900px;line-height:1.5}
+  .cta-next{background:var(--blue);color:#fff;border-radius:8px;padding:16px 36px;font-size:17px;font-weight:700;display:inline-block}
+  .cta-author{font-size:15px;color:var(--tx2)}
+  .cta-author strong{color:var(--tx1);font-weight:700}
+</style>
+</head>
+<body>
+
+<!-- SLIDE 01 — COVER -->
+<div class="slide">
+  <div class="topbar tb-grad"></div>
+  <div class="hdr">
+    <div class="logo">
+      <div class="logo-icon"><svg xmlns="http://www.w3.org/2000/svg" width="40" height="40" viewBox="3.9997 3.9999 39.9994 40.0011"><path fill="url(#fa)" fill-rule="evenodd" d="m5.64 31.6-.586 2.144c-.218.685-.524 1.693-.689 2.59a5.63 5.63 0 0 0 4.638 7.588c.792.114 1.688.108 2.692-.04l4.613-.636a2.92 2.92 0 0 0 2.421-2.127l3.175-11.662L5.64 31.599Z" clip-rule="evenodd"/><path fill="url(#fb)" d="M10.14 32.152c-4.863.753-5.861 4.423-5.861 4.423l4.656-17.11 24.333-3.292-3.318 12.052a1.71 1.71 0 0 1-1.388 1.244l-.136.022-18.423 2.684z"/><path fill="url(#fd)" d="m12.899 21.235 26.938-3.98a1.6 1.6 0 0 0 1.323-1.17l2.78-10.06a1.595 1.595 0 0 0-1.74-2.012L16.498 7.81a7.19 7.19 0 0 0-5.777 5.193L7.013 26.438c.744-2.717 1.202-4.355 5.886-5.203"/><path fill="url(#fg)" d="M12.899 21.236c-3.901.706-4.87 1.962-5.514 3.932L4.279 36.577s.992-3.633 5.796-4.41l18.352-2.673.136-.022a1.71 1.71 0 0 0 1.388-1.244l2.73-9.915z"/><defs><linearGradient id="fa" x1="12.953" x2="12.953" y1="44.001" y2="29.457" gradientUnits="userSpaceOnUse"><stop offset=".056" stop-color="#2AAC94"/><stop offset="1" stop-color="#085954"/></linearGradient><linearGradient id="fb" x1="31.331" x2="17.286" y1="33.448" y2="18.173" gradientUnits="userSpaceOnUse"><stop offset=".042" stop-color="#ABE88E"/><stop offset=".549" stop-color="#2AAA92"/><stop offset=".906" stop-color="#117865"/></linearGradient><linearGradient id="fd" x1="7.013" x2="42.589" y1="15.219" y2="15.219" gradientUnits="userSpaceOnUse"><stop offset=".043" stop-color="#25FFD4"/><stop offset=".874" stop-color="#55DDB9"/></linearGradient><linearGradient id="fg" x1="15.756" x2="16.168" y1="27.96" y2="15.74" gradientUnits="userSpaceOnUse"><stop offset=".205" stop-color="#063D3B" stop-opacity="0"/><stop offset=".872" stop-color="#063D3B" stop-opacity=".75"/></linearGradient></defs></svg></div>
+      <span class="logo-text">Microsoft Fabric</span>
+    </div>
+    <div class="badge bdg-blue"><div class="dot dot-blue"></div>DP-700 Certification Challenge</div>
+  </div>
+  <div class="cover-body">
+    <div class="day-tag">🗓️ DAY 07 OF 30</div>
+    <div class="cover-h">PySpark &amp; Delta Lake<br/><span>Table Optimization &amp; V-Order</span></div>
+    <div class="cover-s">Master PySpark Dataframe transformations, Delta Lake ACID transactions, V-Order, OPTIMIZE, VACUUM, and Time Travel for DP-700</div>
+    <div class="topics">
+      <div class="topic">🐍 PySpark Core Operations</div>
+      <div class="topic">⚡ Fabric V-Order Deep Dive</div>
+      <div class="topic">📦 OPTIMIZE &amp; Z-ORDER Compaction</div>
+      <div class="topic">🧹 VACUUM &amp; Retention Safety</div>
+      <div class="topic">⏳ Time Travel &amp; Schema Evolution</div>
+      <div class="topic">🎯 3 Practice Questions</div>
+    </div>
+  </div>
+  <div class="ftr"><span>Authored by Sayan Banerjee • Microsoft Certified: Fabric Data Engineer Associate</span><span class="ftr-num">01 / 10</span></div>
+</div>
+
+<!-- SLIDE 02 — PYSPARK TRANSFORMATIONS -->
+<div class="slide">
+  <div class="topbar tb-blue"></div>
+  <div class="hdr">
+    <div class="logo"><div class="logo-icon"><svg xmlns="http://www.w3.org/2000/svg" width="40" height="40" viewBox="3.9997 3.9999 39.9994 40.0011"><path fill="url(#fa)" fill-rule="evenodd" d="m5.64 31.6-.586 2.144c-.218.685-.524 1.693-.689 2.59a5.63 5.63 0 0 0 4.638 7.588c.792.114 1.688.108 2.692-.04l4.613-.636a2.92 2.92 0 0 0 2.421-2.127l3.175-11.662L5.64 31.599Z" clip-rule="evenodd"/><path fill="url(#fb)" d="M10.14 32.152c-4.863.753-5.861 4.423-5.861 4.423l4.656-17.11 24.333-3.292-3.318 12.052a1.71 1.71 0 0 1-1.388 1.244l-.136.022-18.423 2.684z"/><path fill="url(#fd)" d="m12.899 21.235 26.938-3.98a1.6 1.6 0 0 0 1.323-1.17l2.78-10.06a1.595 1.595 0 0 0-1.74-2.012L16.498 7.81a7.19 7.19 0 0 0-5.777 5.193L7.013 26.438c.744-2.717 1.202-4.355 5.886-5.203"/><path fill="url(#fg)" d="M12.899 21.236c-3.901.706-4.87 1.962-5.514 3.932L4.279 36.577s.992-3.633 5.796-4.41l18.352-2.673.136-.022a1.71 1.71 0 0 0 1.388-1.244l2.73-9.915z"/><defs><linearGradient id="fa" x1="12.953" x2="12.953" y1="44.001" y2="29.457" gradientUnits="userSpaceOnUse"><stop offset=".056" stop-color="#2AAC94"/><stop offset="1" stop-color="#085954"/></linearGradient><linearGradient id="fb" x1="31.331" x2="17.286" y1="33.448" y2="18.173" gradientUnits="userSpaceOnUse"><stop offset=".042" stop-color="#ABE88E"/><stop offset=".549" stop-color="#2AAA92"/><stop offset=".906" stop-color="#117865"/></linearGradient><linearGradient id="fd" x1="7.013" x2="42.589" y1="15.219" y2="15.219" gradientUnits="userSpaceOnUse"><stop offset=".043" stop-color="#25FFD4"/><stop offset=".874" stop-color="#55DDB9"/></linearGradient><linearGradient id="fg" x1="15.756" x2="16.168" y1="27.96" y2="15.74" gradientUnits="userSpaceOnUse"><stop offset=".205" stop-color="#063D3B" stop-opacity="0"/><stop offset=".872" stop-color="#063D3B" stop-opacity=".75"/></linearGradient></defs></svg></div><span class="logo-text">Microsoft Fabric</span></div>
+    <div class="badge bdg-blue"><div class="dot dot-blue"></div>PySpark Core</div>
+  </div>
+  <div class="body">
+    <div class="crumb"><span class="tag tag-blue">TRANSFORM DATA</span><span>→</span><span>Transform data by using PySpark DataFrames</span></div>
+    <div class="h1">Essential PySpark DataFrame Operations</div>
+    <div class="sub">Key PySpark functions tested in DP-700 Data Engineering scenarios</div>
+    <div class="area">
+      <div class="g2">
+        <div style="display:flex;flex-direction:column;gap:16px;">
+          <div class="code" style="font-size:12px;">
+<span class="cc"># Column Projection &amp; Filtering</span><br/>
+df_filtered = df \<br/>
+&nbsp;&nbsp;.<span class="cf">select</span>(<span class="cs2">"order_id"</span>, <span class="cs2">"customer_id"</span>, <span class="cs2">"amount"</span>, <span class="cs2">"status"</span>) \<br/>
+&nbsp;&nbsp;.<span class="cf">filter</span>(col(<span class="cs2">"amount"</span>) &gt; <span class="cv">100</span>) \<br/>
+&nbsp;&nbsp;.<span class="cf">filter</span>(col(<span class="cs2">"status"</span>) == <span class="cs2">"COMPLETED"</span>)<br/>
+<br/>
+<span class="cc"># Conditional Column Derivation (when / otherwise)</span><br/>
+<span class="ck">from</span> pyspark.sql.functions <span class="ck">import</span> when, col<br/>
+df_tier = df.<span class="cf">withColumn</span>(<br/>
+&nbsp;&nbsp;<span class="cs2">"customer_tier"</span>,<br/>
+&nbsp;&nbsp;<span class="cf">when</span>(col(<span class="cs2">"amount"</span>) &gt;= <span class="cv">500</span>, <span class="cs2">"PLATINUM"</span>)<br/>
+&nbsp;&nbsp;.<span class="cf">when</span>(col(<span class="cs2">"amount"</span>) &gt;= <span class="cv">200</span>, <span class="cs2">"GOLD"</span>)<br/>
+&nbsp;&nbsp;.<span class="cf">otherwise</span>(<span class="cs2">"SILVER"</span>)<br/>
+)
+          </div>
+        </div>
+        <div style="display:flex;flex-direction:column;gap:16px;">
+          <div class="card bl-blue" style="padding:20px;gap:10px;">
+            <div class="ct" style="font-size:16px;">⚡ Lazy Evaluation Concept</div>
+            <div class="cx" style="font-size:13px;">Transformations like <code style="font-size:12px;background:#eff6fc;padding:2px 4px;border-radius:2px;">.filter()</code> and <code style="font-size:12px;background:#eff6fc;padding:2px 4px;border-radius:2px;">.withColumn()</code> do NOT execute immediately. Execution occurs only when an <strong>Action</strong> is called.</div>
+          </div>
+          <div class="g2" style="gap:12px;">
+            <div class="hb hb-blue" style="padding:14px;">
+              <div class="hb-text" style="font-size:12px;"><strong>Transformations (Lazy):</strong> select, filter, groupBy, join, withColumn</div>
+            </div>
+            <div class="hb hb-teal" style="padding:14px;">
+              <div class="hb-text" style="font-size:12px;"><strong>Actions (Eager):</strong> count, show, collect, write, saveAsTable</div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+  <div class="ftr"><span>Authored by Sayan Banerjee • Microsoft Certified: Fabric Data Engineer Associate</span><span class="ftr-num">02 / 10</span></div>
+</div>
+
+<!-- SLIDE 03 — PYSPARK AGGREGATIONS & WINDOWS -->
+<div class="slide">
+  <div class="topbar tb-teal"></div>
+  <div class="hdr">
+    <div class="logo"><div class="logo-icon"><svg xmlns="http://www.w3.org/2000/svg" width="40" height="40" viewBox="3.9997 3.9999 39.9994 40.0011"><path fill="url(#fa)" fill-rule="evenodd" d="m5.64 31.6-.586 2.144c-.218.685-.524 1.693-.689 2.59a5.63 5.63 0 0 0 4.638 7.588c.792.114 1.688.108 2.692-.04l4.613-.636a2.92 2.92 0 0 0 2.421-2.127l3.175-11.662L5.64 31.599Z" clip-rule="evenodd"/><path fill="url(#fb)" d="M10.14 32.152c-4.863.753-5.861 4.423-5.861 4.423l4.656-17.11 24.333-3.292-3.318 12.052a1.71 1.71 0 0 1-1.388 1.244l-.136.022-18.423 2.684z"/><path fill="url(#fd)" d="m12.899 21.235 26.938-3.98a1.6 1.6 0 0 0 1.323-1.17l2.78-10.06a1.595 1.595 0 0 0-1.74-2.012L16.498 7.81a7.19 7.19 0 0 0-5.777 5.193L7.013 26.438c.744-2.717 1.202-4.355 5.886-5.203"/><path fill="url(#fg)" d="M12.899 21.236c-3.901.706-4.87 1.962-5.514 3.932L4.279 36.577s.992-3.633 5.796-4.41l18.352-2.673.136-.022a1.71 1.71 0 0 0 1.388-1.244l2.73-9.915z"/><defs><linearGradient id="fa" x1="12.953" x2="12.953" y1="44.001" y2="29.457" gradientUnits="userSpaceOnUse"><stop offset=".056" stop-color="#2AAC94"/><stop offset="1" stop-color="#085954"/></linearGradient><linearGradient id="fb" x1="31.331" x2="17.286" y1="33.448" y2="18.173" gradientUnits="userSpaceOnUse"><stop offset=".042" stop-color="#ABE88E"/><stop offset=".549" stop-color="#2AAA92"/><stop offset=".906" stop-color="#117865"/></linearGradient><linearGradient id="fd" x1="7.013" x2="42.589" y1="15.219" y2="15.219" gradientUnits="userSpaceOnUse"><stop offset=".043" stop-color="#25FFD4"/><stop offset=".874" stop-color="#55DDB9"/></linearGradient><linearGradient id="fg" x1="15.756" x2="16.168" y1="27.96" y2="15.74" gradientUnits="userSpaceOnUse"><stop offset=".205" stop-color="#063D3B" stop-opacity="0"/><stop offset=".872" stop-color="#063D3B" stop-opacity=".75"/></linearGradient></defs></svg></div><span class="logo-text">Microsoft Fabric</span></div>
+    <div class="badge bdg-teal"><div class="dot dot-teal"></div>Aggregations &amp; Windows</div>
+  </div>
+  <div class="body">
+    <div class="crumb"><span class="tag tag-teal">TRANSFORM DATA</span><span>→</span><span>Group, aggregate, and rank data in PySpark</span></div>
+    <div class="h1">PySpark GroupBy &amp; Window Functions</div>
+    <div class="area">
+      <div class="g2">
+        <div style="display:flex;flex-direction:column;gap:16px;">
+          <div class="card-title" style="font-size:18px;">📊 GroupBy &amp; Aggregations</div>
+          <div class="code" style="font-size:12px;">
+<span class="ck">from</span> pyspark.sql.functions <span class="ck">import</span> sum, avg, count<br/>
+<br/>
+df_grouped = df.<span class="cf">groupBy</span>(<span class="cs2">"region"</span>, <span class="cs2">"category"</span>) \<br/>
+&nbsp;&nbsp;.<span class="cf">agg</span>(<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="cf">sum</span>(<span class="cs2">"sales"</span>).<span class="cf">alias</span>(<span class="cs2">"total_sales"</span>),<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="cf">avg</span>(<span class="cs2">"discount"</span>).<span class="cf">alias</span>(<span class="cs2">"avg_discount"</span>),<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="cf">count</span>(<span class="cs2">"order_id"</span>).<span class="cf">alias</span>(<span class="cs2">"order_count"</span>)<br/>
+&nbsp;&nbsp;)
+          </div>
+        </div>
+        <div style="display:flex;flex-direction:column;gap:16px;">
+          <div class="card-title" style="font-size:18px;">🪟 PySpark Window Ranking (Deduplication)</div>
+          <div class="code" style="font-size:12px;">
+<span class="ck">from</span> pyspark.sql.window <span class="ck">import</span> Window<br/>
+<span class="ck">from</span> pyspark.sql.functions <span class="ck">import</span> row_number, desc<br/>
+<br/>
+w_spec = Window.<span class="cf">partitionBy</span>(<span class="cs2">"customer_id"</span>) \<br/>
+&nbsp;&nbsp;.<span class="cf">orderBy</span>(desc(<span class="cs2">"updated_at"</span>))<br/>
+<br/>
+df_deduped = df.<span class="cf">withColumn</span>(<span class="cs2">"rn"</span>, <span class="cf">row_number</span>().<span class="cf">over</span>(w_spec)) \<br/>
+&nbsp;&nbsp;.<span class="cf">filter</span>(<span class="cs2">"rn == 1"</span>) \<br/>
+&nbsp;&nbsp;.<span class="cf">drop</span>(<span class="cs2">"rn"</span>)
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+  <div class="ftr"><span>Authored by Sayan Banerjee • Microsoft Certified: Fabric Data Engineer Associate</span><span class="ftr-num">03 / 10</span></div>
+</div>
+
+<!-- SLIDE 04 — V-ORDER OPTIMIZATION -->
+<div class="slide">
+  <div class="topbar tb-teal"></div>
+  <div class="hdr">
+    <div class="logo"><div class="logo-icon"><svg xmlns="http://www.w3.org/2000/svg" width="40" height="40" viewBox="3.9997 3.9999 39.9994 40.0011"><path fill="url(#fa)" fill-rule="evenodd" d="m5.64 31.6-.586 2.144c-.218.685-.524 1.693-.689 2.59a5.63 5.63 0 0 0 4.638 7.588c.792.114 1.688.108 2.692-.04l4.613-.636a2.92 2.92 0 0 0 2.421-2.127l3.175-11.662L5.64 31.599Z" clip-rule="evenodd"/><path fill="url(#fb)" d="M10.14 32.152c-4.863.753-5.861 4.423-5.861 4.423l4.656-17.11 24.333-3.292-3.318 12.052a1.71 1.71 0 0 1-1.388 1.244l-.136.022-18.423 2.684z"/><path fill="url(#fd)" d="m12.899 21.235 26.938-3.98a1.6 1.6 0 0 0 1.323-1.17l2.78-10.06a1.595 1.595 0 0 0-1.74-2.012L16.498 7.81a7.19 7.19 0 0 0-5.777 5.193L7.013 26.438c.744-2.717 1.202-4.355 5.886-5.203"/><path fill="url(#fg)" d="M12.899 21.236c-3.901.706-4.87 1.962-5.514 3.932L4.279 36.577s.992-3.633 5.796-4.41l18.352-2.673.136-.022a1.71 1.71 0 0 0 1.388-1.244l2.73-9.915z"/><defs><linearGradient id="fa" x1="12.953" x2="12.953" y1="44.001" y2="29.457" gradientUnits="userSpaceOnUse"><stop offset=".056" stop-color="#2AAC94"/><stop offset="1" stop-color="#085954"/></linearGradient><linearGradient id="fb" x1="31.331" x2="17.286" y1="33.448" y2="18.173" gradientUnits="userSpaceOnUse"><stop offset=".042" stop-color="#ABE88E"/><stop offset=".549" stop-color="#2AAA92"/><stop offset=".906" stop-color="#117865"/></linearGradient><linearGradient id="fd" x1="7.013" x2="42.589" y1="15.219" y2="15.219" gradientUnits="userSpaceOnUse"><stop offset=".043" stop-color="#25FFD4"/><stop offset=".874" stop-color="#55DDB9"/></linearGradient><linearGradient id="fg" x1="15.756" x2="16.168" y1="27.96" y2="15.74" gradientUnits="userSpaceOnUse"><stop offset=".205" stop-color="#063D3B" stop-opacity="0"/><stop offset=".872" stop-color="#063D3B" stop-opacity=".75"/></linearGradient></defs></svg></div><span class="logo-text">Microsoft Fabric</span></div>
+    <div class="badge bdg-teal"><div class="dot dot-teal"></div>V-Order Optimization</div>
+  </div>
+  <div class="body">
+    <div class="crumb"><span class="tag tag-teal">OPTIMIZE SOLUTION</span><span>→</span><span>Optimize a Lakehouse table with V-Order</span></div>
+    <div class="h1">V-Order: Microsoft Fabric's Write Optimization</div>
+    <div class="sub">What it is, why it matters, and how it accelerates reads</div>
+    <div class="area">
+      <div class="g2">
+        <div style="display:flex;flex-direction:column;gap:16px;">
+          <div class="card bl-teal" style="padding:22px;gap:12px;">
+            <div class="ct">⚡ What is V-Order?</div>
+            <div class="cx" style="font-size:14px;line-height:1.6;">
+              A <strong>write-time optimization</strong> for Delta Parquet files in Microsoft Fabric. It applies special sorting, dictionary encoding, and compression algorithms to Parquet file structures.
+            </div>
+            <ul class="bl bl-t" style="font-size:13px;gap:8px;margin-top:4px;">
+              <li><strong>Enabled by default</strong> in all Fabric Spark engines</li>
+              <li>100% compliant with standard open-source Delta Lake</li>
+              <li>Drastically accelerates <strong>Power BI DirectLake</strong> mode</li>
+              <li>Speeds up SQL Analytics Endpoint T-SQL queries</li>
+            </ul>
+          </div>
+        </div>
+        <div style="display:flex;flex-direction:column;gap:16px;">
+          <div class="card bl-blue" style="padding:22px;gap:12px;">
+            <div class="ct">⚙️ How to Control V-Order</div>
+            <div class="code" style="font-size:11px;">
+<span class="cc"># Check or enable via PySpark session</span><br/>
+spark.conf.<span class="cf">set</span>(<span class="cs2">"spark.sql.parquet.vorder.enabled"</span>, <span class="cs2">"true"</span>)<br/>
+<br/>
+<span class="cc"># Disable if writing data for non-Fabric engines</span><br/>
+spark.conf.<span class="cf">set</span>(<span class="cs2">"spark.sql.parquet.vorder.enabled"</span>, <span class="cs2">"false"</span>)
+            </div>
+          </div>
+          <div class="hb hb-gold">
+            <div class="hb-icon">💡</div>
+            <div class="hb-text"><strong>Exam Rule:</strong> When asked how to achieve maximum Power BI DirectLake performance on Lakehouse Delta tables — **V-Order** is the top answer!</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+  <div class="ftr"><span>Authored by Sayan Banerjee • Microsoft Certified: Fabric Data Engineer Associate</span><span class="ftr-num">04 / 10</span></div>
+</div>
+
+<!-- SLIDE 05 — OPTIMIZE & Z-ORDER -->
+<div class="slide">
+  <div class="topbar tb-gold"></div>
+  <div class="hdr">
+    <div class="logo"><div class="logo-icon"><svg xmlns="http://www.w3.org/2000/svg" width="40" height="40" viewBox="3.9997 3.9999 39.9994 40.0011"><path fill="url(#fa)" fill-rule="evenodd" d="m5.64 31.6-.586 2.144c-.218.685-.524 1.693-.689 2.59a5.63 5.63 0 0 0 4.638 7.588c.792.114 1.688.108 2.692-.04l4.613-.636a2.92 2.92 0 0 0 2.421-2.127l3.175-11.662L5.64 31.599Z" clip-rule="evenodd"/><path fill="url(#fb)" d="M10.14 32.152c-4.863.753-5.861 4.423-5.861 4.423l4.656-17.11 24.333-3.292-3.318 12.052a1.71 1.71 0 0 1-1.388 1.244l-.136.022-18.423 2.684z"/><path fill="url(#fd)" d="m12.899 21.235 26.938-3.98a1.6 1.6 0 0 0 1.323-1.17l2.78-10.06a1.595 1.595 0 0 0-1.74-2.012L16.498 7.81a7.19 7.19 0 0 0-5.777 5.193L7.013 26.438c.744-2.717 1.202-4.355 5.886-5.203"/><path fill="url(#fg)" d="M12.899 21.236c-3.901.706-4.87 1.962-5.514 3.932L4.279 36.577s.992-3.633 5.796-4.41l18.352-2.673.136-.022a1.71 1.71 0 0 1 1.388-1.244l2.73-9.915z"/><defs><linearGradient id="fa" x1="12.953" x2="12.953" y1="44.001" y2="29.457" gradientUnits="userSpaceOnUse"><stop offset=".056" stop-color="#2AAC94"/><stop offset="1" stop-color="#085954"/></linearGradient><linearGradient id="fb" x1="31.331" x2="17.286" y1="33.448" y2="18.173" gradientUnits="userSpaceOnUse"><stop offset=".042" stop-color="#ABE88E"/><stop offset=".549" stop-color="#2AAA92"/><stop offset=".906" stop-color="#117865"/></linearGradient><linearGradient id="fd" x1="7.013" x2="42.589" y1="15.219" y2="15.219" gradientUnits="userSpaceOnUse"><stop offset=".043" stop-color="#25FFD4"/><stop offset=".874" stop-color="#55DDB9"/></linearGradient><linearGradient id="fg" x1="15.756" x2="16.168" y1="27.96" y2="15.74" gradientUnits="userSpaceOnUse"><stop offset=".205" stop-color="#063D3B" stop-opacity="0"/><stop offset=".872" stop-color="#063D3B" stop-opacity=".75"/></linearGradient></defs></svg></div><span class="logo-text">Microsoft Fabric</span></div>
+    <div class="badge bdg-gold"><div class="dot dot-gold"></div>File Compaction</div>
+  </div>
+  <div class="body">
+    <div class="crumb"><span class="tag tag-gold">OPTIMIZE SOLUTION</span><span>→</span><span>File Compaction with OPTIMIZE &amp; Z-ORDER</span></div>
+    <div class="h1">Fixing the Small File Problem</div>
+    <div class="sub">How OPTIMIZE merges thousands of small files into large ~1 GB files</div>
+    <div class="area">
+      <div class="g2">
+        <div style="display:flex;flex-direction:column;gap:16px;">
+          <div class="card bl-gold" style="padding:22px;gap:12px;">
+            <div class="ct">📦 OPTIMIZE (Bin-Packing)</div>
+            <div class="cx" style="font-size:13px;line-height:1.6;">
+              Merges thousands of small Parquet files (e.g. 2 MB each) into larger, uniform files (~1 GB). Eliminates file system scanning overhead.
+            </div>
+            <div class="code" style="font-size:11px;">
+<span class="cc">-- Run compaction in Spark SQL</span><br/>
+OPTIMIZE gold_sales;
+            </div>
+          </div>
+        </div>
+        <div style="display:flex;flex-direction:column;gap:16px;">
+          <div class="card bl-blue" style="padding:22px;gap:12px;">
+            <div class="ct">🎯 Z-ORDER (Multi-Dimensional Index)</div>
+            <div class="cx" style="font-size:13px;line-height:1.6;">
+              Co-locates related data in the same physical files based on filter columns. Enables <strong>Data Skipping</strong>.
+            </div>
+            <div class="code" style="font-size:11px;">
+<span class="cc">-- Compact + Z-ORDER by frequent WHERE columns</span><br/>
+OPTIMIZE gold_sales <br/>
+ZORDER BY (customer_id, order_date);
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+  <div class="ftr"><span>Authored by Sayan Banerjee • Microsoft Certified: Fabric Data Engineer Associate</span><span class="ftr-num">05 / 10</span></div>
+</div>
+
+<!-- SLIDE 06 — VACUUM & RETENTION -->
+<div class="slide">
+  <div class="topbar tb-orange"></div>
+  <div class="hdr">
+    <div class="logo"><div class="logo-icon"><svg xmlns="http://www.w3.org/2000/svg" width="40" height="40" viewBox="3.9997 3.9999 39.9994 40.0011"><path fill="url(#fa)" fill-rule="evenodd" d="m5.64 31.6-.586 2.144c-.218.685-.524 1.693-.689 2.59a5.63 5.63 0 0 0 4.638 7.588c.792.114 1.688.108 2.692-.04l4.613-.636a2.92 2.92 0 0 0 2.421-2.127l3.175-11.662L5.64 31.599Z" clip-rule="evenodd"/><path fill="url(#fb)" d="M10.14 32.152c-4.863.753-5.861 4.423-5.861 4.423l4.656-17.11 24.333-3.292-3.318 12.052a1.71 1.71 0 0 1-1.388 1.244l-.136.022-18.423 2.684z"/><path fill="url(#fd)" d="m12.899 21.235 26.938-3.98a1.6 1.6 0 0 0 1.323-1.17l2.78-10.06a1.595 1.595 0 0 0-1.74-2.012L16.498 7.81a7.19 7.19 0 0 0-5.777 5.193L7.013 26.438c.744-2.717 1.202-4.355 5.886-5.203"/><path fill="url(#fg)" d="M12.899 21.236c-3.901.706-4.87 1.962-5.514 3.932L4.279 36.577s.992-3.633 5.796-4.41l18.352-2.673.136-.022a1.71 1.71 0 0 0 1.388-1.244l2.73-9.915z"/><defs><linearGradient id="fa" x1="12.953" x2="12.953" y1="44.001" y2="29.457" gradientUnits="userSpaceOnUse"><stop offset=".056" stop-color="#2AAC94"/><stop offset="1" stop-color="#085954"/></linearGradient><linearGradient id="fb" x1="31.331" x2="17.286" y1="33.448" y2="18.173" gradientUnits="userSpaceOnUse"><stop offset=".042" stop-color="#ABE88E"/><stop offset=".549" stop-color="#2AAA92"/><stop offset=".906" stop-color="#117865"/></linearGradient><linearGradient id="fd" x1="7.013" x2="42.589" y1="15.219" y2="15.219" gradientUnits="userSpaceOnUse"><stop offset=".043" stop-color="#25FFD4"/><stop offset=".874" stop-color="#55DDB9"/></linearGradient><linearGradient id="fg" x1="15.756" x2="16.168" y1="27.96" y2="15.74" gradientUnits="userSpaceOnUse"><stop offset=".205" stop-color="#063D3B" stop-opacity="0"/><stop offset=".872" stop-color="#063D3B" stop-opacity=".75"/></linearGradient></defs></svg></div><span class="logo-text">Microsoft Fabric</span></div>
+    <div class="badge bdg-orange"><div class="dot dot-orange"></div>Table Maintenance</div>
+  </div>
+  <div class="body">
+    <div class="crumb"><span class="tag tag-orange">MAINTAIN TABLES</span><span>→</span><span>VACUUM command &amp; storage retention</span></div>
+    <div class="h1">VACUUM &amp; Retention Safety</div>
+    <div class="sub">Cleaning physical storage vs preserving Time Travel history</div>
+    <div class="area">
+      <div class="g2">
+        <div style="display:flex;flex-direction:column;gap:16px;">
+          <div class="card bl-orange" style="padding:22px;gap:12px;">
+            <div class="ct">🧹 What VACUUM Does</div>
+            <div class="cx" style="font-size:13px;line-height:1.6;">
+              Physically removes unreferenced data files older than the retention threshold from storage.
+            </div>
+            <div class="code" style="font-size:11px;">
+<span class="cc">-- Default retention: 7 days</span><br/>
+VACUUM sales_gold;<br/>
+<br/>
+<span class="cc">-- Retention period override (e.g. 168 hours = 7 days)</span><br/>
+VACUUM sales_gold RETAIN 168 HOURS;
+            </div>
+          </div>
+        </div>
+        <div style="display:flex;flex-direction:column;gap:16px;">
+          <div class="hb hb-red">
+            <div class="hb-icon">⚠️</div>
+            <div class="hb-text"><strong>CRITICAL EXAM TRAP: VACUUM breaks Time Travel!</strong><br/>Once physical files are deleted by `VACUUM`, you CANNOT query timestamps or versions prior to the vacuumed threshold!</div>
+          </div>
+          <div class="card bl-teal" style="padding:18px;gap:8px;">
+            <div class="ct" style="font-size:15px;">🔒 Retention Period Best Practice</div>
+            <div class="cx" style="font-size:13px;">Keep default 7 days unless storage costs dictate aggressive cleanup. Never set retention to 0 hours in production!</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+  <div class="ftr"><span>Authored by Sayan Banerjee • Microsoft Certified: Fabric Data Engineer Associate</span><span class="ftr-num">06 / 10</span></div>
+</div>
+
+<!-- SLIDE 07 — TIME TRAVEL & SCHEMA EVOLUTION -->
+<div class="slide">
+  <div class="topbar tb-teal"></div>
+  <div class="hdr">
+    <div class="logo"><div class="logo-icon"><svg xmlns="http://www.w3.org/2000/svg" width="40" height="40" viewBox="3.9997 3.9999 39.9994 40.0011"><path fill="url(#fa)" fill-rule="evenodd" d="m5.64 31.6-.586 2.144c-.218.685-.524 1.693-.689 2.59a5.63 5.63 0 0 0 4.638 7.588c.792.114 1.688.108 2.692-.04l4.613-.636a2.92 2.92 0 0 0 2.421-2.127l3.175-11.662L5.64 31.599Z" clip-rule="evenodd"/><path fill="url(#fb)" d="M10.14 32.152c-4.863.753-5.861 4.423-5.861 4.423l4.656-17.11 24.333-3.292-3.318 12.052a1.71 1.71 0 0 1-1.388 1.244l-.136.022-18.423 2.684z"/><path fill="url(#fd)" d="m12.899 21.235 26.938-3.98a1.6 1.6 0 0 0 1.323-1.17l2.78-10.06a1.595 1.595 0 0 0-1.74-2.012L16.498 7.81a7.19 7.19 0 0 0-5.777 5.193L7.013 26.438c.744-2.717 1.202-4.355 5.886-5.203"/><path fill="url(#fg)" d="M12.899 21.236c-3.901.706-4.87 1.962-5.514 3.932L4.279 36.577s.992-3.633 5.796-4.41l18.352-2.673.136-.022a1.71 1.71 0 0 0 1.388-1.244l2.73-9.915z"/><defs><linearGradient id="fa" x1="12.953" x2="12.953" y1="44.001" y2="29.457" gradientUnits="userSpaceOnUse"><stop offset=".056" stop-color="#2AAC94"/><stop offset="1" stop-color="#085954"/></linearGradient><linearGradient id="fb" x1="31.331" x2="17.286" y1="33.448" y2="18.173" gradientUnits="userSpaceOnUse"><stop offset=".042" stop-color="#ABE88E"/><stop offset=".549" stop-color="#2AAA92"/><stop offset=".906" stop-color="#117865"/></linearGradient><linearGradient id="fd" x1="7.013" x2="42.589" y1="15.219" y2="15.219" gradientUnits="userSpaceOnUse"><stop offset=".043" stop-color="#25FFD4"/><stop offset=".874" stop-color="#55DDB9"/></linearGradient><linearGradient id="fg" x1="15.756" x2="16.168" y1="27.96" y2="15.74" gradientUnits="userSpaceOnUse"><stop offset=".205" stop-color="#063D3B" stop-opacity="0"/><stop offset=".872" stop-color="#063D3B" stop-opacity=".75"/></linearGradient></defs></svg></div><span class="logo-text">Microsoft Fabric</span></div>
+    <div class="badge bdg-teal"><div class="dot dot-teal"></div>Delta Features</div>
+  </div>
+  <div class="body">
+    <div class="crumb"><span class="tag tag-teal">DELTA LAKE</span><span>→</span><span>Time Travel &amp; Schema Evolution</span></div>
+    <div class="h1">Time Travel &amp; Schema Evolution</div>
+    <div class="area">
+      <div class="g2">
+        <div style="display:flex;flex-direction:column;gap:16px;">
+          <div class="card-title" style="font-size:18px;">⏳ Delta Time Travel</div>
+          <div class="code" style="font-size:11px;">
+<span class="cc">-- Query by Delta Version number</span><br/>
+<span class="ck">SELECT</span> * <span class="ck">FROM</span> sales_gold <span class="ck">VERSION AS OF</span> 4;<br/>
+<br/>
+<span class="cc">-- Query by Timestamp</span><br/>
+<span class="ck">SELECT</span> * <span class="ck">FROM</span> sales_gold <span class="ck">TIMESTAMP AS OF</span> <span class="cs2">'2026-07-22 10:00:00'</span>;<br/>
+<br/>
+<span class="cc"># PySpark Time Travel</span><br/>
+spark.read.<span class="cf">option</span>(<span class="cs2">"versionAsOf"</span>, 4).<span class="cf">table</span>(<span class="cs2">"sales_gold"</span>)
+          </div>
+        </div>
+        <div style="display:flex;flex-direction:column;gap:16px;">
+          <div class="card-title" style="font-size:18px;">🧬 Schema Evolution (<code style="font-size:16px;">mergeSchema</code>)</div>
+          <div class="code" style="font-size:11px;">
+<span class="cc"># Automatically append new columns without failing</span><br/>
+new_data_df.write.<span class="cf">format</span>(<span class="cs2">"delta"</span>) \<br/>
+&nbsp;&nbsp;.<span class="cf">mode</span>(<span class="cs2">"append"</span>) \<br/>
+&nbsp;&nbsp;.<span class="cf">option</span>(<span class="cs2">"mergeSchema"</span>, <span class="cs2">"true"</span>) \<br/>
+&nbsp;&nbsp;.<span class="cf">saveAsTable</span>(<span class="cs2">"sales_gold"</span>)
+          </div>
+          <div class="hb hb-teal">
+            <div class="hb-icon">💡</div>
+            <div class="hb-text"><strong>Schema Enforcement (Default):</strong> Delta Lake rejects writes if new DataFrame columns don't match the table schema, preventing data corruption!</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+  <div class="ftr"><span>Authored by Sayan Banerjee • Microsoft Certified: Fabric Data Engineer Associate</span><span class="ftr-num">07 / 10</span></div>
+</div>
+
+<!-- SLIDE 08 — EXAM TRAPS -->
+<div class="slide">
+  <div class="topbar tb-gold"></div>
+  <div class="hdr">
+    <div class="logo"><div class="logo-icon"><svg xmlns="http://www.w3.org/2000/svg" width="40" height="40" viewBox="3.9997 3.9999 39.9994 40.0011"><path fill="url(#fa)" fill-rule="evenodd" d="m5.64 31.6-.586 2.144c-.218.685-.524 1.693-.689 2.59a5.63 5.63 0 0 0 4.638 7.588c.792.114 1.688.108 2.692-.04l4.613-.636a2.92 2.92 0 0 0 2.421-2.127l3.175-11.662L5.64 31.599Z" clip-rule="evenodd"/><path fill="url(#fb)" d="M10.14 32.152c-4.863.753-5.861 4.423-5.861 4.423l4.656-17.11 24.333-3.292-3.318 12.052a1.71 1.71 0 0 1-1.388 1.244l-.136.022-18.423 2.684z"/><path fill="url(#fd)" d="m12.899 21.235 26.938-3.98a1.6 1.6 0 0 0 1.323-1.17l2.78-10.06a1.595 1.595 0 0 0-1.74-2.012L16.498 7.81a7.19 7.19 0 0 0-5.777 5.193L7.013 26.438c.744-2.717 1.202-4.355 5.886-5.203"/><path fill="url(#fg)" d="M12.899 21.236c-3.901.706-4.87 1.962-5.514 3.932L4.279 36.577s.992-3.633 5.796-4.41l18.352-2.673.136-.022a1.71 1.71 0 0 0 1.388-1.244l2.73-9.915z"/><defs><linearGradient id="fa" x1="12.953" x2="12.953" y1="44.001" y2="29.457" gradientUnits="userSpaceOnUse"><stop offset=".056" stop-color="#2AAC94"/><stop offset="1" stop-color="#085954"/></linearGradient><linearGradient id="fb" x1="31.331" x2="17.286" y1="33.448" y2="18.173" gradientUnits="userSpaceOnUse"><stop offset=".042" stop-color="#ABE88E"/><stop offset=".549" stop-color="#2AAA92"/><stop offset=".906" stop-color="#117865"/></linearGradient><linearGradient id="fd" x1="7.013" x2="42.589" y1="15.219" y2="15.219" gradientUnits="userSpaceOnUse"><stop offset=".043" stop-color="#25FFD4"/><stop offset=".874" stop-color="#55DDB9"/></linearGradient><linearGradient id="fg" x1="15.756" x2="16.168" y1="27.96" y2="15.74" gradientUnits="userSpaceOnUse"><stop offset=".205" stop-color="#063D3B" stop-opacity="0"/><stop offset=".872" stop-color="#063D3B" stop-opacity=".75"/></linearGradient></defs></svg></div><span class="logo-text">Microsoft Fabric</span></div>
+    <div class="badge bdg-gold"><div class="dot dot-gold"></div>Exam Traps</div>
+  </div>
+  <div class="body">
+    <div class="crumb"><span class="tag tag-gold">DP-700 CAUTION</span><span>→</span><span>PySpark &amp; Delta Lake exam traps</span></div>
+    <div class="h1">Top 4 PySpark &amp; Delta Exam Traps ⚠️</div>
+    <div class="area">
+      <div class="g2">
+        <div style="display:flex;flex-direction:column;gap:16px;">
+          <div class="hb hb-red">
+            <div class="hb-icon">🚫</div>
+            <div class="hb-text"><strong>Trap 1: "V-Order breaks open-source Delta readers"</strong> ❌ WRONG. V-Order is 100% open-source Delta Parquet compliant — non-Fabric engines can read V-Ordered tables fine.</div>
+          </div>
+          <div class="hb hb-red">
+            <div class="hb-icon">🚫</div>
+            <div class="hb-text"><strong>Trap 2: "Time Travel works after VACUUM 0 HOURS"</strong> ❌ WRONG. VACUUM physically deletes underlying Parquet files from OneLake storage, breaking Time Travel queries!</div>
+          </div>
+        </div>
+        <div style="display:flex;flex-direction:column;gap:16px;">
+          <div class="hb hb-red">
+            <div class="hb-icon">🚫</div>
+            <div class="hb-text"><strong>Trap 3: "PySpark transformations execute immediately"</strong> ❌ WRONG. PySpark uses lazy evaluation. Code only runs when an Action (`show()`, `write()`, `count()`) is invoked.</div>
+          </div>
+          <div class="hb hb-red">
+            <div class="hb-icon">🚫</div>
+            <div class="hb-text"><strong>Trap 4: "OPTIMIZE deletes old Delta files"</strong> ❌ WRONG. OPTIMIZE merges small files into new large files, but leaves old files referenced in transaction log until VACUUM runs.</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+  <div class="ftr"><span>Authored by Sayan Banerjee • Microsoft Certified: Fabric Data Engineer Associate</span><span class="ftr-num">08 / 10</span></div>
+</div>
+
+<!-- SLIDE 09 — DECISION CHEAT SHEET -->
+<div class="slide">
+  <div class="topbar tb-teal"></div>
+  <div class="hdr">
+    <div class="logo"><div class="logo-icon"><svg xmlns="http://www.w3.org/2000/svg" width="40" height="40" viewBox="3.9997 3.9999 39.9994 40.0011"><path fill="url(#fa)" fill-rule="evenodd" d="m5.64 31.6-.586 2.144c-.218.685-.524 1.693-.689 2.59a5.63 5.63 0 0 0 4.638 7.588c.792.114 1.688.108 2.692-.04l4.613-.636a2.92 2.92 0 0 0 2.421-2.127l3.175-11.662L5.64 31.599Z" clip-rule="evenodd"/><path fill="url(#fb)" d="M10.14 32.152c-4.863.753-5.861 4.423-5.861 4.423l4.656-17.11 24.333-3.292-3.318 12.052a1.71 1.71 0 0 1-1.388 1.244l-.136.022-18.423 2.684z"/><path fill="url(#fd)" d="m12.899 21.235 26.938-3.98a1.6 1.6 0 0 0 1.323-1.17l2.78-10.06a1.595 1.595 0 0 0-1.74-2.012L16.498 7.81a7.19 7.19 0 0 0-5.777 5.193L7.013 26.438c.744-2.717 1.202-4.355 5.886-5.203"/><path fill="url(#fg)" d="M12.899 21.236c-3.901.706-4.87 1.962-5.514 3.932L4.279 36.577s.992-3.633 5.796-4.41l18.352-2.673.136-.022a1.71 1.71 0 0 1 1.388-1.244l2.73-9.915z"/><defs><linearGradient id="fa" x1="12.953" x2="12.953" y1="44.001" y2="29.457" gradientUnits="userSpaceOnUse"><stop offset=".056" stop-color="#2AAC94"/><stop offset="1" stop-color="#085954"/></linearGradient><linearGradient id="fb" x1="31.331" x2="17.286" y1="33.448" y2="18.173" gradientUnits="userSpaceOnUse"><stop offset=".042" stop-color="#ABE88E"/><stop offset=".549" stop-color="#2AAA92"/><stop offset=".906" stop-color="#117865"/></linearGradient><linearGradient id="fd" x1="7.013" x2="42.589" y1="15.219" y2="15.219" gradientUnits="userSpaceOnUse"><stop offset=".043" stop-color="#25FFD4"/><stop offset=".874" stop-color="#55DDB9"/></linearGradient><linearGradient id="fg" x1="15.756" x2="16.168" y1="27.96" y2="15.74" gradientUnits="userSpaceOnUse"><stop offset=".205" stop-color="#063D3B" stop-opacity="0"/><stop offset=".872" stop-color="#063D3B" stop-opacity=".75"/></linearGradient></defs></svg></div><span class="logo-text">Microsoft Fabric</span></div>
+    <div class="badge bdg-teal"><div class="dot dot-teal"></div>Decision Matrix</div>
+  </div>
+  <div class="body">
+    <div class="crumb"><span class="tag tag-teal">QUICK REFERENCE</span><span>→</span><span>Day 07 cheat sheet — save this slide</span></div>
+    <div class="h1">PySpark &amp; Delta Decision Matrix</div>
+    <div class="area">
+      <div class="tw th-teal">
+        <table>
+          <thead><tr><th>Exam Objective / Problem</th><th>Best Feature / Solution</th><th>Why</th></tr></thead>
+          <tbody>
+            <tr><td>Speed up DirectLake Power BI reads on Lakehouse</td><td><span class="c-teal">V-Order</span></td><td>Fabric write-time optimization tailored for DirectLake</td></tr>
+            <tr><td>Fix slow queries caused by thousands of small files</td><td><span class="c-blue">OPTIMIZE</span></td><td>Merges small files into ~1 GB chunks</td></tr>
+            <tr><td>Data skipping on specific filtered columns</td><td><span class="c-gold">Z-ORDER BY (col1, col2)</span></td><td>Co-locates related data in physical files</td></tr>
+            <tr><td>Remove old unreferenced Parquet files to free storage</td><td><span class="c-orange">VACUUM</span></td><td>Physically deletes files older than retention threshold</td></tr>
+            <tr><td>Query data as it appeared 3 days ago</td><td><span class="c-teal">VERSION AS OF / TIMESTAMP AS OF</span></td><td>Delta Time Travel capability</td></tr>
+            <tr><td>Automatically add new columns on write without error</td><td><span class="c-blue">option("mergeSchema", "true")</span></td><td>Enables schema evolution during write</td></tr>
+            <tr><td>Rank rows per customer to keep latest record</td><td><span class="c-teal">Window.partitionBy().orderBy() + row_number()</span></td><td>PySpark windowing pattern for deduplication</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+  <div class="ftr"><span>📌 Save this slide for your DP-700 exam prep</span><span class="ftr-num">09 / 10</span></div>
+</div>
+
+<!-- SLIDE 10 — CTA -->
+<div class="slide">
+  <div class="topbar tb-grad"></div>
+  <div class="hdr">
+    <div class="logo"><div class="logo-icon"><svg xmlns="http://www.w3.org/2000/svg" width="40" height="40" viewBox="3.9997 3.9999 39.9994 40.0011"><path fill="url(#fa)" fill-rule="evenodd" d="m5.64 31.6-.586 2.144c-.218.685-.524 1.693-.689 2.59a5.63 5.63 0 0 0 4.638 7.588c.792.114 1.688.108 2.692-.04l4.613-.636a2.92 2.92 0 0 0 2.421-2.127l3.175-11.662L5.64 31.599Z" clip-rule="evenodd"/><path fill="url(#fb)" d="M10.14 32.152c-4.863.753-5.861 4.423-5.861 4.423l4.656-17.11 24.333-3.292-3.318 12.052a1.71 1.71 0 0 1-1.388 1.244l-.136.022-18.423 2.684z"/><path fill="url(#fd)" d="m12.899 21.235 26.938-3.98a1.6 1.6 0 0 0 1.323-1.17l2.78-10.06a1.595 1.595 0 0 0-1.74-2.012L16.498 7.81a7.19 7.19 0 0 0-5.777 5.193L7.013 26.438c.744-2.717 1.202-4.355 5.886-5.203"/><path fill="url(#fg)" d="M12.899 21.236c-3.901.706-4.87 1.962-5.514 3.932L4.279 36.577s.992-3.633 5.796-4.41l18.352-2.673.136-.022a1.71 1.71 0 0 1 1.388-1.244l2.73-9.915z"/><defs><linearGradient id="fa" x1="12.953" x2="12.953" y1="44.001" y2="29.457" gradientUnits="userSpaceOnUse"><stop offset=".056" stop-color="#2AAC94"/><stop offset="1" stop-color="#085954"/></linearGradient><linearGradient id="fb" x1="31.331" x2="17.286" y1="33.448" y2="18.173" gradientUnits="userSpaceOnUse"><stop offset=".042" stop-color="#ABE88E"/><stop offset=".549" stop-color="#2AAA92"/><stop offset=".906" stop-color="#117865"/></linearGradient><linearGradient id="fd" x1="7.013" x2="42.589" y1="15.219" y2="15.219" gradientUnits="userSpaceOnUse"><stop offset=".043" stop-color="#25FFD4"/><stop offset=".874" stop-color="#55DDB9"/></linearGradient><linearGradient id="fg" x1="15.756" x2="16.168" y1="27.96" y2="15.74" gradientUnits="userSpaceOnUse"><stop offset=".205" stop-color="#063D3B" stop-opacity="0"/><stop offset=".872" stop-color="#063D3B" stop-opacity=".75"/></linearGradient></defs></svg></div><span class="logo-text">Microsoft Fabric</span></div>
+    <div class="badge bdg-blue"><div class="dot dot-blue"></div>Join the Challenge</div>
+  </div>
+  <div class="cta-body">
+    <div class="cta-icon">🐍</div>
+    <div class="cta-h">PySpark &amp; Delta Optimization Mastered.<br/>Week 1 of 30-Day Challenge Complete! 🎉</div>
+    <div class="cta-s">PySpark · Delta Lake · V-Order · OPTIMIZE · VACUUM · Time Travel — 7 Days of DP-700 preparation done.</div>
+    <div class="cta-next">🔔 Day 08 Tomorrow: Monitor &amp; Optimize Fabric Solutions — Spark Pools, Monitoring Hub &amp; Capacity Metrics</div>
+    <div class="cta-author">
+      <strong>Sayan Banerjee</strong> • AI, BI &amp; Analytics Consultant<br/>
+      Microsoft Certified: Fabric Data Engineer Associate (DP-700)
+    </div>
+  </div>
+  <div class="ftr"><span>#MicrosoftFabric #DP700 #PySpark #DeltaLake #VOrder #DataEngineering</span><span class="ftr-num">10 / 10</span></div>
+</div>
+
+</body>
+</html>

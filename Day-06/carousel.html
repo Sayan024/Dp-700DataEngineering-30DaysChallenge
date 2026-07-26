@@ -1,0 +1,525 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<title>Day 06 — Ingest Streaming Data: Eventstreams, KQL & Spark | DP-700</title>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet"/>
+<style>
+  *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+  :root{
+    --teal:#0E7C7B;--teal-d:#085954;--teal-l:#E6F4F3;
+    --blue:#0078D4;--blue-l:#EFF6FC;
+    --gold:#C47F17;--gold-l:#FDF6E3;
+    --purple:#7719AA;--purple-l:#F3E8FC;
+    --orange:#CA5010;--orange-l:#FFF2EC;
+    --red:#C50F1F;--red-l:#FDE7E9;
+    --green:#107C10;--green-l:#DFF6DD;
+    --surf:#FFFFFF;--bg:#F8F9FA;
+    --bdr:#E5E7EB;--bdr-m:#D0D5DD;
+    --tx1:#111827;--tx2:#4B5563;--txm:#9CA3AF;
+  }
+  body{font-family:'Inter','Segoe UI',sans-serif;background:#f0f2f5}
+
+  .slide{width:1920px;height:1080px;background:var(--surf);display:flex;flex-direction:column;overflow:hidden;position:relative;border:1px solid var(--bdr);margin-bottom:32px}
+  .topbar{height:8px;flex-shrink:0}
+  .tb-teal{background:var(--teal)} .tb-blue{background:var(--blue)} .tb-gold{background:var(--gold)}
+  .tb-purple{background:var(--purple)} .tb-orange{background:var(--orange)}
+  .tb-grad{background:linear-gradient(90deg,var(--teal),var(--blue),var(--orange))}
+
+  .hdr{display:flex;align-items:center;justify-content:space-between;padding:18px 64px;border-bottom:1px solid var(--bdr);flex-shrink:0}
+  .logo{display:flex;align-items:center;gap:12px}
+  .logo-icon{width:40px;height:40px;flex-shrink:0}
+  .logo-text{font-size:22px;font-weight:700;color:var(--tx1)}
+  .badge{display:inline-flex;align-items:center;gap:8px;border-radius:4px;padding:6px 18px;font-size:13px;font-weight:600}
+  .bdg-teal{background:var(--teal-l);border:1px solid var(--teal);color:var(--teal-d)}
+  .bdg-blue{background:var(--blue-l);border:1px solid var(--blue);color:var(--blue)}
+  .bdg-gold{background:var(--gold-l);border:1px solid var(--gold);color:var(--gold)}
+  .bdg-orange{background:var(--orange-l);border:1px solid var(--orange);color:var(--orange)}
+  .dot{width:8px;height:8px;border-radius:50%}
+  .dot-teal{background:var(--teal)} .dot-blue{background:var(--blue)} .dot-gold{background:var(--gold)} .dot-orange{background:var(--orange)}
+
+  .body{display:flex;flex-direction:column;flex:1;padding:36px 64px 0;overflow:hidden}
+  .crumb{display:flex;align-items:center;gap:8px;font-size:14px;color:var(--tx2);margin-bottom:18px}
+  .tag{padding:3px 10px;border-radius:3px;font-size:12px;font-weight:700}
+  .tag-teal{background:var(--teal-l);color:var(--teal-d)} .tag-blue{background:var(--blue-l);color:var(--blue)}
+  .tag-gold{background:var(--gold-l);color:var(--gold)} .tag-orange{background:var(--orange-l);color:var(--orange)}
+  .h1{font-size:42px;font-weight:800;color:var(--tx1);letter-spacing:-.5px;line-height:1.15;margin-bottom:12px}
+  .sub{font-size:20px;color:var(--tx2);font-weight:400;line-height:1.4;margin-bottom:28px}
+  .area{flex:1;display:flex;gap:28px;overflow:hidden}
+  .g2{display:grid;grid-template-columns:1fr 1fr;gap:28px;width:100%}
+  .g3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:24px;width:100%}
+  .g4{display:grid;grid-template-columns:1fr 1fr 1fr 1fr;gap:20px;width:100%}
+
+  .card{background:var(--surf);border:1px solid var(--bdr);border-radius:6px;padding:26px;display:flex;flex-direction:column;gap:14px;box-shadow:0 2px 6px rgba(0,0,0,.03)}
+  .bl-teal{border-left:5px solid var(--teal)} .bl-blue{border-left:5px solid var(--blue)}
+  .bl-gold{border-left:5px solid var(--gold)} .bl-purple{border-left:5px solid var(--purple)}
+  .bl-orange{border-left:5px solid var(--orange)} .bl-red{border-left:5px solid var(--red)}
+  .bl-green{border-left:5px solid var(--green)}
+  .ct{font-size:19px;font-weight:700;color:var(--tx1);display:flex;align-items:center;gap:10px}
+  .cs{font-size:12px;font-weight:700;color:var(--tx2);text-transform:uppercase;letter-spacing:.5px}
+  .cx{font-size:15px;color:var(--tx2);line-height:1.6}
+
+  .tw{width:100%;overflow:hidden;border-radius:6px;border:1px solid var(--bdr)}
+  table{width:100%;border-collapse:collapse;font-size:14px}
+  thead{color:#fff}
+  .th-teal thead{background:var(--teal)} .th-blue thead{background:var(--blue)}
+  .th-gold thead{background:#B8690F} .th-orange thead{background:var(--orange)}
+  th{padding:13px 18px;font-weight:700;text-align:left;font-size:13px}
+  td{padding:12px 18px;border-bottom:1px solid var(--bdr);color:var(--tx1);font-size:13px}
+  tr:last-child td{border-bottom:none} tr:nth-child(even) td{background:var(--bg)}
+  .c-teal{color:var(--teal);font-weight:600} .c-blue{color:var(--blue);font-weight:600}
+  .c-gold{color:var(--gold);font-weight:600} .c-orange{color:var(--orange);font-weight:600}
+  .c-green{color:var(--green);font-weight:700} .c-red{color:var(--red);font-weight:700}
+
+  .bl{list-style:none;display:flex;flex-direction:column;gap:9px}
+  .bl li{display:flex;align-items:flex-start;gap:10px;font-size:15px;color:var(--tx2);line-height:1.5}
+  .bl li::before{content:'▸';font-weight:700;flex-shrink:0;margin-top:1px}
+  .bl-t li::before{color:var(--teal)} .bl-b li::before{color:var(--blue)}
+  .bl-g li::before{color:var(--gold)} .bl-o li::before{color:var(--orange)}
+
+  .hb{border-radius:6px;padding:18px 22px;display:flex;gap:14px;align-items:flex-start}
+  .hb-teal{background:var(--teal-l);border-left:5px solid var(--teal)}
+  .hb-blue{background:var(--blue-l);border-left:5px solid var(--blue)}
+  .hb-gold{background:var(--gold-l);border-left:5px solid var(--gold)}
+  .hb-orange{background:var(--orange-l);border-left:5px solid var(--orange)}
+  .hb-red{background:var(--red-l);border-left:5px solid var(--red)}
+  .hb-icon{font-size:22px;line-height:1;flex-shrink:0}
+  .hb-text{font-size:14px;color:var(--tx1);line-height:1.6}
+  .hb-text strong{display:block;margin-bottom:3px;font-size:15px}
+
+  .code{background:#1E1E1E;border-radius:6px;padding:18px 22px;font-family:'Consolas','Monaco',monospace;font-size:12px;color:#D4D4D4;line-height:1.65;overflow:hidden}
+  .cc{color:#6A9955} .ck{color:#569CD6} .cs2{color:#CE9178} .cf{color:#DCDCAA} .cv{color:#9CDCFE}
+
+  .pill{display:inline-block;padding:4px 12px;border-radius:20px;font-size:11px;font-weight:700}
+  .p-teal{background:var(--teal-l);color:var(--teal-d)} .p-blue{background:var(--blue-l);color:var(--blue)}
+  .p-gold{background:var(--gold-l);color:var(--gold)} .p-green{background:var(--green-l);color:var(--green)}
+  .p-orange{background:var(--orange-l);color:var(--orange)}
+
+  .ftr{padding:13px 64px;border-top:1px solid var(--bdr);display:flex;align-items:center;justify-content:space-between;font-size:13px;color:var(--txm);flex-shrink:0}
+  .ftr-num{font-size:14px;font-weight:700;color:var(--tx2)}
+
+  .cover-body{flex:1;display:flex;flex-direction:column;justify-content:center;padding:64px 120px;background:linear-gradient(135deg,#F0FAF9 0%,#EFF6FC 50%,#FFFBF0 100%);position:relative}
+  .day-tag{display:inline-flex;align-items:center;gap:8px;background:#fff;border:2px solid var(--teal);border-radius:24px;padding:8px 20px;font-size:14px;font-weight:700;color:var(--teal-d);margin-bottom:28px;width:fit-content}
+  .cover-h{font-size:66px;font-weight:800;color:var(--tx1);letter-spacing:-2px;line-height:1.05;margin-bottom:22px}
+  .cover-h span{color:var(--teal)}
+  .cover-s{font-size:22px;color:var(--tx2);font-weight:400;line-height:1.5;margin-bottom:36px;max-width:900px}
+  .topics{display:flex;flex-wrap:wrap;gap:12px}
+  .topic{background:#fff;border:1px solid var(--bdr);border-radius:6px;padding:10px 18px;font-size:14px;font-weight:600;color:var(--tx2)}
+
+  .cta-body{flex:1;display:flex;flex-direction:column;justify-content:center;align-items:center;padding:64px;background:linear-gradient(135deg,#F0FAF9 0%,#EFF6FC 50%,#FFFBF0 100%);text-align:center;gap:26px}
+  .cta-icon{font-size:60px}
+  .cta-h{font-size:48px;font-weight:800;color:var(--tx1);letter-spacing:-1px}
+  .cta-s{font-size:20px;color:var(--tx2);max-width:900px;line-height:1.5}
+  .cta-next{background:var(--teal);color:#fff;border-radius:8px;padding:16px 36px;font-size:17px;font-weight:700;display:inline-block}
+  .cta-author{font-size:15px;color:var(--tx2)}
+  .cta-author strong{color:var(--tx1);font-weight:700}
+</style>
+</head>
+<body>
+
+<!-- SLIDE 01 — COVER -->
+<div class="slide">
+  <div class="topbar tb-grad"></div>
+  <div class="hdr">
+    <div class="logo">
+      <div class="logo-icon"><svg xmlns="http://www.w3.org/2000/svg" width="40" height="40" viewBox="3.9997 3.9999 39.9994 40.0011"><path fill="url(#fa)" fill-rule="evenodd" d="m5.64 31.6-.586 2.144c-.218.685-.524 1.693-.689 2.59a5.63 5.63 0 0 0 4.638 7.588c.792.114 1.688.108 2.692-.04l4.613-.636a2.92 2.92 0 0 0 2.421-2.127l3.175-11.662L5.64 31.599Z" clip-rule="evenodd"/><path fill="url(#fb)" d="M10.14 32.152c-4.863.753-5.861 4.423-5.861 4.423l4.656-17.11 24.333-3.292-3.318 12.052a1.71 1.71 0 0 1-1.388 1.244l-.136.022-18.423 2.684z"/><path fill="url(#fd)" d="m12.899 21.235 26.938-3.98a1.6 1.6 0 0 0 1.323-1.17l2.78-10.06a1.595 1.595 0 0 0-1.74-2.012L16.498 7.81a7.19 7.19 0 0 0-5.777 5.193L7.013 26.438c.744-2.717 1.202-4.355 5.886-5.203"/><path fill="url(#fg)" d="M12.899 21.236c-3.901.706-4.87 1.962-5.514 3.932L4.279 36.577s.992-3.633 5.796-4.41l18.352-2.673.136-.022a1.71 1.71 0 0 0 1.388-1.244l2.73-9.915z"/><defs><linearGradient id="fa" x1="12.953" x2="12.953" y1="44.001" y2="29.457" gradientUnits="userSpaceOnUse"><stop offset=".056" stop-color="#2AAC94"/><stop offset="1" stop-color="#085954"/></linearGradient><linearGradient id="fb" x1="31.331" x2="17.286" y1="33.448" y2="18.173" gradientUnits="userSpaceOnUse"><stop offset=".042" stop-color="#ABE88E"/><stop offset=".549" stop-color="#2AAA92"/><stop offset=".906" stop-color="#117865"/></linearGradient><linearGradient id="fd" x1="7.013" x2="42.589" y1="15.219" y2="15.219" gradientUnits="userSpaceOnUse"><stop offset=".043" stop-color="#25FFD4"/><stop offset=".874" stop-color="#55DDB9"/></linearGradient><linearGradient id="fg" x1="15.756" x2="16.168" y1="27.96" y2="15.74" gradientUnits="userSpaceOnUse"><stop offset=".205" stop-color="#063D3B" stop-opacity="0"/><stop offset=".872" stop-color="#063D3B" stop-opacity=".75"/></linearGradient></defs></svg></div>
+      <span class="logo-text">Microsoft Fabric</span>
+    </div>
+    <div class="badge bdg-teal"><div class="dot dot-teal"></div>DP-700 Certification Challenge</div>
+  </div>
+  <div class="cover-body">
+    <div class="day-tag">🗓️ DAY 06 OF 30</div>
+    <div class="cover-h">Ingest &amp; Transform Streaming Data<br/><span>Real-Time Intelligence</span></div>
+    <div class="cover-s">Master Fabric Eventstreams, KQL Databases, Spark Structured Streaming, Windowing Functions, and Query Acceleration for DP-700</div>
+    <div class="topics">
+      <div class="topic">⚡ Eventstreams No-Code Routing</div>
+      <div class="topic">📊 4 Windowing Functions</div>
+      <div class="topic">🔍 KQL Query Acceleration</div>
+      <div class="topic">🌊 Spark Structured Streaming</div>
+      <div class="topic">🛠️ Streaming Decision Matrix</div>
+      <div class="topic">🎯 3 Practice Questions</div>
+    </div>
+  </div>
+  <div class="ftr"><span>Authored by Sayan Banerjee • Microsoft Certified: Fabric Data Engineer Associate</span><span class="ftr-num">01 / 10</span></div>
+</div>
+
+<!-- SLIDE 02 — STREAMING ENGINES -->
+<div class="slide">
+  <div class="topbar tb-orange"></div>
+  <div class="hdr">
+    <div class="logo"><div class="logo-icon"><svg xmlns="http://www.w3.org/2000/svg" width="40" height="40" viewBox="3.9997 3.9999 39.9994 40.0011"><path fill="url(#fa)" fill-rule="evenodd" d="m5.64 31.6-.586 2.144c-.218.685-.524 1.693-.689 2.59a5.63 5.63 0 0 0 4.638 7.588c.792.114 1.688.108 2.692-.04l4.613-.636a2.92 2.92 0 0 0 2.421-2.127l3.175-11.662L5.64 31.599Z" clip-rule="evenodd"/><path fill="url(#fb)" d="M10.14 32.152c-4.863.753-5.861 4.423-5.861 4.423l4.656-17.11 24.333-3.292-3.318 12.052a1.71 1.71 0 0 1-1.388 1.244l-.136.022-18.423 2.684z"/><path fill="url(#fd)" d="m12.899 21.235 26.938-3.98a1.6 1.6 0 0 0 1.323-1.17l2.78-10.06a1.595 1.595 0 0 0-1.74-2.012L16.498 7.81a7.19 7.19 0 0 0-5.777 5.193L7.013 26.438c.744-2.717 1.202-4.355 5.886-5.203"/><path fill="url(#fg)" d="M12.899 21.236c-3.901.706-4.87 1.962-5.514 3.932L4.279 36.577s.992-3.633 5.796-4.41l18.352-2.673.136-.022a1.71 1.71 0 0 0 1.388-1.244l2.73-9.915z"/><defs><linearGradient id="fa" x1="12.953" x2="12.953" y1="44.001" y2="29.457" gradientUnits="userSpaceOnUse"><stop offset=".056" stop-color="#2AAC94"/><stop offset="1" stop-color="#085954"/></linearGradient><linearGradient id="fb" x1="31.331" x2="17.286" y1="33.448" y2="18.173" gradientUnits="userSpaceOnUse"><stop offset=".042" stop-color="#ABE88E"/><stop offset=".549" stop-color="#2AAA92"/><stop offset=".906" stop-color="#117865"/></linearGradient><linearGradient id="fd" x1="7.013" x2="42.589" y1="15.219" y2="15.219" gradientUnits="userSpaceOnUse"><stop offset=".043" stop-color="#25FFD4"/><stop offset=".874" stop-color="#55DDB9"/></linearGradient><linearGradient id="fg" x1="15.756" x2="16.168" y1="27.96" y2="15.74" gradientUnits="userSpaceOnUse"><stop offset=".205" stop-color="#063D3B" stop-opacity="0"/><stop offset=".872" stop-color="#063D3B" stop-opacity=".75"/></linearGradient></defs></svg></div><span class="logo-text">Microsoft Fabric</span></div>
+    <div class="badge bdg-orange"><div class="dot dot-orange"></div>Streaming Engines</div>
+  </div>
+  <div class="body">
+    <div class="crumb"><span class="tag tag-orange">REAL-TIME INTELLIGENCE</span><span>→</span><span>Choose an appropriate streaming engine</span></div>
+    <div class="h1">3 Streaming Engines in Fabric</div>
+    <div class="sub">Pick the right engine based on latency, complexity, and language requirement</div>
+    <div class="area">
+      <div class="g3">
+        <div class="card bl-orange" style="padding:22px;gap:12px;">
+          <div class="ct">⚡ Fabric Eventstreams</div>
+          <div class="cs">No-Code Ingestion &amp; Routing</div>
+          <ul class="bl bl-o" style="font-size:13px;gap:8px;">
+            <li><strong>Latency:</strong> Milliseconds</li>
+            <li><strong>Interface:</strong> Drag-and-drop UI</li>
+            <li><strong>Sources:</strong> Event Hubs, IoT Hub, CDC</li>
+            <li><strong>Destinations:</strong> Lakehouse, KQL DB, Reflex</li>
+            <li>In-stream filtering &amp; windowing</li>
+          </ul>
+          <div class="pill p-orange" style="margin-top:auto;">Best for: Code-free routing &amp; simple transforms</div>
+        </div>
+        <div class="card bl-teal" style="padding:22px;gap:12px;">
+          <div class="ct">🔍 KQL DB (Eventhouse)</div>
+          <div class="cs">High-Throughput Time-Series</div>
+          <ul class="bl bl-t" style="font-size:13px;gap:8px;">
+            <li><strong>Latency:</strong> Sub-second queries</li>
+            <li><strong>Language:</strong> Kusto Query Language</li>
+            <li><strong>Capacity:</strong> Billions of records</li>
+            <li>Real-time dashboards &amp; alerts</li>
+            <li>Auto-indexing &amp; hot/cold cache</li>
+          </ul>
+          <div class="pill p-teal" style="margin-top:auto;">Best for: Log analytics &amp; telemetry dashboards</div>
+        </div>
+        <div class="card bl-blue" style="padding:22px;gap:12px;">
+          <div class="ct">🌊 Spark Streaming</div>
+          <div class="cs">Stateful &amp; Complex Micro-Batching</div>
+          <ul class="bl bl-b" style="font-size:13px;gap:8px;">
+            <li><strong>Latency:</strong> Seconds (micro-batch)</li>
+            <li><strong>Language:</strong> PySpark / Scala / SQL</li>
+            <li>Complex stream-stream joins</li>
+            <li>Delta Lake ACID guarantees</li>
+            <li>Machine learning on streams</li>
+          </ul>
+          <div class="pill p-blue" style="margin-top:auto;">Best for: Complex PySpark transformations</div>
+        </div>
+      </div>
+    </div>
+  </div>
+  <div class="ftr"><span>Authored by Sayan Banerjee • Microsoft Certified: Fabric Data Engineer Associate</span><span class="ftr-num">02 / 10</span></div>
+</div>
+
+<!-- SLIDE 03 — WINDOWING FUNCTIONS -->
+<div class="slide">
+  <div class="topbar tb-teal"></div>
+  <div class="hdr">
+    <div class="logo"><div class="logo-icon"><svg xmlns="http://www.w3.org/2000/svg" width="40" height="40" viewBox="3.9997 3.9999 39.9994 40.0011"><path fill="url(#fa)" fill-rule="evenodd" d="m5.64 31.6-.586 2.144c-.218.685-.524 1.693-.689 2.59a5.63 5.63 0 0 0 4.638 7.588c.792.114 1.688.108 2.692-.04l4.613-.636a2.92 2.92 0 0 0 2.421-2.127l3.175-11.662L5.64 31.599Z" clip-rule="evenodd"/><path fill="url(#fb)" d="M10.14 32.152c-4.863.753-5.861 4.423-5.861 4.423l4.656-17.11 24.333-3.292-3.318 12.052a1.71 1.71 0 0 1-1.388 1.244l-.136.022-18.423 2.684z"/><path fill="url(#fd)" d="m12.899 21.235 26.938-3.98a1.6 1.6 0 0 0 1.323-1.17l2.78-10.06a1.595 1.595 0 0 0-1.74-2.012L16.498 7.81a7.19 7.19 0 0 0-5.777 5.193L7.013 26.438c.744-2.717 1.202-4.355 5.886-5.203"/><path fill="url(#fg)" d="M12.899 21.236c-3.901.706-4.87 1.962-5.514 3.932L4.279 36.577s.992-3.633 5.796-4.41l18.352-2.673.136-.022a1.71 1.71 0 0 0 1.388-1.244l2.73-9.915z"/><defs><linearGradient id="fa" x1="12.953" x2="12.953" y1="44.001" y2="29.457" gradientUnits="userSpaceOnUse"><stop offset=".056" stop-color="#2AAC94"/><stop offset="1" stop-color="#085954"/></linearGradient><linearGradient id="fb" x1="31.331" x2="17.286" y1="33.448" y2="18.173" gradientUnits="userSpaceOnUse"><stop offset=".042" stop-color="#ABE88E"/><stop offset=".549" stop-color="#2AAA92"/><stop offset=".906" stop-color="#117865"/></linearGradient><linearGradient id="fd" x1="7.013" x2="42.589" y1="15.219" y2="15.219" gradientUnits="userSpaceOnUse"><stop offset=".043" stop-color="#25FFD4"/><stop offset=".874" stop-color="#55DDB9"/></linearGradient><linearGradient id="fg" x1="15.756" x2="16.168" y1="27.96" y2="15.74" gradientUnits="userSpaceOnUse"><stop offset=".205" stop-color="#063D3B" stop-opacity="0"/><stop offset=".872" stop-color="#063D3B" stop-opacity=".75"/></linearGradient></defs></svg></div><span class="logo-text">Microsoft Fabric</span></div>
+    <div class="badge bdg-teal"><div class="dot dot-teal"></div>Windowing Functions</div>
+  </div>
+  <div class="body">
+    <div class="crumb"><span class="tag tag-teal">STREAMING TRANSFORMS</span><span>→</span><span>Create windowing functions (Exam Objective)</span></div>
+    <div class="h1">4 Streaming Window Types</div>
+    <div class="sub">Understanding window boundaries is essential for stream aggregation questions</div>
+    <div class="area">
+      <div class="g4">
+        <div class="card bl-teal" style="padding:18px;gap:10px;">
+          <div class="ct" style="font-size:16px;">🟩 Tumbling</div>
+          <div class="cs">Fixed &amp; Non-Overlapping</div>
+          <div class="cx" style="font-size:12px;">Events belong to <strong>exactly 1 window</strong>.</div>
+          <div class="code" style="font-size:10px;padding:10px;">[10:00-10:05]<br/>[10:05-10:10]<br/>[10:10-10:15]</div>
+          <div class="pill p-teal" style="margin-top:auto;">e.g. 5-min total counts</div>
+        </div>
+        <div class="card bl-blue" style="padding:18px;gap:10px;">
+          <div class="ct" style="font-size:16px;">🟦 Hopping</div>
+          <div class="cs">Fixed &amp; Overlapping (Hop Step)</div>
+          <div class="cx" style="font-size:12px;">Fixed length, moves forward by smaller hop.</div>
+          <div class="code" style="font-size:10px;padding:10px;">Len: 10m, Hop: 2m<br/>[10:00-10:10]<br/>[10:02-10:12]</div>
+          <div class="pill p-blue" style="margin-top:auto;">e.g. Moving average</div>
+        </div>
+        <div class="card bl-gold" style="padding:18px;gap:10px;">
+          <div class="ct" style="font-size:16px;">🟨 Sliding</div>
+          <div class="cs">Event-Driven Overlap</div>
+          <div class="cx" style="font-size:12px;">Evaluates output only when an event occurs.</div>
+          <div class="code" style="font-size:10px;padding:10px;">Looks back N mins<br/>from current event<br/>timestamp</div>
+          <div class="pill p-gold" style="margin-top:auto;">e.g. Threshold alert</div>
+        </div>
+        <div class="card bl-purple" style="padding:18px;gap:10px;">
+          <div class="ct" style="font-size:16px;">🟪 Session</div>
+          <div class="cs">Gap-based Activity</div>
+          <div class="cx" style="font-size:12px;">Closes when inactive for specified gap.</div>
+          <div class="code" style="font-size:10px;padding:10px;">User Active...<br/>[Gap: 15 mins]<br/>Window Closes</div>
+          <div class="pill p-teal" style="margin-top:auto;background:var(--purple-l);color:var(--purple);">e.g. User session clickstream</div>
+        </div>
+      </div>
+    </div>
+  </div>
+  <div class="ftr"><span>Authored by Sayan Banerjee • Microsoft Certified: Fabric Data Engineer Associate</span><span class="ftr-num">03 / 10</span></div>
+</div>
+
+<!-- SLIDE 04 — EVENTSTREAMS IN-STREAM TRANSFORMS -->
+<div class="slide">
+  <div class="topbar tb-orange"></div>
+  <div class="hdr">
+    <div class="logo"><div class="logo-icon"><svg xmlns="http://www.w3.org/2000/svg" width="40" height="40" viewBox="3.9997 3.9999 39.9994 40.0011"><path fill="url(#fa)" fill-rule="evenodd" d="m5.64 31.6-.586 2.144c-.218.685-.524 1.693-.689 2.59a5.63 5.63 0 0 0 4.638 7.588c.792.114 1.688.108 2.692-.04l4.613-.636a2.92 2.92 0 0 0 2.421-2.127l3.175-11.662L5.64 31.599Z" clip-rule="evenodd"/><path fill="url(#fb)" d="M10.14 32.152c-4.863.753-5.861 4.423-5.861 4.423l4.656-17.11 24.333-3.292-3.318 12.052a1.71 1.71 0 0 1-1.388 1.244l-.136.022-18.423 2.684z"/><path fill="url(#fd)" d="m12.899 21.235 26.938-3.98a1.6 1.6 0 0 0 1.323-1.17l2.78-10.06a1.595 1.595 0 0 0-1.74-2.012L16.498 7.81a7.19 7.19 0 0 0-5.777 5.193L7.013 26.438c.744-2.717 1.202-4.355 5.886-5.203"/><path fill="url(#fg)" d="M12.899 21.236c-3.901.706-4.87 1.962-5.514 3.932L4.279 36.577s.992-3.633 5.796-4.41l18.352-2.673.136-.022a1.71 1.71 0 0 0 1.388-1.244l2.73-9.915z"/><defs><linearGradient id="fa" x1="12.953" x2="12.953" y1="44.001" y2="29.457" gradientUnits="userSpaceOnUse"><stop offset=".056" stop-color="#2AAC94"/><stop offset="1" stop-color="#085954"/></linearGradient><linearGradient id="fb" x1="31.331" x2="17.286" y1="33.448" y2="18.173" gradientUnits="userSpaceOnUse"><stop offset=".042" stop-color="#ABE88E"/><stop offset=".549" stop-color="#2AAA92"/><stop offset=".906" stop-color="#117865"/></linearGradient><linearGradient id="fd" x1="7.013" x2="42.589" y1="15.219" y2="15.219" gradientUnits="userSpaceOnUse"><stop offset=".043" stop-color="#25FFD4"/><stop offset=".874" stop-color="#55DDB9"/></linearGradient><linearGradient id="fg" x1="15.756" x2="16.168" y1="27.96" y2="15.74" gradientUnits="userSpaceOnUse"><stop offset=".205" stop-color="#063D3B" stop-opacity="0"/><stop offset=".872" stop-color="#063D3B" stop-opacity=".75"/></linearGradient></defs></svg></div><span class="logo-text">Microsoft Fabric</span></div>
+    <div class="badge bdg-orange"><div class="dot dot-orange"></div>Eventstreams</div>
+  </div>
+  <div class="body">
+    <div class="crumb"><span class="tag tag-orange">PROCESS DATA</span><span>→</span><span>Process data by using Eventstreams</span></div>
+    <div class="h1">Fabric Eventstreams Architecture</div>
+    <div class="area">
+      <div class="g2">
+        <div style="display:flex;flex-direction:column;gap:16px;">
+          <div class="card bl-orange" style="padding:20px;gap:10px;">
+            <div class="ct" style="font-size:16px;">📥 Sources</div>
+            <ul class="bl bl-o" style="font-size:13px;gap:6px;">
+              <li>Azure Event Hubs &amp; IoT Hub</li>
+              <li>Database CDC (Azure SQL, Postgres, MySQL)</li>
+              <li>Custom App via REST API / SDK</li>
+              <li>Sample Data Streams</li>
+            </ul>
+          </div>
+          <div class="card bl-teal" style="padding:20px;gap:10px;">
+            <div class="ct" style="font-size:16px;">⚙️ No-Code In-Stream Transforms</div>
+            <ul class="bl bl-t" style="font-size:13px;gap:6px;">
+              <li><strong>Filter:</strong> Exclude rows matching criteria</li>
+              <li><strong>Manage Fields:</strong> Rename, drop, cast types</li>
+              <li><strong>Group By / Aggregate:</strong> SUM, AVG, COUNT in Tumbling/Hopping windows</li>
+              <li><strong>Union:</strong> Combine multiple stream sources</li>
+            </ul>
+          </div>
+        </div>
+        <div style="display:flex;flex-direction:column;gap:16px;">
+          <div class="card bl-blue" style="padding:20px;gap:10px;">
+            <div class="ct" style="font-size:16px;">📤 Destinations</div>
+            <ul class="bl bl-b" style="font-size:13px;gap:6px;">
+              <li><strong>KQL Database:</strong> Sub-second dashboarding</li>
+              <li><strong>Lakehouse:</strong> Directly writes Delta Parquet files</li>
+              <li><strong>Activator (Reflex):</strong> Real-time alerts on conditions</li>
+              <li><strong>Custom Endpoint:</strong> Forward to external REST API</li>
+            </ul>
+          </div>
+          <div class="hb hb-orange">
+            <div class="hb-icon">💡</div>
+            <div class="hb-text"><strong>Exam Key Takeaway:</strong> Eventstreams can write directly to Delta tables in a Lakehouse without needing Spark or a Data Pipeline!</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+  <div class="ftr"><span>Authored by Sayan Banerjee • Microsoft Certified: Fabric Data Engineer Associate</span><span class="ftr-num">04 / 10</span></div>
+</div>
+
+<!-- SLIDE 05 — RTI STORAGE & QUERY ACCELERATION -->
+<div class="slide">
+  <div class="topbar tb-teal"></div>
+  <div class="hdr">
+    <div class="logo"><div class="logo-icon"><svg xmlns="http://www.w3.org/2000/svg" width="40" height="40" viewBox="3.9997 3.9999 39.9994 40.0011"><path fill="url(#fa)" fill-rule="evenodd" d="m5.64 31.6-.586 2.144c-.218.685-.524 1.693-.689 2.59a5.63 5.63 0 0 0 4.638 7.588c.792.114 1.688.108 2.692-.04l4.613-.636a2.92 2.92 0 0 0 2.421-2.127l3.175-11.662L5.64 31.599Z" clip-rule="evenodd"/><path fill="url(#fb)" d="M10.14 32.152c-4.863.753-5.861 4.423-5.861 4.423l4.656-17.11 24.333-3.292-3.318 12.052a1.71 1.71 0 0 1-1.388 1.244l-.136.022-18.423 2.684z"/><path fill="url(#fd)" d="m12.899 21.235 26.938-3.98a1.6 1.6 0 0 0 1.323-1.17l2.78-10.06a1.595 1.595 0 0 0-1.74-2.012L16.498 7.81a7.19 7.19 0 0 0-5.777 5.193L7.013 26.438c.744-2.717 1.202-4.355 5.886-5.203"/><path fill="url(#fg)" d="M12.899 21.236c-3.901.706-4.87 1.962-5.514 3.932L4.279 36.577s.992-3.633 5.796-4.41l18.352-2.673.136-.022a1.71 1.71 0 0 1 1.388-1.244l2.73-9.915z"/><defs><linearGradient id="fa" x1="12.953" x2="12.953" y1="44.001" y2="29.457" gradientUnits="userSpaceOnUse"><stop offset=".056" stop-color="#2AAC94"/><stop offset="1" stop-color="#085954"/></linearGradient><linearGradient id="fb" x1="31.331" x2="17.286" y1="33.448" y2="18.173" gradientUnits="userSpaceOnUse"><stop offset=".042" stop-color="#ABE88E"/><stop offset=".549" stop-color="#2AAA92"/><stop offset=".906" stop-color="#117865"/></linearGradient><linearGradient id="fd" x1="7.013" x2="42.589" y1="15.219" y2="15.219" gradientUnits="userSpaceOnUse"><stop offset=".043" stop-color="#25FFD4"/><stop offset=".874" stop-color="#55DDB9"/></linearGradient><linearGradient id="fg" x1="15.756" x2="16.168" y1="27.96" y2="15.74" gradientUnits="userSpaceOnUse"><stop offset=".205" stop-color="#063D3B" stop-opacity="0"/><stop offset=".872" stop-color="#063D3B" stop-opacity=".75"/></linearGradient></defs></svg></div><span class="logo-text">Microsoft Fabric</span></div>
+    <div class="badge bdg-teal"><div class="dot dot-teal"></div>Real-Time Storage</div>
+  </div>
+  <div class="body">
+    <div class="crumb"><span class="tag tag-teal">REAL-TIME INTELLIGENCE</span><span>→</span><span>Native Tables vs OneLake Shortcuts &amp; Acceleration</span></div>
+    <div class="h1">RTI Storage &amp; Query Acceleration</div>
+    <div class="sub">DP-700 specific decision patterns for KQL Database storage</div>
+    <div class="area">
+      <div class="tw th-teal">
+        <table>
+          <thead><tr><th>Feature</th><th>Native KQL Table</th><th>Standard OneLake Shortcut</th><th>Shortcut + Query Acceleration</th></tr></thead>
+          <tbody>
+            <tr><td><strong>Data Location</strong></td><td class="c-teal">KQL Engine SSD Hot Cache + Cold Store</td><td class="c-blue">OneLake (External Delta Parquet)</td><td class="c-gold">OneLake + KQL Cache Index</td></tr>
+            <tr><td><strong>Query Latency</strong></td><td class="c-green">Sub-second (Fastest)</td><td>Standard Parquet Scan</td><td class="c-green">Near-Native KQL Speed</td></tr>
+            <tr><td><strong>Storage Duplicate?</strong></td><td class="c-red">Yes (In KQL storage)</td><td class="c-green">No (Pointer only)</td><td class="c-green">No (Cached Index only)</td></tr>
+            <tr><td><strong>Best Use Case</strong></td><td>Interactive dashboards, high concurrency</td><td>Infrequently queried historical Delta data</td><td>High-speed queries on large OneLake Delta data</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+  <div class="ftr"><span>Authored by Sayan Banerjee • Microsoft Certified: Fabric Data Engineer Associate</span><span class="ftr-num">05 / 10</span></div>
+</div>
+
+<!-- SLIDE 06 — SPARK STRUCTURED STREAMING -->
+<div class="slide">
+  <div class="topbar tb-blue"></div>
+  <div class="hdr">
+    <div class="logo"><div class="logo-icon"><svg xmlns="http://www.w3.org/2000/svg" width="40" height="40" viewBox="3.9997 3.9999 39.9994 40.0011"><path fill="url(#fa)" fill-rule="evenodd" d="m5.64 31.6-.586 2.144c-.218.685-.524 1.693-.689 2.59a5.63 5.63 0 0 0 4.638 7.588c.792.114 1.688.108 2.692-.04l4.613-.636a2.92 2.92 0 0 0 2.421-2.127l3.175-11.662L5.64 31.599Z" clip-rule="evenodd"/><path fill="url(#fb)" d="M10.14 32.152c-4.863.753-5.861 4.423-5.861 4.423l4.656-17.11 24.333-3.292-3.318 12.052a1.71 1.71 0 0 1-1.388 1.244l-.136.022-18.423 2.684z"/><path fill="url(#fd)" d="m12.899 21.235 26.938-3.98a1.6 1.6 0 0 0 1.323-1.17l2.78-10.06a1.595 1.595 0 0 0-1.74-2.012L16.498 7.81a7.19 7.19 0 0 0-5.777 5.193L7.013 26.438c.744-2.717 1.202-4.355 5.886-5.203"/><path fill="url(#fg)" d="M12.899 21.236c-3.901.706-4.87 1.962-5.514 3.932L4.279 36.577s.992-3.633 5.796-4.41l18.352-2.673.136-.022a1.71 1.71 0 0 0 1.388-1.244l2.73-9.915z"/><defs><linearGradient id="fa" x1="12.953" x2="12.953" y1="44.001" y2="29.457" gradientUnits="userSpaceOnUse"><stop offset=".056" stop-color="#2AAC94"/><stop offset="1" stop-color="#085954"/></linearGradient><linearGradient id="fb" x1="31.331" x2="17.286" y1="33.448" y2="18.173" gradientUnits="userSpaceOnUse"><stop offset=".042" stop-color="#ABE88E"/><stop offset=".549" stop-color="#2AAA92"/><stop offset=".906" stop-color="#117865"/></linearGradient><linearGradient id="fd" x1="7.013" x2="42.589" y1="15.219" y2="15.219" gradientUnits="userSpaceOnUse"><stop offset=".043" stop-color="#25FFD4"/><stop offset=".874" stop-color="#55DDB9"/></linearGradient><linearGradient id="fg" x1="15.756" x2="16.168" y1="27.96" y2="15.74" gradientUnits="userSpaceOnUse"><stop offset=".205" stop-color="#063D3B" stop-opacity="0"/><stop offset=".872" stop-color="#063D3B" stop-opacity=".75"/></linearGradient></defs></svg></div><span class="logo-text">Microsoft Fabric</span></div>
+    <div class="badge bdg-blue"><div class="dot dot-blue"></div>Spark Streaming</div>
+  </div>
+  <div class="body">
+    <div class="crumb"><span class="tag tag-blue">PROCESS DATA</span><span>→</span><span>Process data by using Spark Structured Streaming</span></div>
+    <div class="h1">Spark Structured Streaming Code Pattern</div>
+    <div class="area">
+      <div class="g2">
+        <div style="display:flex;flex-direction:column;gap:16px;">
+          <div class="code" style="font-size:12px;">
+<span class="cc"># Read stream from Delta or Event Hub</span><br/>
+stream_df = spark.readStream \<br/>
+&nbsp;&nbsp;.<span class="cf">format</span>(<span class="cs2">"delta"</span>) \<br/>
+&nbsp;&nbsp;.<span class="cf">load</span>(<span class="cs2">"Files/bronze/sensor_data"</span>)<br/>
+<br/>
+<span class="cc"># Windowed aggregation</span><br/>
+<span class="ck">from</span> pyspark.sql.functions <span class="ck">import</span> window, col, avg<br/>
+agg_df = stream_df \<br/>
+&nbsp;&nbsp;.<span class="cf">withWatermark</span>(<span class="cs2">"event_time"</span>, <span class="cs2">"10 minutes"</span>) \<br/>
+&nbsp;&nbsp;.<span class="cf">groupBy</span>(<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="cf">window</span>(col(<span class="cs2">"event_time"</span>), <span class="cs2">"5 minutes"</span>),<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;col(<span class="cs2">"sensor_id"</span>)<br/>
+&nbsp;&nbsp;) \<br/>
+&nbsp;&nbsp;.<span class="cf">agg</span>(<span class="cf">avg</span>(<span class="cs2">"temp"</span>).<span class="cf">alias</span>(<span class="cs2">"avg_temp"</span>))<br/>
+<br/>
+<span class="cc"># Write stream to Delta sink</span><br/>
+query = agg_df.writeStream \<br/>
+&nbsp;&nbsp;.<span class="cf">format</span>(<span class="cs2">"delta"</span>) \<br/>
+&nbsp;&nbsp;.<span class="cf">outputMode</span>(<span class="cs2">"append"</span>) \<br/>
+&nbsp;&nbsp;.<span class="cf">option</span>(<span class="cs2">"checkpointLocation"</span>, <span class="cs2">"Files/chk"</span>) \<br/>
+&nbsp;&nbsp;.<span class="cf">table</span>(<span class="cs2">"silver.sensor_averages"</span>)
+          </div>
+        </div>
+        <div style="display:flex;flex-direction:column;gap:16px;">
+          <div class="card bl-blue" style="padding:20px;gap:10px;">
+            <div class="ct" style="font-size:16px;">⚙️ 3 Output Modes</div>
+            <ul class="bl bl-b" style="font-size:13px;gap:6px;">
+              <li><strong>Append:</strong> Only new rows written to sink (Default for Delta)</li>
+              <li><strong>Complete:</strong> Entire aggregated table rewritten every batch</li>
+              <li><strong>Update:</strong> Only updated rows written to sink</li>
+            </ul>
+          </div>
+          <div class="hb hb-blue">
+            <div class="hb-icon">📍</div>
+            <div class="hb-text"><strong>Checkpointing is Mandatory:</strong> Always provide <code style="font-size:11px;background:#eff6fc;padding:2px 4px;border-radius:2px;">checkpointLocation</code> for fault tolerance and exactly-once processing guarantees!</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+  <div class="ftr"><span>Authored by Sayan Banerjee • Microsoft Certified: Fabric Data Engineer Associate</span><span class="ftr-num">06 / 10</span></div>
+</div>
+
+<!-- SLIDE 07 — KQL PROCESS DATA -->
+<div class="slide">
+  <div class="topbar tb-teal"></div>
+  <div class="hdr">
+    <div class="logo"><div class="logo-icon"><svg xmlns="http://www.w3.org/2000/svg" width="40" height="40" viewBox="3.9997 3.9999 39.9994 40.0011"><path fill="url(#fa)" fill-rule="evenodd" d="m5.64 31.6-.586 2.144c-.218.685-.524 1.693-.689 2.59a5.63 5.63 0 0 0 4.638 7.588c.792.114 1.688.108 2.692-.04l4.613-.636a2.92 2.92 0 0 0 2.421-2.127l3.175-11.662L5.64 31.599Z" clip-rule="evenodd"/><path fill="url(#fb)" d="M10.14 32.152c-4.863.753-5.861 4.423-5.861 4.423l4.656-17.11 24.333-3.292-3.318 12.052a1.71 1.71 0 0 1-1.388 1.244l-.136.022-18.423 2.684z"/><path fill="url(#fd)" d="m12.899 21.235 26.938-3.98a1.6 1.6 0 0 0 1.323-1.17l2.78-10.06a1.595 1.595 0 0 0-1.74-2.012L16.498 7.81a7.19 7.19 0 0 0-5.777 5.193L7.013 26.438c.744-2.717 1.202-4.355 5.886-5.203"/><path fill="url(#fg)" d="M12.899 21.236c-3.901.706-4.87 1.962-5.514 3.932L4.279 36.577s.992-3.633 5.796-4.41l18.352-2.673.136-.022a1.71 1.71 0 0 0 1.388-1.244l2.73-9.915z"/><defs><linearGradient id="fa" x1="12.953" x2="12.953" y1="44.001" y2="29.457" gradientUnits="userSpaceOnUse"><stop offset=".056" stop-color="#2AAC94"/><stop offset="1" stop-color="#085954"/></linearGradient><linearGradient id="fb" x1="31.331" x2="17.286" y1="33.448" y2="18.173" gradientUnits="userSpaceOnUse"><stop offset=".042" stop-color="#ABE88E"/><stop offset=".549" stop-color="#2AAA92"/><stop offset=".906" stop-color="#117865"/></linearGradient><linearGradient id="fd" x1="7.013" x2="42.589" y1="15.219" y2="15.219" gradientUnits="userSpaceOnUse"><stop offset=".043" stop-color="#25FFD4"/><stop offset=".874" stop-color="#55DDB9"/></linearGradient><linearGradient id="fg" x1="15.756" x2="16.168" y1="27.96" y2="15.74" gradientUnits="userSpaceOnUse"><stop offset=".205" stop-color="#063D3B" stop-opacity="0"/><stop offset=".872" stop-color="#063D3B" stop-opacity=".75"/></linearGradient></defs></svg></div><span class="logo-text">Microsoft Fabric</span></div>
+    <div class="badge bdg-teal"><div class="dot dot-teal"></div>KQL Analytics</div>
+  </div>
+  <div class="body">
+    <div class="crumb"><span class="tag tag-teal">PROCESS DATA</span><span>→</span><span>Process data by using KQL (Kusto Query Language)</span></div>
+    <div class="h1">KQL Streaming &amp; Transformation Patterns</div>
+    <div class="area">
+      <div class="g2">
+        <div style="display:flex;flex-direction:column;gap:16px;">
+          <div class="card-title" style="font-size:18px;">🔎 KQL In-Stream Transformation (Update Policy)</div>
+          <div class="code" style="font-size:11px;">
+<span class="cc">// Define update policy function</span><br/>
+.<span class="ck">create-or-alter function</span> TransformTelemetry() {<br/>
+&nbsp;&nbsp;RawTelemetry<br/>
+&nbsp;&nbsp;| <span class="ck">where</span> Status == <span class="cs2">"ERROR"</span><br/>
+&nbsp;&nbsp;| <span class="ck">project</span> Timestamp, DeviceID, ErrorMessage<br/>
+}<br/>
+<br/>
+<span class="cc">// Attach policy to target table</span><br/>
+.<span class="ck">alter table</span> ErrorTelemetry <span class="ck">policy update</span><br/>
+@<span class="cs2">'[{"IsEnabled": true, "Source": "RawTelemetry", "Query": "TransformTelemetry()", "IsTransactional": true}]'</span>
+          </div>
+        </div>
+        <div style="display:flex;flex-direction:column;gap:16px;">
+          <div class="card bl-teal" style="padding:20px;gap:10px;">
+            <div class="ct" style="font-size:16px;">⚡ KQL Windowing Query (<code style="font-size:14px;">bin()</code>)</div>
+            <div class="code" style="font-size:11px;">
+RawTelemetry<br/>
+| <span class="ck">where</span> Timestamp &gt; <span class="cf">ago</span>(1h)<br/>
+| <span class="ck">summarize</span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;AvgTemp = <span class="cf">avg</span>(Temperature),<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;MaxTemp = <span class="cf">max</span>(Temperature)<br/>
+&nbsp;&nbsp;<span class="ck">by</span> DeviceID, <span class="cf">bin</span>(Timestamp, 5m)
+            </div>
+          </div>
+          <div class="hb hb-teal">
+            <div class="hb-icon">💡</div>
+            <div class="hb-text"><strong>Update Policies:</strong> In KQL, Update Policies transform data automatically as it is ingested into raw tables, writing results to target tables seamlessly!</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+  <div class="ftr"><span>Authored by Sayan Banerjee • Microsoft Certified: Fabric Data Engineer Associate</span><span class="ftr-num">07 / 10</span></div>
+</div>
+
+<!-- SLIDE 08 — EXAM TRAPS -->
+<div class="slide">
+  <div class="topbar tb-gold"></div>
+  <div class="hdr">
+    <div class="logo"><div class="logo-icon"><svg xmlns="http://www.w3.org/2000/svg" width="40" height="40" viewBox="3.9997 3.9999 39.9994 40.0011"><path fill="url(#fa)" fill-rule="evenodd" d="m5.64 31.6-.586 2.144c-.218.685-.524 1.693-.689 2.59a5.63 5.63 0 0 0 4.638 7.588c.792.114 1.688.108 2.692-.04l4.613-.636a2.92 2.92 0 0 0 2.421-2.127l3.175-11.662L5.64 31.599Z" clip-rule="evenodd"/><path fill="url(#fb)" d="M10.14 32.152c-4.863.753-5.861 4.423-5.861 4.423l4.656-17.11 24.333-3.292-3.318 12.052a1.71 1.71 0 0 1-1.388 1.244l-.136.022-18.423 2.684z"/><path fill="url(#fd)" d="m12.899 21.235 26.938-3.98a1.6 1.6 0 0 0 1.323-1.17l2.78-10.06a1.595 1.595 0 0 0-1.74-2.012L16.498 7.81a7.19 7.19 0 0 0-5.777 5.193L7.013 26.438c.744-2.717 1.202-4.355 5.886-5.203"/><path fill="url(#fg)" d="M12.899 21.236c-3.901.706-4.87 1.962-5.514 3.932L4.279 36.577s.992-3.633 5.796-4.41l18.352-2.673.136-.022a1.71 1.71 0 0 0 1.388-1.244l2.73-9.915z"/><defs><linearGradient id="fa" x1="12.953" x2="12.953" y1="44.001" y2="29.457" gradientUnits="userSpaceOnUse"><stop offset=".056" stop-color="#2AAC94"/><stop offset="1" stop-color="#085954"/></linearGradient><linearGradient id="fb" x1="31.331" x2="17.286" y1="33.448" y2="18.173" gradientUnits="userSpaceOnUse"><stop offset=".042" stop-color="#ABE88E"/><stop offset=".549" stop-color="#2AAA92"/><stop offset=".906" stop-color="#117865"/></linearGradient><linearGradient id="fd" x1="7.013" x2="42.589" y1="15.219" y2="15.219" gradientUnits="userSpaceOnUse"><stop offset=".043" stop-color="#25FFD4"/><stop offset=".874" stop-color="#55DDB9"/></linearGradient><linearGradient id="fg" x1="15.756" x2="16.168" y1="27.96" y2="15.74" gradientUnits="userSpaceOnUse"><stop offset=".205" stop-color="#063D3B" stop-opacity="0"/><stop offset=".872" stop-color="#063D3B" stop-opacity=".75"/></linearGradient></defs></svg></div><span class="logo-text">Microsoft Fabric</span></div>
+    <div class="badge bdg-gold"><div class="dot dot-gold"></div>Exam Traps</div>
+  </div>
+  <div class="body">
+    <div class="crumb"><span class="tag tag-gold">DP-700 CAUTION</span><span>→</span><span>Streaming &amp; RTI questions that trick candidates</span></div>
+    <div class="h1">Top 4 Streaming Exam Traps ⚠️</div>
+    <div class="area">
+      <div class="g2">
+        <div style="display:flex;flex-direction:column;gap:16px;">
+          <div class="hb hb-red">
+            <div class="hb-icon">🚫</div>
+            <div class="hb-text"><strong>Trap 1: "Eventstreams requires a Data Pipeline"</strong> ❌ WRONG. Eventstreams is a standalone Fabric item that ingests, transforms, and outputs directly to Lakehouses or KQL DBs without pipelines.</div>
+          </div>
+          <div class="hb hb-red">
+            <div class="hb-icon">🚫</div>
+            <div class="hb-text"><strong>Trap 2: "Tumbling window has overlapping steps"</strong> ❌ WRONG. Tumbling windows are fixed AND non-overlapping. Hopping windows have overlapping steps (hop interval).</div>
+          </div>
+        </div>
+        <div style="display:flex;flex-direction:column;gap:16px;">
+          <div class="hb hb-red">
+            <div class="hb-icon">🚫</div>
+            <div class="hb-text"><strong>Trap 3: "Querying OneLake Delta via KQL duplicates data"</strong> ❌ WRONG. OneLake Shortcuts in KQL Database point directly to external Delta Parquet files without copying data.</div>
+          </div>
+          <div class="hb hb-red">
+            <div class="hb-icon">🚫</div>
+            <div class="hb-text"><strong>Trap 4: "Spark Streaming doesn't need checkpointing"</strong> ❌ WRONG. Checkpoint location is mandatory in Spark Streaming for fault recovery and state tracking.</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+  <div class="ftr"><span>Authored by Sayan Banerjee • Microsoft Certified: Fabric Data Engineer Associate</span><span class="ftr-num">08 / 10</span></div>
+</div>
+
+<!-- SLIDE 09 — STREAMING CHEAT SHEET -->
+<div class="slide">
+  <div class="topbar tb-teal"></div>
+  <div class="hdr">
+    <div class="logo"><div class="logo-icon"><svg xmlns="http://www.w3.org/2000/svg" width="40" height="40" viewBox="3.9997 3.9999 39.9994 40.0011"><path fill="url(#fa)" fill-rule="evenodd" d="m5.64 31.6-.586 2.144c-.218.685-.524 1.693-.689 2.59a5.63 5.63 0 0 0 4.638 7.588c.792.114 1.688.108 2.692-.04l4.613-.636a2.92 2.92 0 0 0 2.421-2.127l3.175-11.662L5.64 31.599Z" clip-rule="evenodd"/><path fill="url(#fb)" d="M10.14 32.152c-4.863.753-5.861 4.423-5.861 4.423l4.656-17.11 24.333-3.292-3.318 12.052a1.71 1.71 0 0 1-1.388 1.244l-.136.022-18.423 2.684z"/><path fill="url(#fd)" d="m12.899 21.235 26.938-3.98a1.6 1.6 0 0 0 1.323-1.17l2.78-10.06a1.595 1.595 0 0 0-1.74-2.012L16.498 7.81a7.19 7.19 0 0 0-5.777 5.193L7.013 26.438c.744-2.717 1.202-4.355 5.886-5.203"/><path fill="url(#fg)" d="M12.899 21.236c-3.901.706-4.87 1.962-5.514 3.932L4.279 36.577s.992-3.633 5.796-4.41l18.352-2.673.136-.022a1.71 1.71 0 0 0 1.388-1.244l2.73-9.915z"/><defs><linearGradient id="fa" x1="12.953" x2="12.953" y1="44.001" y2="29.457" gradientUnits="userSpaceOnUse"><stop offset=".056" stop-color="#2AAC94"/><stop offset="1" stop-color="#085954"/></linearGradient><linearGradient id="fb" x1="31.331" x2="17.286" y1="33.448" y2="18.173" gradientUnits="userSpaceOnUse"><stop offset=".042" stop-color="#ABE88E"/><stop offset=".549" stop-color="#2AAA92"/><stop offset=".906" stop-color="#117865"/></linearGradient><linearGradient id="fd" x1="7.013" x2="42.589" y1="15.219" y2="15.219" gradientUnits="userSpaceOnUse"><stop offset=".043" stop-color="#25FFD4"/><stop offset=".874" stop-color="#55DDB9"/></linearGradient><linearGradient id="fg" x1="15.756" x2="16.168" y1="27.96" y2="15.74" gradientUnits="userSpaceOnUse"><stop offset=".205" stop-color="#063D3B" stop-opacity="0"/><stop offset=".872" stop-color="#063D3B" stop-opacity=".75"/></linearGradient></defs></svg></div><span class="logo-text">Microsoft Fabric</span></div>
+    <div class="badge bdg-teal"><div class="dot dot-teal"></div>Decision Matrix</div>
+  </div>
+  <div class="body">
+    <div class="crumb"><span class="tag tag-teal">QUICK REFERENCE</span><span>→</span><span>Day 06 cheat sheet — save this slide</span></div>
+    <div class="h1">Streaming Decision Cheat Sheet</div>
+    <div class="area">
+      <div class="tw th-teal">
+        <table>
+          <thead><tr><th>Exam Scenario</th><th>Best Choice</th><th>Why</th></tr></thead>
+          <tbody>
+            <tr><td>Ingest IoT telemetry without code &amp; output to Lakehouse</td><td><span class="c-orange">Fabric Eventstream</span></td><td>No-code, UI drag &amp; drop routing directly to Lakehouse</td></tr>
+            <tr><td>Sub-second interactive queries over billions of log rows</td><td><span class="c-teal">KQL Database (Native Table)</span></td><td>SSD Hot Cache &amp; automatic KQL indexing</td></tr>
+            <tr><td>Query OneLake Delta historical data in KQL at high speed</td><td><span class="c-gold">Shortcut + Query Acceleration</span></td><td>Index cache over OneLake Parquet without copying data</td></tr>
+            <tr><td>10-minute aggregation window that moves forward every 2 mins</td><td><span class="c-blue">Hopping Window</span></td><td>Fixed duration with smaller hop step (overlapping)</td></tr>
+            <tr><td>Fixed 5-minute non-overlapping analytics window</td><td><span class="c-teal">Tumbling Window</span></td><td>Fixed time blocks with no overlap</td></tr>
+            <tr><td>Transform streaming data automatically on KQL ingestion</td><td><span class="c-teal">KQL Update Policy</span></td><td>Fires functions on raw table write and outputs to target</td></tr>
+            <tr><td>Complex PySpark stream-stream joins with ACID guarantees</td><td><span class="c-blue">Spark Structured Streaming</span></td><td>Stateful PySpark micro-batch engine on Delta Lake</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+  <div class="ftr"><span>📌 Save this slide for your DP-700 exam prep</span><span class="ftr-num">09 / 10</span></div>
+</div>
+
+<!-- SLIDE 10 — CTA -->
+<div class="slide">
+  <div class="topbar tb-grad"></div>
+  <div class="hdr">
+    <div class="logo"><div class="logo-icon"><svg xmlns="http://www.w3.org/2000/svg" width="40" height="40" viewBox="3.9997 3.9999 39.9994 40.0011"><path fill="url(#fa)" fill-rule="evenodd" d="m5.64 31.6-.586 2.144c-.218.685-.524 1.693-.689 2.59a5.63 5.63 0 0 0 4.638 7.588c.792.114 1.688.108 2.692-.04l4.613-.636a2.92 2.92 0 0 0 2.421-2.127l3.175-11.662L5.64 31.599Z" clip-rule="evenodd"/><path fill="url(#fb)" d="M10.14 32.152c-4.863.753-5.861 4.423-5.861 4.423l4.656-17.11 24.333-3.292-3.318 12.052a1.71 1.71 0 0 1-1.388 1.244l-.136.022-18.423 2.684z"/><path fill="url(#fd)" d="m12.899 21.235 26.938-3.98a1.6 1.6 0 0 0 1.323-1.17l2.78-10.06a1.595 1.595 0 0 0-1.74-2.012L16.498 7.81a7.19 7.19 0 0 0-5.777 5.193L7.013 26.438c.744-2.717 1.202-4.355 5.886-5.203"/><path fill="url(#fg)" d="M12.899 21.236c-3.901.706-4.87 1.962-5.514 3.932L4.279 36.577s.992-3.633 5.796-4.41l18.352-2.673.136-.022a1.71 1.71 0 0 0 1.388-1.244l2.73-9.915z"/><defs><linearGradient id="fa" x1="12.953" x2="12.953" y1="44.001" y2="29.457" gradientUnits="userSpaceOnUse"><stop offset=".056" stop-color="#2AAC94"/><stop offset="1" stop-color="#085954"/></linearGradient><linearGradient id="fb" x1="31.331" x2="17.286" y1="33.448" y2="18.173" gradientUnits="userSpaceOnUse"><stop offset=".042" stop-color="#ABE88E"/><stop offset=".549" stop-color="#2AAA92"/><stop offset=".906" stop-color="#117865"/></linearGradient><linearGradient id="fd" x1="7.013" x2="42.589" y1="15.219" y2="15.219" gradientUnits="userSpaceOnUse"><stop offset=".043" stop-color="#25FFD4"/><stop offset=".874" stop-color="#55DDB9"/></linearGradient><linearGradient id="fg" x1="15.756" x2="16.168" y1="27.96" y2="15.74" gradientUnits="userSpaceOnUse"><stop offset=".205" stop-color="#063D3B" stop-opacity="0"/><stop offset=".872" stop-color="#063D3B" stop-opacity=".75"/></linearGradient></defs></svg></div><span class="logo-text">Microsoft Fabric</span></div>
+    <div class="badge bdg-teal"><div class="dot dot-teal"></div>Join the Challenge</div>
+  </div>
+  <div class="cta-body">
+    <div class="cta-icon">⚡</div>
+    <div class="cta-h">Real-Time Intelligence Mastered.<br/>Streaming Data for DP-700 Complete.</div>
+    <div class="cta-s">Eventstreams · KQL DB · Spark Streaming · Windowing Functions · Query Acceleration — you now know the entire streaming spectrum.</div>
+    <div class="cta-next">🔔 Day 07 Tomorrow: Transform Data with PySpark &amp; Delta Lake Deep Dive</div>
+    <div class="cta-author">
+      <strong>Sayan Banerjee</strong> • AI, BI &amp; Analytics Consultant<br/>
+      Microsoft Certified: Fabric Data Engineer Associate (DP-700)
+    </div>
+  </div>
+  <div class="ftr"><span>#MicrosoftFabric #DP700 #DataEngineering #RealTimeIntelligence #Eventstreams #KQL</span><span class="ftr-num">10 / 10</span></div>
+</div>
+
+</body>
+</html>

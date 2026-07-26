@@ -1,0 +1,272 @@
+===============================================================
+Infrastructure Assessment Notes
+Customer: ABC Manufacturing Pvt. Ltd.
+Prepared By: Data Platform Consulting Team
+Assessment Date: July 2026
+===============================================================
+
+Business Overview
+
+ABC Manufacturing is planning to modernize its reporting platform and evaluate Microsoft Fabric and Azure Databricks.
+
+The company currently relies on SQL Server, Power BI, and Excel-based reporting.
+
+------------------------------------------------------------
+
+Business Applications
+
+• Microsoft Dynamics 365
+• SQL Server ERP
+• SharePoint Online
+• REST APIs
+• Excel Uploads
+
+------------------------------------------------------------
+
+Current Data Estate
+
+SQL Server Databases
+
+5
+
+Schemas
+
+18
+
+Business Tables
+
+248
+
+Views
+
+84
+
+Stored Procedures
+
+42
+
+------------------------------------------------------------
+
+Daily Processing
+
+Daily data processed
+
+105 GB
+
+Current warehouse size
+
+2.4 TB
+
+Expected annual growth
+
+20%
+
+------------------------------------------------------------
+
+Files Processed
+
+Excel
+
+28 files/day
+
+CSV
+
+42 files/day
+
+JSON
+
+12 files/day
+
+XML
+
+3 files/day
+
+Largest file
+
+850 MB
+
+Average file
+
+120 MB
+
+------------------------------------------------------------
+
+Data Engineering
+
+ETL Pipelines
+
+12
+
+Azure Data Factory Pipelines
+
+8
+
+Spark Notebooks
+
+4
+
+SQL Jobs
+
+18
+
+Stored Procedures
+
+42
+
+Batch Schedule
+
+Hourly
+
+------------------------------------------------------------
+
+Power BI Environment
+
+Reports
+
+26
+
+Dashboards
+
+8
+
+Semantic Models
+
+6
+
+Concurrent report users
+
+85
+
+Daily active users
+
+240
+
+Refresh Schedule
+
+Every 2 hours
+
+Incremental Refresh
+
+Enabled
+
+------------------------------------------------------------
+
+Machine Learning
+
+Current ML Usage
+
+None
+
+Python Developers
+
+1
+
+Data Scientists
+
+0
+
+GPU Workloads
+
+No
+
+------------------------------------------------------------
+
+Storage
+
+Bronze Layer
+
+900 GB
+
+Silver Layer
+
+450 GB
+
+Gold Layer
+
+180 GB
+
+Retention Policy
+
+5 Years
+
+------------------------------------------------------------
+
+Current Team
+
+SQL Developers
+
+4
+
+Power BI Developers
+
+3
+
+Data Engineers
+
+2
+
+Python Developers
+
+1
+
+Primary Skills
+
+SQL Server
+Power BI
+Azure Data Factory
+
+------------------------------------------------------------
+
+Migration Inventory
+
+Power BI Reports
+
+26
+
+Stored Procedures
+
+42
+
+Excel Reports
+
+18
+
+SQL Scripts
+
+96
+
+------------------------------------------------------------
+
+Business Requirements
+
+Target SLA
+
+99.9%
+
+Maximum dashboard refresh
+
+60 minutes
+
+Primary Goal
+
+Reduce reporting time and simplify platform management.
+
+Future AI Plans
+
+None in the next 2 years.
+
+Expected data growth
+
+100 GB/day today to approximately 250 GB/day within 3 years.
+
+------------------------------------------------------------
+
+Assessment Request
+
+Compare Microsoft Fabric and Azure Databricks for:
+
+• Estimated monthly cost
+• Recommended platform
+• Migration complexity
+• Operational overhead
+• Future scalability

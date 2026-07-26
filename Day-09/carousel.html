@@ -1,0 +1,484 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<title>Day 09 — Configure Security &amp; Governance | DP-700</title>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet"/>
+<style>
+  *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+  :root{
+    --teal:#0E7C7B;--teal-d:#085954;--teal-l:#E6F4F3;
+    --blue:#0078D4;--blue-l:#EFF6FC;
+    --gold:#C47F17;--gold-l:#FDF6E3;
+    --purple:#7719AA;--purple-l:#F3E8FC;
+    --orange:#CA5010;--orange-l:#FFF2EC;
+    --red:#C50F1F;--red-l:#FDE7E9;
+    --green:#107C10;--green-l:#DFF6DD;
+    --surf:#FFFFFF;--bg:#F8F9FA;
+    --bdr:#E5E7EB;--bdr-m:#D0D5DD;
+    --tx1:#111827;--tx2:#4B5563;--txm:#9CA3AF;
+  }
+  body{font-family:'Inter','Segoe UI',sans-serif;background:#f0f2f5}
+
+  .slide{width:1920px;height:1080px;background:var(--surf);display:flex;flex-direction:column;overflow:hidden;position:relative;border:1px solid var(--bdr);margin-bottom:32px}
+  .topbar{height:8px;flex-shrink:0}
+  .tb-teal{background:var(--teal)} .tb-blue{background:var(--blue)} .tb-gold{background:var(--gold)}
+  .tb-purple{background:var(--purple)} .tb-orange{background:var(--orange)}
+  .tb-grad{background:linear-gradient(90deg,var(--teal),var(--purple),var(--orange))}
+
+  .hdr{display:flex;align-items:center;justify-content:space-between;padding:18px 64px;border-bottom:1px solid var(--bdr);flex-shrink:0}
+  .logo{display:flex;align-items:center;gap:12px}
+  .logo-icon{width:40px;height:40px;flex-shrink:0}
+  .logo-text{font-size:22px;font-weight:700;color:var(--tx1)}
+  .badge{display:inline-flex;align-items:center;gap:8px;border-radius:4px;padding:6px 18px;font-size:13px;font-weight:600}
+  .bdg-teal{background:var(--teal-l);border:1px solid var(--teal);color:var(--teal-d)}
+  .bdg-blue{background:var(--blue-l);border:1px solid var(--blue);color:var(--blue)}
+  .bdg-gold{background:var(--gold-l);border:1px solid var(--gold);color:var(--gold)}
+  .bdg-orange{background:var(--orange-l);border:1px solid var(--orange);color:var(--orange)}
+  .bdg-purple{background:var(--purple-l);border:1px solid var(--purple);color:var(--purple)}
+  .dot{width:8px;height:8px;border-radius:50%}
+  .dot-teal{background:var(--teal)} .dot-blue{background:var(--blue)} .dot-gold{background:var(--gold)} .dot-orange{background:var(--orange)} .dot-purple{background:var(--purple)}
+
+  .body{display:flex;flex-direction:column;flex:1;padding:36px 64px 0;overflow:hidden}
+  .crumb{display:flex;align-items:center;gap:8px;font-size:14px;color:var(--tx2);margin-bottom:18px}
+  .tag{padding:3px 10px;border-radius:3px;font-size:12px;font-weight:700}
+  .tag-teal{background:var(--teal-l);color:var(--teal-d)} .tag-blue{background:var(--blue-l);color:var(--blue)}
+  .tag-gold{background:var(--gold-l);color:var(--gold)} .tag-orange{background:var(--orange-l);color:var(--orange)} .tag-purple{background:var(--purple-l);color:var(--purple)}
+  .h1{font-size:42px;font-weight:800;color:var(--tx1);letter-spacing:-.5px;line-height:1.15;margin-bottom:12px}
+  .sub{font-size:20px;color:var(--tx2);font-weight:400;line-height:1.4;margin-bottom:28px}
+  .area{flex:1;display:flex;gap:28px;overflow:hidden}
+  .g2{display:grid;grid-template-columns:1fr 1fr;gap:28px;width:100%}
+  .g3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:24px;width:100%}
+  .g4{display:grid;grid-template-columns:1fr 1fr 1fr 1fr;gap:20px;width:100%}
+
+  .card{background:var(--surf);border:1px solid var(--bdr);border-radius:6px;padding:26px;display:flex;flex-direction:column;gap:14px;box-shadow:0 2px 6px rgba(0,0,0,.03)}
+  .bl-teal{border-left:5px solid var(--teal)} .bl-blue{border-left:5px solid var(--blue)}
+  .bl-gold{border-left:5px solid var(--gold)} .bl-purple{border-left:5px solid var(--purple)}
+  .bl-orange{border-left:5px solid var(--orange)} .bl-red{border-left:5px solid var(--red)}
+  .bl-green{border-left:5px solid var(--green)}
+  .ct{font-size:19px;font-weight:700;color:var(--tx1);display:flex;align-items:center;gap:10px}
+  .cs{font-size:12px;font-weight:700;color:var(--tx2);text-transform:uppercase;letter-spacing:.5px}
+  .cx{font-size:15px;color:var(--tx2);line-height:1.6}
+
+  .tw{width:100%;overflow:hidden;border-radius:6px;border:1px solid var(--bdr)}
+  table{width:100%;border-collapse:collapse;font-size:14px}
+  thead{color:#fff}
+  .th-teal thead{background:var(--teal)} .th-blue thead{background:var(--blue)}
+  .th-gold thead{background:#B8690F} .th-orange thead{background:var(--orange)} .th-purple thead{background:var(--purple)}
+  th{padding:13px 18px;font-weight:700;text-align:left;font-size:13px}
+  td{padding:12px 18px;border-bottom:1px solid var(--bdr);color:var(--tx1);font-size:13px}
+  tr:last-child td{border-bottom:none} tr:nth-child(even) td{background:var(--bg)}
+  .c-teal{color:var(--teal);font-weight:600} .c-blue{color:var(--blue);font-weight:600}
+  .c-gold{color:var(--gold);font-weight:600} .c-orange{color:var(--orange);font-weight:600} .c-purple{color:var(--purple);font-weight:600}
+  .c-green{color:var(--green);font-weight:700} .c-red{color:var(--red);font-weight:700}
+
+  .bl{list-style:none;display:flex;flex-direction:column;gap:9px}
+  .bl li{display:flex;align-items:flex-start;gap:10px;font-size:15px;color:var(--tx2);line-height:1.5}
+  .bl li::before{content:'▸';font-weight:700;flex-shrink:0;margin-top:1px}
+  .bl-t li::before{color:var(--teal)} .bl-b li::before{color:var(--blue)}
+  .bl-g li::before{color:var(--gold)} .bl-o li::before{color:var(--orange)} .bl-p li::before{color:var(--purple)}
+
+  .hb{border-radius:6px;padding:18px 22px;display:flex;gap:14px;align-items:flex-start}
+  .hb-teal{background:var(--teal-l);border-left:5px solid var(--teal)}
+  .hb-blue{background:var(--blue-l);border-left:5px solid var(--blue)}
+  .hb-gold{background:var(--gold-l);border-left:5px solid var(--gold)}
+  .hb-orange{background:var(--orange-l);border-left:5px solid var(--orange)}
+  .hb-red{background:var(--red-l);border-left:5px solid var(--red)}
+  .hb-icon{font-size:22px;line-height:1;flex-shrink:0}
+  .hb-text{font-size:14px;color:var(--tx1);line-height:1.6}
+  .hb-text strong{display:block;margin-bottom:3px;font-size:15px}
+
+  .code{background:#1E1E1E;border-radius:6px;padding:18px 22px;font-family:'Consolas','Monaco',monospace;font-size:12px;color:#D4D4D4;line-height:1.65;overflow:hidden}
+  .cc{color:#6A9955} .ck{color:#569CD6} .cs2{color:#CE9178} .cf{color:#DCDCAA} .cv{color:#9CDCFE}
+
+  .pill{display:inline-block;padding:4px 12px;border-radius:20px;font-size:11px;font-weight:700}
+  .p-teal{background:var(--teal-l);color:var(--teal-d)} .p-blue{background:var(--blue-l);color:var(--blue)}
+  .p-gold{background:var(--gold-l);color:var(--gold)} .p-green{background:var(--green-l);color:var(--green)}
+  .p-orange{background:var(--orange-l);color:var(--orange)}
+
+  .ftr{padding:13px 64px;border-top:1px solid var(--bdr);display:flex;align-items:center;justify-content:space-between;font-size:13px;color:var(--txm);flex-shrink:0}
+  .ftr-num{font-size:14px;font-weight:700;color:var(--tx2)}
+
+  .cover-body{flex:1;display:flex;flex-direction:column;justify-content:center;padding:64px 120px;background:linear-gradient(135deg,#F0FAF9 0%,#EFF6FC 50%,#FFFBF0 100%);position:relative}
+  .day-tag{display:inline-flex;align-items:center;gap:8px;background:#fff;border:2px solid var(--teal);border-radius:24px;padding:8px 20px;font-size:14px;font-weight:700;color:var(--teal-d);margin-bottom:28px;width:fit-content}
+  .cover-h{font-size:66px;font-weight:800;color:var(--tx1);letter-spacing:-2px;line-height:1.05;margin-bottom:22px}
+  .cover-h span{color:var(--teal)}
+  .cover-s{font-size:22px;color:var(--tx2);font-weight:400;line-height:1.5;margin-bottom:36px;max-width:900px}
+  .topics{display:flex;flex-wrap:wrap;gap:12px}
+  .topic{background:#fff;border:1px solid var(--bdr);border-radius:6px;padding:10px 18px;font-size:14px;font-weight:600;color:var(--tx2)}
+
+  .cta-body{flex:1;display:flex;flex-direction:column;justify-content:center;align-items:center;padding:64px;background:linear-gradient(135deg,#F0FAF9 0%,#EFF6FC 50%,#FFFBF0 100%);text-align:center;gap:26px}
+  .cta-icon{font-size:60px}
+  .cta-h{font-size:48px;font-weight:800;color:var(--tx1);letter-spacing:-1px}
+  .cta-s{font-size:20px;color:var(--tx2);max-width:900px;line-height:1.5}
+  .cta-next{background:var(--teal);color:#fff;border-radius:8px;padding:16px 36px;font-size:17px;font-weight:700;display:inline-block}
+  .cta-author{font-size:15px;color:var(--tx2)}
+  .cta-author strong{color:var(--tx1);font-weight:700}
+</style>
+</head>
+<body>
+
+<!-- SLIDE 01 — COVER -->
+<div class="slide">
+  <div class="topbar tb-grad"></div>
+  <div class="hdr">
+    <div class="logo">
+      <div class="logo-icon"><svg xmlns="http://www.w3.org/2000/svg" width="40" height="40" viewBox="3.9997 3.9999 39.9994 40.0011"><path fill="url(#fa)" fill-rule="evenodd" d="m5.64 31.6-.586 2.144c-.218.685-.524 1.693-.689 2.59a5.63 5.63 0 0 0 4.638 7.588c.792.114 1.688.108 2.692-.04l4.613-.636a2.92 2.92 0 0 0 2.421-2.127l3.175-11.662L5.64 31.599Z" clip-rule="evenodd"/><path fill="url(#fb)" d="M10.14 32.152c-4.863.753-5.861 4.423-5.861 4.423l4.656-17.11 24.333-3.292-3.318 12.052a1.71 1.71 0 0 1-1.388 1.244l-.136.022-18.423 2.684z"/><path fill="url(#fd)" d="m12.899 21.235 26.938-3.98a1.6 1.6 0 0 0 1.323-1.17l2.78-10.06a1.595 1.595 0 0 0-1.74-2.012L16.498 7.81a7.19 7.19 0 0 0-5.777 5.193L7.013 26.438c.744-2.717 1.202-4.355 5.886-5.203"/><path fill="url(#fg)" d="M12.899 21.236c-3.901.706-4.87 1.962-5.514 3.932L4.279 36.577s.992-3.633 5.796-4.41l18.352-2.673.136-.022a1.71 1.71 0 0 0 1.388-1.244l2.73-9.915z"/><defs><linearGradient id="fa" x1="12.953" x2="12.953" y1="44.001" y2="29.457" gradientUnits="userSpaceOnUse"><stop offset=".056" stop-color="#2AAC94"/><stop offset="1" stop-color="#085954"/></linearGradient><linearGradient id="fb" x1="31.331" x2="17.286" y1="33.448" y2="18.173" gradientUnits="userSpaceOnUse"><stop offset=".042" stop-color="#ABE88E"/><stop offset=".549" stop-color="#2AAA92"/><stop offset=".906" stop-color="#117865"/></linearGradient><linearGradient id="fd" x1="7.013" x2="42.589" y1="15.219" y2="15.219" gradientUnits="userSpaceOnUse"><stop offset=".043" stop-color="#25FFD4"/><stop offset=".874" stop-color="#55DDB9"/></linearGradient><linearGradient id="fg" x1="15.756" x2="16.168" y1="27.96" y2="15.74" gradientUnits="userSpaceOnUse"><stop offset=".205" stop-color="#063D3B" stop-opacity="0"/><stop offset=".872" stop-color="#063D3B" stop-opacity=".75"/></linearGradient></defs></svg></div>
+      <span class="logo-text">Microsoft Fabric</span>
+    </div>
+    <div class="badge bdg-teal"><div class="dot dot-teal"></div>DP-700 Certification Challenge</div>
+  </div>
+  <div class="cover-body">
+    <div class="day-tag">🗓️ DAY 09 OF 30</div>
+    <div class="cover-h">Fabric Security &amp;<br/><span>Access Control Architectures</span></div>
+    <div class="cover-s">Master workspace-level roles, row-level (RLS), column-level (CLS), dynamic data masking (DDM), and OneLake folder access controls</div>
+    <div class="topics">
+      <div class="topic">👥 Workspace Role Privileges</div>
+      <div class="topic">🔒 SQL Endpoint RLS &amp; CLS</div>
+      <div class="topic">🎭 Dynamic Data Masking</div>
+      <div class="topic">📁 OneLake Data Access Roles</div>
+      <div class="topic">🏷️ Sensitivity Labels &amp; Endorsement</div>
+      <div class="topic">🎯 3 Practice Questions</div>
+    </div>
+  </div>
+  <div class="ftr"><span>Authored by Sayan Banerjee • AI &amp; BI Advisor</span><span class="ftr-num">01 / 10</span></div>
+</div>
+
+<!-- SLIDE 02 — WORKSPACE ROLES -->
+<div class="slide">
+  <div class="topbar tb-teal"></div>
+  <div class="hdr">
+    <div class="logo"><div class="logo-icon"><svg xmlns="http://www.w3.org/2000/svg" width="40" height="40" viewBox="3.9997 3.9999 39.9994 40.0011"><path fill="url(#fa)" fill-rule="evenodd" d="m5.64 31.6-.586 2.144c-.218.685-.524 1.693-.689 2.59a5.63 5.63 0 0 0 4.638 7.588c.792.114 1.688.108 2.692-.04l4.613-.636a2.92 2.92 0 0 0 2.421-2.127l3.175-11.662L5.64 31.599Z" clip-rule="evenodd"/><path fill="url(#fb)" d="M10.14 32.152c-4.863.753-5.861 4.423-5.861 4.423l4.656-17.11 24.333-3.292-3.318 12.052a1.71 1.71 0 0 1-1.388 1.244l-.136.022-18.423 2.684z"/><path fill="url(#fd)" d="m12.899 21.235 26.938-3.98a1.6 1.6 0 0 0 1.323-1.17l2.78-10.06a1.595 1.595 0 0 0-1.74-2.012L16.498 7.81a7.19 7.19 0 0 0-5.777 5.193L7.013 26.438c.744-2.717 1.202-4.355 5.886-5.203"/><path fill="url(#fg)" d="M12.899 21.236c-3.901.706-4.87 1.962-5.514 3.932L4.279 36.577s.992-3.633 5.796-4.41l18.352-2.673.136-.022a1.71 1.71 0 0 0 1.388-1.244l2.73-9.915z"/><defs><linearGradient id="fa" x1="12.953" x2="12.953" y1="44.001" y2="29.457" gradientUnits="userSpaceOnUse"><stop offset=".056" stop-color="#2AAC94"/><stop offset="1" stop-color="#085954"/></linearGradient><linearGradient id="fb" x1="31.331" x2="17.286" y1="33.448" y2="18.173" gradientUnits="userSpaceOnUse"><stop offset=".042" stop-color="#ABE88E"/><stop offset=".549" stop-color="#2AAA92"/><stop offset=".906" stop-color="#117865"/></linearGradient><linearGradient id="fd" x1="7.013" x2="42.589" y1="15.219" y2="15.219" gradientUnits="userSpaceOnUse"><stop offset=".043" stop-color="#25FFD4"/><stop offset=".874" stop-color="#55DDB9"/></linearGradient><linearGradient id="fg" x1="15.756" x2="16.168" y1="27.96" y2="15.74" gradientUnits="userSpaceOnUse"><stop offset=".205" stop-color="#063D3B" stop-opacity="0"/><stop offset=".872" stop-color="#063D3B" stop-opacity=".75"/></linearGradient></defs></svg></div><span class="logo-text">Microsoft Fabric</span></div>
+    <div class="badge bdg-teal"><div class="dot dot-teal"></div>Workspace Roles</div>
+  </div>
+  <div class="body">
+    <div class="crumb"><span class="tag tag-teal">WORKSPACE SECURITY</span><span>→</span><span>Workspace role permissions &amp; management</span></div>
+    <div class="h1">Workspace Roles vs. Item Sharing</div>
+    <div class="area">
+      <div class="g2">
+        <div style="display:flex;flex-direction:column;gap:16px;">
+          <div class="card bl-teal" style="padding:22px;gap:12px;">
+            <div class="ct">👥 Workspace Roles (Global)</div>
+            <div class="cx" style="font-size:14px;line-height:1.6;">Define user capabilities across ALL items within the workspace environment.</div>
+            <ul class="bl bl-t" style="font-size:13px;gap:6px;margin-top:4px;">
+              <li><strong>Admin:</strong> Add/remove workspace users + manage capacities</li>
+              <li><strong>Member:</strong> Add users to lower roles + share items</li>
+              <li><strong>Contributor:</strong> Build, edit, &amp; delete items; no user management</li>
+              <li><strong>Viewer:</strong> Read-only metadata &amp; report consumption</li>
+            </ul>
+          </div>
+        </div>
+        <div style="display:flex;flex-direction:column;gap:16px;">
+          <div class="card bl-blue" style="padding:22px;gap:12px;">
+            <div class="ct">🔗 Item-Level Permissions (Granular)</div>
+            <div class="cx" style="font-size:14px;line-height:1.6;">Share specific workspace resources without workspace-wide access permissions.</div>
+            <ul class="bl bl-b" style="font-size:13px;gap:6px;margin-top:4px;">
+              <li><strong>Read:</strong> General item metadata viewing permission</li>
+              <li><strong>ReadData:</strong> Query database records (SQL Endpoint / Warehouse)</li>
+              <li><strong>ReadAll:</strong> View raw unstructured data storage in OneLake Files</li>
+            </ul>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+  <div class="ftr"><span>Authored by Sayan Banerjee • AI &amp; BI Advisor</span><span class="ftr-num">02 / 10</span></div>
+</div>
+
+<!-- SLIDE 03 — DATABASE RLS & CLS -->
+<div class="slide">
+  <div class="topbar tb-blue"></div>
+  <div class="hdr">
+    <div class="logo"><div class="logo-icon"><svg xmlns="http://www.w3.org/2000/svg" width="40" height="40" viewBox="3.9997 3.9999 39.9994 40.0011"><path fill="url(#fa)" fill-rule="evenodd" d="m5.64 31.6-.586 2.144c-.218.685-.524 1.693-.689 2.59a5.63 5.63 0 0 0 4.638 7.588c.792.114 1.688.108 2.692-.04l4.613-.636a2.92 2.92 0 0 0 2.421-2.127l3.175-11.662L5.64 31.599Z" clip-rule="evenodd"/><path fill="url(#fb)" d="M10.14 32.152c-4.863.753-5.861 4.423-5.861 4.423l4.656-17.11 24.333-3.292-3.318 12.052a1.71 1.71 0 0 1-1.388 1.244l-.136.022-18.423 2.684z"/><path fill="url(#fd)" d="m12.899 21.235 26.938-3.98a1.6 1.6 0 0 0 1.323-1.17l2.78-10.06a1.595 1.595 0 0 0-1.74-2.012L16.498 7.81a7.19 7.19 0 0 0-5.777 5.193L7.013 26.438c.744-2.717 1.202-4.355 5.886-5.203"/><path fill="url(#fg)" d="M12.899 21.236c-3.901.706-4.87 1.962-5.514 3.932L4.279 36.577s.992-3.633 5.796-4.41l18.352-2.673.136-.022a1.71 1.71 0 0 0 1.388-1.244l2.73-9.915z"/><defs><linearGradient id="fa" x1="12.953" x2="12.953" y1="44.001" y2="29.457" gradientUnits="userSpaceOnUse"><stop offset=".056" stop-color="#2AAC94"/><stop offset="1" stop-color="#085954"/></linearGradient><linearGradient id="fb" x1="31.331" x2="17.286" y1="33.448" y2="18.173" gradientUnits="userSpaceOnUse"><stop offset=".042" stop-color="#ABE88E"/><stop offset=".549" stop-color="#2AAA92"/><stop offset=".906" stop-color="#117865"/></linearGradient><linearGradient id="fd" x1="7.013" x2="42.589" y1="15.219" y2="15.219" gradientUnits="userSpaceOnUse"><stop offset=".043" stop-color="#25FFD4"/><stop offset=".874" stop-color="#55DDB9"/></linearGradient><linearGradient id="fg" x1="15.756" x2="16.168" y1="27.96" y2="15.74" gradientUnits="userSpaceOnUse"><stop offset=".205" stop-color="#063D3B" stop-opacity="0"/><stop offset=".872" stop-color="#063D3B" stop-opacity=".75"/></linearGradient></defs></svg></div><span class="logo-text">Microsoft Fabric</span></div>
+    <div class="badge bdg-blue"><div class="dot dot-blue"></div>SQL Security</div>
+  </div>
+  <div class="body">
+    <div class="crumb"><span class="tag tag-blue">DATABASE LEVEL</span><span>→</span><span>Row-level &amp; Column-level security configurations</span></div>
+    <div class="h1">Row &amp; Column Level Security (RLS/CLS)</div>
+    <div class="area">
+      <div class="g2">
+        <div style="display:flex;flex-direction:column;gap:16px;">
+          <div class="card bl-blue" style="padding:22px;gap:12px;">
+            <div class="ct">🗺️ Row-Level Security (RLS)</div>
+            <div class="cx" style="font-size:14px;line-height:1.6;">Filter row visibility dynamically using a TVF predicate function. Used to restrict region or group sales view access.</div>
+            <div class="code" style="font-size:11px;">
+<span class="ck">CREATE FUNCTION</span> fn_securitypredicate(@Region sysname)<br/>
+&nbsp;&nbsp;<span class="ck">RETURNS TABLE WITH SCHEMABINDING</span><br/>
+<span class="ck">AS</span><br/>
+&nbsp;&nbsp;<span class="cf">RETURN SELECT</span> 1 <span class="ck">WHERE</span> @Region = <span class="cf">USER_NAME</span>();
+            </div>
+          </div>
+        </div>
+        <div style="display:flex;flex-direction:column;gap:16px;">
+          <div class="card bl-teal" style="padding:22px;gap:12px;">
+            <div class="ct">📊 Column-Level Security (CLS)</div>
+            <div class="cx" style="font-size:14px;line-height:1.6;">Restrict access to specific columns (like SSN, Salary) on a table without needing separate views.</div>
+            <div class="code" style="font-size:11px;">
+<span class="cc">-- Grant permissions only on non-sensitive columns</span><br/>
+<span class="ck">GRANT SELECT ON</span> dbo.Employees<br/>
+(EmployeeID, FirstName, LastName)<br/>
+<span class="ck">TO</span> HrManager;
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+  <div class="ftr"><span>Authored by Sayan Banerjee • AI &amp; BI Advisor</span><span class="ftr-num">03 / 10</span></div>
+</div>
+
+<!-- SLIDE 04 — DYNAMIC DATA MASKING -->
+<div class="slide">
+  <div class="topbar tb-orange"></div>
+  <div class="hdr">
+    <div class="logo"><div class="logo-icon"><svg xmlns="http://www.w3.org/2000/svg" width="40" height="40" viewBox="3.9997 3.9999 39.9994 40.0011"><path fill="url(#fa)" fill-rule="evenodd" d="m5.64 31.6-.586 2.144c-.218.685-.524 1.693-.689 2.59a5.63 5.63 0 0 0 4.638 7.588c.792.114 1.688.108 2.692-.04l4.613-.636a2.92 2.92 0 0 0 2.421-2.127l3.175-11.662L5.64 31.599Z" clip-rule="evenodd"/><path fill="url(#fb)" d="M10.14 32.152c-4.863.753-5.861 4.423-5.861 4.423l4.656-17.11 24.333-3.292-3.318 12.052a1.71 1.71 0 0 1-1.388 1.244l-.136.022-18.423 2.684z"/><path fill="url(#fd)" d="m12.899 21.235 26.938-3.98a1.6 1.6 0 0 0 1.323-1.17l2.78-10.06a1.595 1.595 0 0 0-1.74-2.012L16.498 7.81a7.19 7.19 0 0 0-5.777 5.193L7.013 26.438c.744-2.717 1.202-4.355 5.886-5.203"/><path fill="url(#fg)" d="M12.899 21.236c-3.901.706-4.87 1.962-5.514 3.932L4.279 36.577s.992-3.633 5.796-4.41l18.352-2.673.136-.022a1.71 1.71 0 0 0 1.388-1.244l2.73-9.915z"/><defs><linearGradient id="fa" x1="12.953" x2="12.953" y1="44.001" y2="29.457" gradientUnits="userSpaceOnUse"><stop offset=".056" stop-color="#2AAC94"/><stop offset="1" stop-color="#085954"/></linearGradient><linearGradient id="fb" x1="31.331" x2="17.286" y1="33.448" y2="18.173" gradientUnits="userSpaceOnUse"><stop offset=".042" stop-color="#ABE88E"/><stop offset=".549" stop-color="#2AAA92"/><stop offset=".906" stop-color="#117865"/></linearGradient><linearGradient id="fd" x1="7.013" x2="42.589" y1="15.219" y2="15.219" gradientUnits="userSpaceOnUse"><stop offset=".043" stop-color="#25FFD4"/><stop offset=".874" stop-color="#55DDB9"/></linearGradient><linearGradient id="fg" x1="15.756" x2="16.168" y1="27.96" y2="15.74" gradientUnits="userSpaceOnUse"><stop offset=".205" stop-color="#063D3B" stop-opacity="0"/><stop offset=".872" stop-color="#063D3B" stop-opacity=".75"/></linearGradient></defs></svg></div><span class="logo-text">Microsoft Fabric</span></div>
+    <div class="badge bdg-orange"><div class="dot dot-orange"></div>Data Masking</div>
+  </div>
+  <div class="body">
+    <div class="crumb"><span class="tag tag-orange">SQL ENGINE</span><span>→</span><span>Implement dynamic data masking</span></div>
+    <div class="h1">Dynamic Data Masking (DDM)</div>
+    <div class="sub">An on-the-fly masking mechanism that protects sensitive database fields</div>
+    <div class="area">
+      <div class="g2">
+        <div style="display:flex;flex-direction:column;gap:16px;">
+          <div class="tw th-orange">
+            <table>
+              <thead><tr><th>Mask Function</th><th>Masking Behavior</th><th>Example (Original → Masked)</th></tr></thead>
+              <tbody>
+                <tr><td><strong>default()</strong></td><td>Blank or zero values depending on type</td><td>Sayan → XXXX / 42.5 → 0.0</td></tr>
+                <tr><td><strong>email()</strong></td><td>Exposes first letter &amp; domain suffix</td><td>sayan@test.com → sXXXX@XXXX.com</td></tr>
+                <tr><td><strong>random(1, 9)</strong></td><td>Replaces numeric values with random bounds</td><td>42 → random single digit</td></tr>
+                <tr><td><strong>partial(2, "X", 2)</strong></td><td>Keeps first and last N letters, masks middle</td><td>Sayan → SaXaN</td></tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+        <div style="display:flex;flex-direction:column;gap:16px;">
+          <div class="code" style="font-size:11px;">
+<span class="cc">-- Apply masking to a credit card field</span><br/>
+<span class="ck">ALTER TABLE</span> dbo.Customers<br/>
+<span class="ck">ALTER COLUMN</span> CreditCard<br/>
+&nbsp;&nbsp;<span class="ck">ADD MASKED WITH</span>(<span class="ck">FUNCTION</span> = <span class="cs2">'partial(0, "XXXX-XXXX-XXXX-", 4)'</span>);
+          </div>
+          <div class="hb hb-orange">
+            <div class="hb-icon">💡</div>
+            <div class="hb-text"><strong>Unmask Permission:</strong> Admin/Owner roles see unmasked values by default. Grant viewers full visibility with <code style="font-size:12px;background:#eff6fc;padding:2px 4px;">GRANT UNMASK TO [user]</code>.</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+  <div class="ftr"><span>Authored by Sayan Banerjee • AI &amp; BI Advisor</span><span class="ftr-num">04 / 10</span></div>
+</div>
+
+<!-- SLIDE 05 — ONELAKE ACCESS ROLES -->
+<div class="slide">
+  <div class="topbar tb-teal"></div>
+  <div class="hdr">
+    <div class="logo"><div class="logo-icon"><svg xmlns="http://www.w3.org/2000/svg" width="40" height="40" viewBox="3.9997 3.9999 39.9994 40.0011"><path fill="url(#fa)" fill-rule="evenodd" d="m5.64 31.6-.586 2.144c-.218.685-.524 1.693-.689 2.59a5.63 5.63 0 0 0 4.638 7.588c.792.114 1.688.108 2.692-.04l4.613-.636a2.92 2.92 0 0 0 2.421-2.127l3.175-11.662L5.64 31.599Z" clip-rule="evenodd"/><path fill="url(#fb)" d="M10.14 32.152c-4.863.753-5.861 4.423-5.861 4.423l4.656-17.11 24.333-3.292-3.318 12.052a1.71 1.71 0 0 1-1.388 1.244l-.136.022-18.423 2.684z"/><path fill="url(#fd)" d="m12.899 21.235 26.938-3.98a1.6 1.6 0 0 0 1.323-1.17l2.78-10.06a1.595 1.595 0 0 0-1.74-2.012L16.498 7.81a7.19 7.19 0 0 0-5.777 5.193L7.013 26.438c.744-2.717 1.202-4.355 5.886-5.203"/><path fill="url(#fg)" d="M12.899 21.236c-3.901.706-4.87 1.962-5.514 3.932L4.279 36.577s.992-3.633 5.796-4.41l18.352-2.673.136-.022a1.71 1.71 0 0 0 1.388-1.244l2.73-9.915z"/><defs><linearGradient id="fa" x1="12.953" x2="12.953" y1="44.001" y2="29.457" gradientUnits="userSpaceOnUse"><stop offset=".056" stop-color="#2AAC94"/><stop offset="1" stop-color="#085954"/></linearGradient><linearGradient id="fb" x1="31.331" x2="17.286" y1="33.448" y2="18.173" gradientUnits="userSpaceOnUse"><stop offset=".042" stop-color="#ABE88E"/><stop offset=".549" stop-color="#2AAA92"/><stop offset=".906" stop-color="#117865"/></linearGradient><linearGradient id="fd" x1="7.013" x2="42.589" y1="15.219" y2="15.219" gradientUnits="userSpaceOnUse"><stop offset=".043" stop-color="#25FFD4"/><stop offset=".874" stop-color="#55DDB9"/></linearGradient><linearGradient id="fg" x1="15.756" x2="16.168" y1="27.96" y2="15.74" gradientUnits="userSpaceOnUse"><stop offset=".205" stop-color="#063D3B" stop-opacity="0"/><stop offset=".872" stop-color="#063D3B" stop-opacity=".75"/></linearGradient></defs></svg></div><span class="logo-text">Microsoft Fabric</span></div>
+    <div class="badge bdg-teal"><div class="dot dot-teal"></div>OneLake Security</div>
+  </div>
+  <div class="body">
+    <div class="crumb"><span class="tag tag-teal">STORAGE LEVEL</span><span>→</span><span>Unified folder &amp; file level security configurations</span></div>
+    <div class="h1">OneLake Data Access Roles</div>
+    <div class="sub">Unified security model independent of SQL or Spark query engines</div>
+    <div class="area">
+      <div class="g2">
+        <div style="display:flex;flex-direction:column;gap:16px;">
+          <div class="card bl-teal" style="padding:22px;gap:12px;">
+            <div class="ct">📁 Storage-Level Folders</div>
+            <div class="cx" style="font-size:14px;line-height:1.6;">Configure access rules directly on folders inside OneLake (`Tables/` or `Files/`).</div>
+            <ul class="bl bl-t" style="font-size:13px;gap:6px;margin-top:4px;">
+              <li>Applies globally whether using Spark, SQL Endpoint, or Shortcuts</li>
+              <li>Saves you from writing duplicate security rules across database engines</li>
+              <li>Assign custom AD users or groups directly to roles</li>
+            </ul>
+          </div>
+        </div>
+        <div style="display:flex;flex-direction:column;gap:16px;">
+          <div class="card bl-blue" style="padding:22px;gap:12px;">
+            <div class="ct">🔒 Access Level Types</div>
+            <ul class="bl bl-b" style="font-size:13px;gap:8px;margin-top:4px;">
+              <li><strong>Read:</strong> View folder metadata &amp; read data</li>
+              <li><strong>Write:</strong> Modify or upload files into folders</li>
+              <li><strong>No Access:</strong> Folder remains completely hidden</li>
+            </ul>
+          </div>
+          <div class="hb hb-teal">
+            <div class="hb-icon">🧠</div>
+            <div class="hb-text"><strong>Shortcut inheritance:</strong> Shortcuts inherit the folder-level permissions of their target path by default!</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+  <div class="ftr"><span>Authored by Sayan Banerjee • AI &amp; BI Advisor</span><span class="ftr-num">05 / 10</span></div>
+</div>
+
+<!-- SLIDE 06 — INFORMATION PROTECTION -->
+<div class="slide">
+  <div class="topbar tb-purple"></div>
+  <div class="hdr">
+    <div class="logo"><div class="logo-icon"><svg xmlns="http://www.w3.org/2000/svg" width="40" height="40" viewBox="3.9997 3.9999 39.9994 40.0011"><path fill="url(#fa)" fill-rule="evenodd" d="m5.64 31.6-.586 2.144c-.218.685-.524 1.693-.689 2.59a5.63 5.63 0 0 0 4.638 7.588c.792.114 1.688.108 2.692-.04l4.613-.636a2.92 2.92 0 0 0 2.421-2.127l3.175-11.662L5.64 31.599Z" clip-rule="evenodd"/><path fill="url(#fb)" d="M10.14 32.152c-4.863.753-5.861 4.423-5.861 4.423l4.656-17.11 24.333-3.292-3.318 12.052a1.71 1.71 0 0 1-1.388 1.244l-.136.022-18.423 2.684z"/><path fill="url(#fd)" d="m12.899 21.235 26.938-3.98a1.6 1.6 0 0 0 1.323-1.17l2.78-10.06a1.595 1.595 0 0 0-1.74-2.012L16.498 7.81a7.19 7.19 0 0 0-5.777 5.193L7.013 26.438c.744-2.717 1.202-4.355 5.886-5.203"/><path fill="url(#fg)" d="M12.899 21.236c-3.901.706-4.87 1.962-5.514 3.932L4.279 36.577s.992-3.633 5.796-4.41l18.352-2.673.136-.022a1.71 1.71 0 0 0 1.388-1.244l2.73-9.915z"/><defs><linearGradient id="fa" x1="12.953" x2="12.953" y1="44.001" y2="29.457" gradientUnits="userSpaceOnUse"><stop offset=".056" stop-color="#2AAC94"/><stop offset="1" stop-color="#085954"/></linearGradient><linearGradient id="fb" x1="31.331" x2="17.286" y1="33.448" y2="18.173" gradientUnits="userSpaceOnUse"><stop offset=".042" stop-color="#ABE88E"/><stop offset=".549" stop-color="#2AAA92"/><stop offset=".906" stop-color="#117865"/></linearGradient><linearGradient id="fd" x1="7.013" x2="42.589" y1="15.219" y2="15.219" gradientUnits="userSpaceOnUse"><stop offset=".043" stop-color="#25FFD4"/><stop offset=".874" stop-color="#55DDB9"/></linearGradient><linearGradient id="fg" x1="15.756" x2="16.168" y1="27.96" y2="15.74" gradientUnits="userSpaceOnUse"><stop offset=".205" stop-color="#063D3B" stop-opacity="0"/><stop offset=".872" stop-color="#063D3B" stop-opacity=".75"/></linearGradient></defs></svg></div><span class="logo-text">Microsoft Fabric</span></div>
+    <div class="badge bdg-purple"><div class="dot dot-purple"></div>Purview &amp; Labels</div>
+  </div>
+  <div class="body">
+    <div class="crumb"><span class="tag tag-purple">GOVERNANCE</span><span>→</span><span>Apply sensitivity labels &amp; endorsement states</span></div>
+    <div class="h1">Governance: Endorsement &amp; Labels</div>
+    <div class="sub">Ensuring data trustworthiness and leakage protection across Fabric</div>
+    <div class="area">
+      <div class="g2">
+        <div style="display:flex;flex-direction:column;gap:16px;">
+          <div class="card bl-purple" style="padding:22px;gap:12px;">
+            <div class="ct">🏷️ Microsoft Purview Sensitivity Labels</div>
+            <div class="cx" style="font-size:14px;line-height:1.6;">Apply labels (Confidential, Public, Highly Restricted) to prevent data leaks.</div>
+            <ul class="bl bl-p" style="font-size:13px;gap:6px;margin-top:4px;">
+              <li>Labels follow data inside the workspace</li>
+              <li><strong>Lineage Inheritance:</strong> Semantic model labels propagate down to reports automatically</li>
+            </ul>
+          </div>
+        </div>
+        <div style="display:flex;flex-direction:column;gap:16px;">
+          <div class="card bl-blue" style="padding:22px;gap:12px;">
+            <div class="ct">🌟 Item Endorsement States</div>
+            <ul class="bl bl-b" style="font-size:13px;gap:8px;margin-top:4px;">
+              <li><strong>Promoted:</strong> Alerts consumers to verified content. Available to anyone with workspace edit rights.</li>
+              <li><strong>Certified:</strong> Strict verification. Can ONLY be enabled by tenant admins or workspace curators. Represents the single source of truth.</li>
+            </ul>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+  <div class="ftr"><span>Authored by Sayan Banerjee • AI &amp; BI Advisor</span><span class="ftr-num">06 / 10</span></div>
+</div>
+
+<!-- SLIDE 07 — FABRIC AUDIT LOGS -->
+<div class="slide">
+  <div class="topbar tb-teal"></div>
+  <div class="hdr">
+    <div class="logo"><div class="logo-icon"><svg xmlns="http://www.w3.org/2000/svg" width="40" height="40" viewBox="3.9997 3.9999 39.9994 40.0011"><path fill="url(#fa)" fill-rule="evenodd" d="m5.64 31.6-.586 2.144c-.218.685-.524 1.693-.689 2.59a5.63 5.63 0 0 0 4.638 7.588c.792.114 1.688.108 2.692-.04l4.613-.636a2.92 2.92 0 0 0 2.421-2.127l3.175-11.662L5.64 31.599Z" clip-rule="evenodd"/><path fill="url(#fb)" d="M10.14 32.152c-4.863.753-5.861 4.423-5.861 4.423l4.656-17.11 24.333-3.292-3.318 12.052a1.71 1.71 0 0 1-1.388 1.244l-.136.022-18.423 2.684z"/><path fill="url(#fd)" d="m12.899 21.235 26.938-3.98a1.6 1.6 0 0 0 1.323-1.17l2.78-10.06a1.595 1.595 0 0 0-1.74-2.012L16.498 7.81a7.19 7.19 0 0 0-5.777 5.193L7.013 26.438c.744-2.717 1.202-4.355 5.886-5.203"/><path fill="url(#fg)" d="M12.899 21.236c-3.901.706-4.87 1.962-5.514 3.932L4.279 36.577s.992-3.633 5.796-4.41l18.352-2.673.136-.022a1.71 1.71 0 0 0 1.388-1.244l2.73-9.915z"/><defs><linearGradient id="fa" x1="12.953" x2="12.953" y1="44.001" y2="29.457" gradientUnits="userSpaceOnUse"><stop offset=".056" stop-color="#2AAC94"/><stop offset="1" stop-color="#085954"/></linearGradient><linearGradient id="fb" x1="31.331" x2="17.286" y1="33.448" y2="18.173" gradientUnits="userSpaceOnUse"><stop offset=".042" stop-color="#ABE88E"/><stop offset=".549" stop-color="#2AAA92"/><stop offset=".906" stop-color="#117865"/></linearGradient><linearGradient id="fd" x1="7.013" x2="42.589" y1="15.219" y2="15.219" gradientUnits="userSpaceOnUse"><stop offset=".043" stop-color="#25FFD4"/><stop offset=".874" stop-color="#55DDB9"/></linearGradient><linearGradient id="fg" x1="15.756" x2="16.168" y1="27.96" y2="15.74" gradientUnits="userSpaceOnUse"><stop offset=".205" stop-color="#063D3B" stop-opacity="0"/><stop offset=".872" stop-color="#063D3B" stop-opacity=".75"/></linearGradient></defs></svg></div><span class="logo-text">Microsoft Fabric</span></div>
+    <div class="badge bdg-teal"><div class="dot dot-teal"></div>Audit Logs</div>
+  </div>
+  <div class="body">
+    <div class="crumb"><span class="tag tag-teal">GOVERNANCE</span><span>→</span><span>Audit trail, compliance, &amp; data access tracking</span></div>
+    <div class="h1">Tracking Access: Fabric Audit Logs</div>
+    <div class="area">
+      <div class="g2">
+        <div style="display:flex;flex-direction:column;gap:16px;">
+          <div class="card bl-teal" style="padding:22px;gap:12px;">
+            <div class="ct">📋 Microsoft Purview Audit Logs</div>
+            <div class="cx" style="font-size:14px;line-height:1.6;">Track operations and security changes across the tenant environment.</div>
+            <ul class="bl bl-t" style="font-size:13px;gap:8px;margin-top:4px;">
+              <li>Logs workspaces created, deleted, or shared</li>
+              <li>Tracks credential updates &amp; gatekeeper access changes</li>
+              <li>Monitor direct semantic model reads and refreshes</li>
+            </ul>
+          </div>
+        </div>
+        <div style="display:flex;flex-direction:column;gap:16px;">
+          <div class="card bl-blue" style="padding:22px;gap:12px;">
+            <div class="ct">🔍 Query History monitoring</div>
+            <div class="cx" style="font-size:14px;line-height:1.6;">Monitor queries executed inside the Data Warehouse SQL engine:</div>
+            <ul class="bl bl-b" style="font-size:13px;gap:8px;margin-top:4px;">
+              <li>Utilize dynamic management views (DMVs)</li>
+              <li>Identify unauthorized or expensive queries</li>
+            </ul>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+  <div class="ftr"><span>Authored by Sayan Banerjee • AI &amp; BI Advisor</span><span class="ftr-num">07 / 10</span></div>
+</div>
+
+<!-- SLIDE 08 — EXAM TRAPS -->
+<div class="slide">
+  <div class="topbar tb-gold"></div>
+  <div class="hdr">
+    <div class="logo"><div class="logo-icon"><svg xmlns="http://www.w3.org/2000/svg" width="40" height="40" viewBox="3.9997 3.9999 39.9994 40.0011"><path fill="url(#fa)" fill-rule="evenodd" d="m5.64 31.6-.586 2.144c-.218.685-.524 1.693-.689 2.59a5.63 5.63 0 0 0 4.638 7.588c.792.114 1.688.108 2.692-.04l4.613-.636a2.92 2.92 0 0 0 2.421-2.127l3.175-11.662L5.64 31.599Z" clip-rule="evenodd"/><path fill="url(#fb)" d="M10.14 32.152c-4.863.753-5.861 4.423-5.861 4.423l4.656-17.11 24.333-3.292-3.318 12.052a1.71 1.71 0 0 1-1.388 1.244l-.136.022-18.423 2.684z"/><path fill="url(#fd)" d="m12.899 21.235 26.938-3.98a1.6 1.6 0 0 0 1.323-1.17l2.78-10.06a1.595 1.595 0 0 0-1.74-2.012L16.498 7.81a7.19 7.19 0 0 0-5.777 5.193L7.013 26.438c.744-2.717 1.202-4.355 5.886-5.203"/><path fill="url(#fg)" d="M12.899 21.236c-3.901.706-4.87 1.962-5.514 3.932L4.279 36.577s.992-3.633 5.796-4.41l18.352-2.673.136-.022a1.71 1.71 0 0 0 1.388-1.244l2.73-9.915z"/><defs><linearGradient id="fa" x1="12.953" x2="12.953" y1="44.001" y2="29.457" gradientUnits="userSpaceOnUse"><stop offset=".056" stop-color="#2AAC94"/><stop offset="1" stop-color="#085954"/></linearGradient><linearGradient id="fb" x1="31.331" x2="17.286" y1="33.448" y2="18.173" gradientUnits="userSpaceOnUse"><stop offset=".042" stop-color="#ABE88E"/><stop offset=".549" stop-color="#2AAA92"/><stop offset=".906" stop-color="#117865"/></linearGradient><linearGradient id="fd" x1="7.013" x2="42.589" y1="15.219" y2="15.219" gradientUnits="userSpaceOnUse"><stop offset=".043" stop-color="#25FFD4"/><stop offset=".874" stop-color="#55DDB9"/></linearGradient><linearGradient id="fg" x1="15.756" x2="16.168" y1="27.96" y2="15.74" gradientUnits="userSpaceOnUse"><stop offset=".205" stop-color="#063D3B" stop-opacity="0"/><stop offset=".872" stop-color="#063D3B" stop-opacity=".75"/></linearGradient></defs></svg></div><span class="logo-text">Microsoft Fabric</span></div>
+    <div class="badge bdg-gold"><div class="dot dot-gold"></div>Exam Traps</div>
+  </div>
+  <div class="body">
+    <div class="crumb"><span class="tag tag-gold">DP-700 CAUTION</span><span>→</span><span>Security &amp; governance traps</span></div>
+    <div class="h1">Top 4 Security Exam Traps ⚠️</div>
+    <div class="area">
+      <div class="g2">
+        <div style="display:flex;flex-direction:column;gap:16px;">
+          <div class="hb hb-red">
+            <div class="hb-icon">🚫</div>
+            <div class="hb-text"><strong>Trap 1: "Contributors cannot add sensitivity labels"</strong><br/>❌ WRONG. Contributors have edit rights on items and can apply Purview sensitivity labels directly. Only Certifications require admin status.</div>
+          </div>
+          <div class="hb hb-red">
+            <div class="hb-icon">🚫</div>
+            <div class="hb-text"><strong>Trap 2: "Promoting an item requires tenant administrator approval"</strong><br/>❌ WRONG. Anyone with write permissions on an item can **promote** it. Only **certifications** require tenant-authorized admin approval.</div>
+          </div>
+        </div>
+        <div style="display:flex;flex-direction:column;gap:16px;">
+          <div class="hb hb-red">
+            <div class="hb-icon">🚫</div>
+            <div class="hb-text"><strong>Trap 3: "Dynamic Data Masking encrypts the storage columns"</strong><br/>❌ WRONG. DDM does not change the physical data. It masks values on-the-fly during SELECT queries based on permission status.</div>
+          </div>
+          <div class="hb hb-red">
+            <div class="hb-icon">🚫</div>
+            <div class="hb-text"><strong>Trap 4: "OneLake Data Access Roles apply only to Spark"</strong><br/>❌ WRONG. OneLake Data Access Roles are engine-agnostic storage filters. They protect folders from Spark, T-SQL, and shortcuts globally!</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+  <div class="ftr"><span>Authored by Sayan Banerjee • AI &amp; BI Advisor</span><span class="ftr-num">08 / 10</span></div>
+</div>
+
+<!-- SLIDE 09 — SECURITY CHEAT SHEET -->
+<div class="slide">
+  <div class="topbar tb-teal"></div>
+  <div class="hdr">
+    <div class="logo"><div class="logo-icon"><svg xmlns="http://www.w3.org/2000/svg" width="40" height="40" viewBox="3.9997 3.9999 39.9994 40.0011"><path fill="url(#fa)" fill-rule="evenodd" d="m5.64 31.6-.586 2.144c-.218.685-.524 1.693-.689 2.59a5.63 5.63 0 0 0 4.638 7.588c.792.114 1.688.108 2.692-.04l4.613-.636a2.92 2.92 0 0 0 2.421-2.127l3.175-11.662L5.64 31.599Z" clip-rule="evenodd"/><path fill="url(#fb)" d="M10.14 32.152c-4.863.753-5.861 4.423-5.861 4.423l4.656-17.11 24.333-3.292-3.318 12.052a1.71 1.71 0 0 1-1.388 1.244l-.136.022-18.423 2.684z"/><path fill="url(#fd)" d="m12.899 21.235 26.938-3.98a1.6 1.6 0 0 0 1.323-1.17l2.78-10.06a1.595 1.595 0 0 0-1.74-2.012L16.498 7.81a7.19 7.19 0 0 0-5.777 5.193L7.013 26.438c.744-2.717 1.202-4.355 5.886-5.203"/><path fill="url(#fg)" d="M12.899 21.236c-3.901.706-4.87 1.962-5.514 3.932L4.279 36.577s.992-3.633 5.796-4.41l18.352-2.673.136-.022a1.71 1.71 0 0 0 1.388-1.244l2.73-9.915z"/><defs><linearGradient id="fa" x1="12.953" x2="12.953" y1="44.001" y2="29.457" gradientUnits="userSpaceOnUse"><stop offset=".056" stop-color="#2AAC94"/><stop offset="1" stop-color="#085954"/></linearGradient><linearGradient id="fb" x1="31.331" x2="17.286" y1="33.448" y2="18.173" gradientUnits="userSpaceOnUse"><stop offset=".042" stop-color="#ABE88E"/><stop offset=".549" stop-color="#2AAA92"/><stop offset=".906" stop-color="#117865"/></linearGradient><linearGradient id="fd" x1="7.013" x2="42.589" y1="15.219" y2="15.219" gradientUnits="userSpaceOnUse"><stop offset=".043" stop-color="#25FFD4"/><stop offset=".874" stop-color="#55DDB9"/></linearGradient><linearGradient id="fg" x1="15.756" x2="16.168" y1="27.96" y2="15.74" gradientUnits="userSpaceOnUse"><stop offset=".205" stop-color="#063D3B" stop-opacity="0"/><stop offset=".872" stop-color="#063D3B" stop-opacity=".75"/></linearGradient></defs></svg></div><span class="logo-text">Microsoft Fabric</span></div>
+    <div class="badge bdg-teal"><div class="dot dot-teal"></div>Decision Matrix</div>
+  </div>
+  <div class="body">
+    <div class="crumb"><span class="tag tag-teal">QUICK REFERENCE</span><span>→</span><span>Security architecture decision cheat sheet</span></div>
+    <div class="h1">Fabric Security Decision Matrix</div>
+    <div class="area">
+      <div class="tw th-teal">
+        <table>
+          <thead><tr><th>Exam Business Requirement</th><th>Recommended Security Control</th><th>Engine Layer</th></tr></thead>
+          <tbody>
+            <tr><td>Prevent analysts from editing tables while letting them query SQL</td><td>Assign **Viewer** workspace role + grant **ReadData**</td><td>Workspace / Item level</td></tr>
+            <tr><td>Restrict row access dynamically based on salesperson region</td><td>**Row-Level Security (RLS)** with security predicate</td><td>SQL Endpoint / DW Engine</td></tr>
+            <tr><td>Prevent junior staff from viewing Salary column in employee table</td><td>**Column-Level Security (CLS)** on specific columns</td><td>SQL Endpoint / DW Engine</td></tr>
+            <tr><td>Mask corporate credit card fields to non-admin viewer accounts</td><td>**Dynamic Data Masking (DDM)** using partial() function</td><td>SQL Endpoint / DW Engine</td></tr>
+            <tr><td>Restrict folder and file access globally across both Spark and SQL</td><td>**OneLake Data Access Roles** directly on target paths</td><td>OneLake Storage Layer</td></tr>
+            <tr><td>Establish an authorized "single source of truth" asset flag</td><td>Apply **Certified** endorsement status</td><td>Tenant governance layer</td></tr>
+            <tr><td>Enforce compliance labels that inherit downstream in Power BI reports</td><td>Apply **Microsoft Purview Sensitivity Labels**</td><td>Fabric workspace lineage</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+  <div class="ftr"><span>📌 Save this slide for your DP-700 exam prep</span><span class="ftr-num">09 / 10</span></div>
+</div>
+
+<!-- SLIDE 10 — CTA -->
+<div class="slide">
+  <div class="topbar tb-grad"></div>
+  <div class="hdr">
+    <div class="logo"><div class="logo-icon"><svg xmlns="http://www.w3.org/2000/svg" width="40" height="40" viewBox="3.9997 3.9999 39.9994 40.0011"><path fill="url(#fa)" fill-rule="evenodd" d="m5.64 31.6-.586 2.144c-.218.685-.524 1.693-.689 2.59a5.63 5.63 0 0 0 4.638 7.588c.792.114 1.688.108 2.692-.04l4.613-.636a2.92 2.92 0 0 0 2.421-2.127l3.175-11.662L5.64 31.599Z" clip-rule="evenodd"/><path fill="url(#fb)" d="M10.14 32.152c-4.863.753-5.861 4.423-5.861 4.423l4.656-17.11 24.333-3.292-3.318 12.052a1.71 1.71 0 0 1-1.388 1.244l-.136.022-18.423 2.684z"/><path fill="url(#fd)" d="m12.899 21.235 26.938-3.98a1.6 1.6 0 0 0 1.323-1.17l2.78-10.06a1.595 1.595 0 0 0-1.74-2.012L16.498 7.81a7.19 7.19 0 0 0-5.777 5.193L7.013 26.438c.744-2.717 1.202-4.355 5.886-5.203"/><path fill="url(#fg)" d="M12.899 21.236c-3.901.706-4.87 1.962-5.514 3.932L4.279 36.577s.992-3.633 5.796-4.41l18.352-2.673.136-.022a1.71 1.71 0 0 0 1.388-1.244l2.73-9.915z"/><defs><linearGradient id="fa" x1="12.953" x2="12.953" y1="44.001" y2="29.457" gradientUnits="userSpaceOnUse"><stop offset=".056" stop-color="#2AAC94"/><stop offset="1" stop-color="#085954"/></linearGradient><linearGradient id="fb" x1="31.331" x2="17.286" y1="33.448" y2="18.173" gradientUnits="userSpaceOnUse"><stop offset=".042" stop-color="#ABE88E"/><stop offset=".549" stop-color="#2AAA92"/><stop offset=".906" stop-color="#117865"/></linearGradient><linearGradient id="fd" x1="7.013" x2="42.589" y1="15.219" y2="15.219" gradientUnits="userSpaceOnUse"><stop offset=".043" stop-color="#25FFD4"/><stop offset=".874" stop-color="#55DDB9"/></linearGradient><linearGradient id="fg" x1="15.756" x2="16.168" y1="27.96" y2="15.74" gradientUnits="userSpaceOnUse"><stop offset=".205" stop-color="#063D3B" stop-opacity="0"/><stop offset=".872" stop-color="#063D3B" stop-opacity=".75"/></linearGradient></defs></svg></div><span class="logo-text">Microsoft Fabric</span></div>
+    <div class="badge bdg-teal"><div class="dot dot-teal"></div>Join the Challenge</div>
+  </div>
+  <div class="cta-body">
+    <div class="cta-icon">🔒</div>
+    <div class="cta-h">Workspace &amp; Table Security Mastered.<br/>Governance for DP-700 Complete.</div>
+    <div class="cta-s">Workspace Roles · RLS / CLS · Dynamic Masking · OneLake Data Access Roles · Sensitivity Labels — you now know the entire security framework.</div>
+    <div class="cta-next">🔔 Day 10 Tomorrow: Lifecycle Management in Fabric — Git Integration, Database Projects &amp; Deployment Pipelines</div>
+    <div class="cta-author">
+      <strong>Sayan Banerjee</strong> • AI &amp; BI Advisor<br/>
+      Microsoft Certified: Fabric Data Engineer Associate (DP-700)
+    </div>
+  </div>
+  <div class="ftr"><span>#MicrosoftFabric #DP700 #DataSecurity #OneLake #Governance #DataEngineering</span><span class="ftr-num">10 / 10</span></div>
+</div>
+
+</body>
+</html>
